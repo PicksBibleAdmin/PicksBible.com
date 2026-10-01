@@ -43,6 +43,30 @@ th{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.04
 .tag.prem{background:var(--purple);border-color:var(--purple)}
 .empty{text-align:center;color:var(--muted);padding:24px}
 #login{max-width:360px;margin:12vh auto;padding:0 16px}
+
+/* sport toggle + league picker (mirrors the site's Select A League panel) */
+.seg{display:flex;border:1px solid var(--line);border-radius:999px;overflow:hidden;background:var(--bg)}
+.seg button{flex:1;border:0;background:transparent;color:var(--muted);padding:10px 12px;font:inherit;font-weight:700;cursor:pointer}
+.seg button[aria-pressed=true]{background:#e9fbff;color:var(--cyan-ink)}
+.seg button.bb[aria-pressed=true]{background:#fff1e0;color:#7c2d12}
+.lgwrap{position:relative}
+.lg-select{width:100%;text-align:left;background:#e9fbff;color:var(--cyan-ink);border:1px solid #0e7490;border-radius:999px;font:600 14px inherit;padding:10px 16px;cursor:pointer}
+.lg-select.bb{background:#fff1e0;border-color:#c2410c;color:#7c2d12}
+.lgpanel{position:absolute;top:calc(100% + 8px);left:0;z-index:30;background:#fbfbfd;color:#0b1734;border-radius:10px;width:min(400px,92vw);max-height:62vh;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 16px 40px #0007;border:1px solid #e4e6f0}
+.lgsearch{padding:10px;border-bottom:1px solid #eef0f6;background:#fff}
+.lgsearch input{background:#f3f4fa;color:#0b1734;border:1px solid #dfe2ee;border-radius:8px;padding:9px 10px}
+.lgpanel-body{overflow-y:auto;padding:4px 0}
+.lggroup{border-bottom:1px solid #eef0f6}.lggroup:last-child{border-bottom:0}
+.lgtop{background:#f7f8fc}
+.lgcountry{display:flex;align-items:center;gap:12px;background:none;border:0;color:#0b1734;text-align:left;padding:12px 16px;cursor:pointer;font:700 15px inherit;width:100%}
+.lgcountry:hover{background:#f3f4fa}
+.lgcountry .badge{font-size:13px;font-weight:800;width:24px;text-align:center;color:#2d4373;flex-shrink:0}
+.lgcountry .lgname{flex:1}
+.lgcountry .toggle{color:#16a34a;font:800 18px inherit;width:18px;text-align:center}
+.lgsub{display:flex;flex-direction:column;padding:0 0 6px}
+.lgleague{display:flex;justify-content:space-between;gap:10px;background:none;border:0;color:#2d4373;text-align:left;padding:9px 16px 9px 52px;cursor:pointer;font:600 13.5px inherit;width:100%}
+.lgleague:hover{background:#eef2fb;color:#1447e6}
+.lgempty{padding:18px;text-align:center;color:#6b7290;font-size:14px}
 [hidden]{display:none!important}
 .toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:var(--won);color:#04220f;padding:10px 16px;border-radius:8px;font-weight:700}
 </style></head>
@@ -83,14 +107,23 @@ th{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.04
     <p class="note">Fixture details (teams, competition, kickoff) will be filled automatically from a sports data API in the backend step. For now, add them by hand or use the button below once the API is connected.</p>
     <form id="fxForm">
       <div class="grid">
-        <div><label>Sport</label><select name="sport"><option value="football">Football</option><option value="basketball">Basketball</option></select></div>
-        <div><label>Competition</label><input name="competition" list="comps" required placeholder="e.g. Premier League"></div>
+        <div><label>Sport</label>
+          <div class="seg" role="group" aria-label="Sport"><button type="button" data-sport="football" aria-pressed="true">⚽ Football</button><button type="button" class="bb" data-sport="basketball" aria-pressed="false">🏀 Basketball</button></div>
+          <input type="hidden" name="sport" value="football"></div>
+        <div><label>Competition</label>
+          <div class="lgwrap">
+            <button class="lg-select" type="button" id="lgBtn" aria-haspopup="true" aria-expanded="false">🌍 Select A League ▾</button>
+            <div class="lgpanel" id="lgPanel" hidden>
+              <div class="lgsearch"><input id="lgSearch" type="search" placeholder="Search any country or league…" autocomplete="off"></div>
+              <div class="lgpanel-body" id="lgBody"></div>
+            </div>
+          </div>
+          <input type="hidden" name="country"><input type="hidden" name="competition"></div>
         <div><label>Home team</label><input name="home" required></div>
         <div><label>Away team</label><input name="away" required></div>
         <div><label>Kick-off</label><input name="kickoff" type="datetime-local" required></div>
       </div>
-      <datalist id="comps"></datalist>
-      <div class="row end">
+            <div class="row end">
         <button type="button" class="btn ghost" disabled title="Connected in the backend step">Load fixtures from API</button>
         <button class="btn">Add fixture</button>
       </div>
@@ -155,6 +188,7 @@ th{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.04
 
 <div class="toast" id="toast" hidden></div>
 
+<script src="leagues.js"></script>
 <script>
 /* ============ CONFIG (edit here) ============ */
 const CONFIG = {
@@ -164,7 +198,6 @@ const CONFIG = {
     football:   ["1X2 / Double Chance","Over/Under Goals","Both Teams To Score","Handicap","HT/FT","Correct Score","Other"],
     basketball: ["Moneyline","Spread","Total Over/Under","Player Prop","Other"]
   },
-  COMPETITIONS: ["Premier League","La Liga","Bundesliga","Serie A","Ligue 1","Champions League","NPFL","NBA","WNBA","EuroLeague","Liga ACB","NBL","NCAA"]
 };
 
 /* ============ DATA LAYER (swap for Firebase later) ============ */
@@ -189,7 +222,6 @@ $("#loginBtn").onclick = () => {
 };
 $("#pw").addEventListener("keydown",e=>{ if(e.key==="Enter") $("#loginBtn").click(); });
 $("#logout").onclick = () => { try{sessionStorage.removeItem("pb_in")}catch(e){} location.reload(); };
-try{ if(sessionStorage.getItem("pb_in")) enter(); }catch(e){}
 
 /* ============ TABS ============ */
 function showTab(name){
@@ -199,12 +231,65 @@ function showTab(name){
 document.querySelectorAll("nav.tabs button").forEach(b=>b.onclick=()=>{ if(b.dataset.tab==="picks") resetPick(); showTab(b.dataset.tab); });
 
 /* ============ FIXTURES ============ */
-$("#comps").innerHTML = CONFIG.COMPETITIONS.map(c=>`<option value="${esc(c)}">`).join("");
-$("#fxForm").onsubmit = e => {
+/* ---- sport toggle + league picker ---- */
+const fxForm = $("#fxForm");
+const LG = window.PB_LEAGUES || {football:[],basketball:[],top:{football:[],basketball:[]}};
+let sport = "football";
+function setLeague(country, league){
+  fxForm.country.value = country||""; fxForm.competition.value = league||"";
+  ("#lgBtn").textContent=league?`{country} · ${league} ▾` : "🌍 Select A League ▾";
+}
+function setSport(sp){
+  sport = sp; fxForm.sport.value = sp;
+  document.querySelectorAll(".seg button").forEach(b=>b.setAttribute("aria-pressed", b.dataset.sport===sp));
+  $("#lgBtn").classList.toggle("bb", sp==="basketball");
+  setLeague("",""); buildPanel(""); closePanel();
+}
+function groupHtml(key, badge, label, leagues, top){
+  return `<div class="lggroup${top?" lgtop":""}"><button type="button" class="lgcountry" data-key="esc(key)"aria-expanded="false"><spanclass="badge">{esc(badge)}</span><span class="lgname">esc(label)</span><spanclass="toggle">+</span></button><divclass="lgsub"hidden>{leagues.map(([c,l])=>`<button type="button" class="lgleague" data-c="esc(c)"data-l="{esc(l)}"><span>esc(l)</span><span>{sport==="football"?"⚽":"🏀"}</span></button>`).join("")}</div></div>`;
+}
+const norm = t => String(t).normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase();
+function buildPanel(q){
+  q = norm(q.trim()); let html = "";
+  const match = (c,l) => !q || norm(c).includes(q) || norm(l).includes(q);
+  if(!q && LG.top[sport]?.length) html += groupHtml("__top__","⭐","Top League",LG.top[sport],true);
+  for(const g of LG[sport]){
+    const rows = g.l.filter(l=>match(g.c,l)).map(l=>[g.c,l]);
+    if(rows.length) html += groupHtml(g.c, g.code, g.c, rows, false);
+  }
+  const body = ("#lgBody");body.innerHTML=html||`<divclass="lgempty">{LG[sport].length?"No match.":"leagues.js is missing. Upload it next to admin.html."}</div>`;
+  if(q) body.querySelectorAll(".lgcountry").forEach(b=>toggleGroup(b,true));
+}
+function toggleGroup(b, open){
+  b.setAttribute("aria-expanded", String(open));
+  b.querySelector(".toggle").textContent = open ? "−" : "+";
+  b.nextElementSibling.hidden = !open;
+}
+function closePanel(){ $("#lgPanel").hidden = true; $("#lgBtn").setAttribute("aria-expanded","false"); }
+$("#lgBtn").onclick = e => {
+  e.stopPropagation();
+  const open = $("#lgPanel").hidden;
+  $("#lgPanel").hidden = !open; $("#lgBtn").setAttribute("aria-expanded", String(open));
+  if(open){ $("#lgSearch").value=""; buildPanel(""); $("#lgSearch").focus(); }
+};
+$("#lgSearch").oninput = e => buildPanel(e.target.value);
+$("#lgBody").onclick = e => {
+  const g = e.target.closest(".lgcountry");
+  if(g) return toggleGroup(g, g.getAttribute("aria-expanded")!=="true");
+  const l = e.target.closest(".lgleague");
+  if(l){ setLeague(l.dataset.c, l.dataset.l); closePanel(); }
+};
+document.addEventListener("click", e => { if(!$("#lgPanel").hidden && !$("#lgPanel").contains(e.target)) closePanel(); });
+document.addEventListener("keydown", e => { if(e.key==="Escape") closePanel(); });
+document.querySelectorAll(".seg button").forEach(b=>b.onclick=()=>setSport(b.dataset.sport));
+const compLabel = f => f.country ? `${f.country} · ${f.competition}` : (f.competition||"");
+
+fxForm.onsubmit = e => {
   e.preventDefault();
-  const f = Object.fromEntries(new FormData(e.target));
+  const f = Object.fromEntries(new FormData(fxForm));
+  if(!f.competition) return toast("Select a league first");
   db.fixtures.push({id:uid(), ...f});
-  e.target.reset(); commit(); toast("Fixture added");
+  fxForm.reset(); setSport(sport); commit(); toast("Fixture added");
 };
 function delFixture(id){
   if(db.picks.some(p=>p.fixtureId===id) && !confirm("This fixture has picks. Delete it and its picks?")) return;
@@ -225,9 +310,7 @@ function fillMarkets(){
 pkForm.fixtureId.onchange = fillMarkets;
 function resetPick(fixtureId){
   pkForm.reset(); pkForm.id.value="";
-  $("#pickTitle").textContent="New pick";
-  pkForm.fixtureId.innerHTML = db.fixtures.length
-    ? db.fixtures.slice().sort((a,b)=>a.kickoff.localeCompare(b.kickoff)).map(f=>`<option value="${f.id}">${esc(f.home)} v ${esc(f.away)} · ${esc(fmt(f.kickoff))}</option>`).join("")
+  ("#pickTitle").textContent="Newpick";pkForm.fixtureId.innerHTML=db.fixtures.length?db.fixtures.slice().sort((a,b)=>a.kickoff.localeCompare(b.kickoff)).map(f=>`<optionvalue="{f.id}">${esc(f.home)} v ${esc(f.away)} · ${esc(fmt(f.kickoff))}</option>`).join("")
     : `<option value="">Add a fixture first</option>`;
   if(fixtureId) pkForm.fixtureId.value = fixtureId;
   fillMarkets();
@@ -259,13 +342,11 @@ $("#fStatus").onchange = render;
 
 /* ============ RENDER ============ */
 function render(){
-  $("#stats").textContent = `${db.fixtures.length} fixtures · ${db.picks.filter(p=>p.status==="published").length} live`;
+  ("#stats").textContent=`{db.fixtures.length} fixtures · ${db.picks.filter(p=>p.status==="published").length} live`;
   const fxs = db.fixtures.slice().sort((a,b)=>a.kickoff.localeCompare(b.kickoff));
-  $("#fxCount").textContent = fxs.length?`(${fxs.length})`:"";
-  $("#fxBody").innerHTML = fxs.length ? fxs.map(f=>`<tr>
-    <td>${esc(fmt(f.kickoff))}</td><td><b>${esc(f.home)}</b> v <b>${esc(f.away)}</b><br><span class="muted">${f.sport==="football"?"Football":"Basketball"}</span></td>
-    <td>${esc(f.competition)}</td>
-    <td class="row"><button class="btn sm" onclick="pickFor('${f.id}')">Add pick</button><button class="btn danger sm" onclick="delFixture('${f.id}')">Delete</button></td></tr>`).join("")
+  ("#fxCount").textContent=fxs.length?`({fxs.length})`:"";
+  ("#fxBody").innerHTML=fxs.length?fxs.map(f=>`<tr><td>{esc(fmt(f.kickoff))}</td><td><b>esc(f.home)</b>v<b>{esc(f.away)}</b><br><span class="muted">f.sport==="football"?"Football":"Basketball"</span></td><td>{esc(compLabel(f))}</td>
+    <td class="row"><button class="btn sm" onclick="pickFor('f.id')">Addpick</button><buttonclass="btndangersm"onclick="delFixture('{f.id}')">Delete</button></td></tr>`).join("")
     : `<tr><td colspan="4" class="empty">No fixtures yet.</td></tr>`;
 
   const flt = $("#fStatus").value;
@@ -273,11 +354,10 @@ function render(){
   $("#pkBody").innerHTML = picks.length ? picks.map(p=>{
     const f = db.fixtures.find(x=>x.id===p.fixtureId)||{home:"?",away:"?"};
     return `<tr>
-      <td><b>${esc(f.home)}</b> v <b>${esc(f.away)}</b><br><span class="muted">${esc(f.competition||"")} · ${esc(p.slot)}</span></td>
-      <td>${esc(p.selection)}<br><span class="muted">${esc(p.market)}${p.odds?` @ ${esc(p.odds)}`:""} · ${esc(p.confidence)}</span> ${p.access==="premium"?'<span class="tag prem">Premium</span>':""}</td>
-      <td><span class="tag ${p.status==="published"?"live":"draft"}">${p.status==="published"?"Live":"Draft"}</span></td>
-      <td><select onchange="setResult('${p.id}',this.value)" style="width:auto">${["pending","won","lost","void"].map(r=>`<option ${p.result===r?"selected":""}>${r}</option>`).join("")}</select></td>
-      <td class="row"><button class="btn ghost sm" onclick="editPick('${p.id}')">Edit</button><button class="btn ghost sm" onclick="toggleStatus('${p.id}')">${p.status==="published"?"Unpublish":"Publish"}</button><button class="btn danger sm" onclick="delPick('${p.id}')">Delete</button></td></tr>`;
+      <td><b>${esc(f.home)}</b> v <b>esc(f.away)</b><br><spanclass="muted">{esc(compLabel(f))} · esc(p.slot)</span></td><td>{esc(p.selection)}<br><span class="muted">esc(p.market){p.odds?` @ ${esc(p.odds)}`:""} · ${esc(p.confidence)}</span> ${p.access==="premium"?'<span class="tag prem">Premium</span>':""}</td>
+      <td><span class="tag p.status==="published"?"live":"draft"">{p.status==="published"?"Live":"Draft"}</span></td>
+      <td><select onchange="setResult('p.id',this.value)"style="width:auto">{["pending","won","lost","void"].map(r=>`<option p.result===r?"selected":"">{r}</option>`).join("")}</select></td>
+      <td class="row"><button class="btn ghost sm" onclick="editPick('p.id')">Edit</button><buttonclass="btnghostsm"onclick="toggleStatus('{p.id}')">p.status==="published"?"Unpublish":"Publish"</button><buttonclass="btndangersm"onclick="delPick('{p.id}')">Delete</button></td></tr>`;
   }).join("") : `<tr><td colspan="5" class="empty">No picks yet.</td></tr>`;
 }
 
@@ -294,7 +374,6 @@ $("#imp").onchange = e => {
 $("#wipe").onclick = () => { if(confirm("Erase all fixtures and picks from this browser?")){ db={fixtures:[],picks:[]}; commit(); } };
 
 resetPick();
+try{ if(sessionStorage.getItem("pb_in")) enter(); }catch(e){}
 </script>
-</body></html>
-
-
+</body></html> 
