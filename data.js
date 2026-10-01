@@ -124,31 +124,32 @@ window.PB = {
      p = [home win %, draw %, away win %]
      o   = odds for [1, X, 2]  (shown in the full football table)
      pk  = our pick for the full football table: "1", "X" or "2"
+     gg/ggo = GG or NG pick and its odds;  ou/ouo = Over or Under 2.5 and its odds
      tip = pick shown in the compact homepage panel (1, X, 2, 1X, X2, GG, NG, +2.5 ...)
      score = final score once played, e.g. "2:1" (leave "" before kickoff)
      featured: true = shows on the homepage featured panel            */
   football: {
     yesterday: [
-      { t:"20:00", lg:"ucl",   h:"Liverpool",       a:"Atalanta",        p:[61,22,17], o:["1.52","4.23","5.47"], pk:"1", tip:"1",   htft:"1/1", cs:"2-0", score:"3:1", st:"won",  featured:true },
-      { t:"20:00", lg:"ucl",   h:"Bayern Munich",   a:"Sporting CP",     p:[72,16,12], o:["1.29","5.81","7.75"], pk:"1", tip:"+2.5",htft:"1/1", cs:"3-1", score:"4:1", st:"won",  featured:true },
-      { t:"17:45", lg:"ucl",   h:"Olympiacos",      a:"Atletico Madrid", p:[24,28,48], o:["3.88","3.32","1.94"], pk:"2", tip:"X2",  htft:"X/2", cs:"0-1", score:"1:1", st:"won",  featured:true },
-      { t:"20:45", lg:"champ", h:"Stoke City",      a:"Watford",         p:[38,30,32], o:["2.45","3.10","2.91"], pk:"1", tip:"1",   htft:"X/1", cs:"1-0", score:"0:2", st:"lost" },
-      { t:"16:00", lg:"npfl",  h:"Kano Pillars",    a:"Shooting Stars",  p:[51,31,18], o:["1.82","3.00","5.17"], pk:"1", tip:"1X",  htft:"X/1", cs:"1-0", score:"1:0", st:"won" }
+      { t:"20:00", lg:"ucl",   h:"Liverpool",       a:"Atalanta",        p:[61,22,17], o:["1.52","4.23","5.47"], pk:"1", gg:"GG", ggo:"1.72", ou:"Under", ouo:"1.95", tip:"1",   htft:"1/1", cs:"2-0", score:"3:1", st:"won",  featured:true },
+      { t:"20:00", lg:"ucl",   h:"Bayern Munich",   a:"Sporting CP",     p:[72,16,12], o:["1.29","5.81","7.75"], pk:"1", gg:"NG", ggo:"1.95", ou:"Over", ouo:"2.05", tip:"+2.5",htft:"1/1", cs:"3-1", score:"4:1", st:"won",  featured:true },
+      { t:"17:45", lg:"ucl",   h:"Olympiacos",      a:"Atletico Madrid", p:[24,28,48], o:["3.88","3.32","1.94"], pk:"2", gg:"GG", ggo:"1.65", ou:"Over", ouo:"1.90", tip:"X2",  htft:"X/2", cs:"0-1", score:"1:1", st:"won",  featured:true },
+      { t:"20:45", lg:"champ", h:"Stoke City",      a:"Watford",         p:[38,30,32], o:["2.45","3.10","2.91"], pk:"1", gg:"NG", ggo:"2.05", ou:"Over", ouo:"1.75", tip:"1",   htft:"X/1", cs:"1-0", score:"0:2", st:"lost" },
+      { t:"16:00", lg:"npfl",  h:"Kano Pillars",    a:"Shooting Stars",  p:[51,31,18], o:["1.82","3.00","5.17"], pk:"1", gg:"GG", ggo:"1.80", ou:"Under", ouo:"1.85", tip:"1X",  htft:"X/1", cs:"1-0", score:"1:0", st:"won" }
     ],
     today: [
-      { t:"17:45", lg:"ucl",   h:"Galatasaray",     a:"Borussia Dortmund", p:[33,26,41], o:["2.82","3.58","2.27"], pk:"2", tip:"GG",  htft:"X/2", cs:"1-2", score:"", st:"pending", featured:true },
-      { t:"17:45", lg:"ucl",   h:"Inter",           a:"Club Brugge",     p:[58,24,18], o:["1.60","3.88","5.17"], pk:"1", tip:"1X",  htft:"1/1", cs:"2-0", score:"", st:"pending" },
-      { t:"20:00", lg:"ucl",   h:"Real Madrid",     a:"Benfica",         p:[64,20,16], o:["1.45","4.65","5.81"], pk:"1", tip:"1",   htft:"1/1", cs:"2-0", score:"", st:"pending", featured:true },
-      { t:"20:00", lg:"ucl",   h:"Arsenal",         a:"PSV Eindhoven",   p:[68,19,13], o:["1.37","4.89","7.15"], pk:"1", tip:"+2.5",htft:"1/1", cs:"3-1", score:"", st:"pending", featured:true },
-      { t:"20:45", lg:"champ", h:"Sheffield Wednesday", a:"Middlesbrough", p:[28,27,45], o:["3.32","3.44","2.07"], pk:"2", tip:"X2", htft:"X/2", cs:"1-2", score:"", st:"pending" },
-      { t:"20:45", lg:"champ", h:"Norwich City",    a:"Coventry City",   p:[40,28,32], o:["2.33","3.32","2.91"], pk:"1", tip:"+1.5",htft:"1/1", cs:"2-1", score:"", st:"pending" },
-      { t:"16:00", lg:"npfl",  h:"Enyimba",         a:"Rangers International", p:[48,32,20], o:["1.94","2.91","4.65"], pk:"1", tip:"1X", htft:"X/1", cs:"1-0", score:"", st:"pending" }
+      { t:"17:45", lg:"ucl",   h:"Galatasaray",     a:"Borussia Dortmund", p:[33,26,41], o:["2.82","3.58","2.27"], pk:"2", gg:"GG", ggo:"1.72", ou:"Under", ouo:"1.95", tip:"GG",  htft:"X/2", cs:"1-2", score:"", st:"pending", featured:true },
+      { t:"17:45", lg:"ucl",   h:"Inter",           a:"Club Brugge",     p:[58,24,18], o:["1.60","3.88","5.17"], pk:"1", gg:"NG", ggo:"1.95", ou:"Over", ouo:"2.05", tip:"1X",  htft:"1/1", cs:"2-0", score:"", st:"pending" },
+      { t:"20:00", lg:"ucl",   h:"Real Madrid",     a:"Benfica",         p:[64,20,16], o:["1.45","4.65","5.81"], pk:"1", gg:"GG", ggo:"1.65", ou:"Over", ouo:"1.90", tip:"1",   htft:"1/1", cs:"2-0", score:"", st:"pending", featured:true },
+      { t:"20:00", lg:"ucl",   h:"Arsenal",         a:"PSV Eindhoven",   p:[68,19,13], o:["1.37","4.89","7.15"], pk:"1", gg:"NG", ggo:"2.05", ou:"Over", ouo:"1.75", tip:"+2.5",htft:"1/1", cs:"3-1", score:"", st:"pending", featured:true },
+      { t:"20:45", lg:"champ", h:"Sheffield Wednesday", a:"Middlesbrough", p:[28,27,45], o:["3.32","3.44","2.07"], pk:"2", gg:"GG", ggo:"1.80", ou:"Under", ouo:"1.85", tip:"X2", htft:"X/2", cs:"1-2", score:"", st:"pending" },
+      { t:"20:45", lg:"champ", h:"Norwich City",    a:"Coventry City",   p:[40,28,32], o:["2.33","3.32","2.91"], pk:"1", gg:"GG", ggo:"1.72", ou:"Under", ouo:"1.95", tip:"+1.5",htft:"1/1", cs:"2-1", score:"", st:"pending" },
+      { t:"16:00", lg:"npfl",  h:"Enyimba",         a:"Rangers International", p:[48,32,20], o:["1.94","2.91","4.65"], pk:"1", gg:"NG", ggo:"1.95", ou:"Over", ouo:"2.05", tip:"1X", htft:"X/1", cs:"1-0", score:"", st:"pending" }
     ],
     tomorrow: [
-      { t:"17:45", lg:"ucl",   h:"Napoli",          a:"Monaco",          p:[52,26,22], o:["1.79","3.58","4.23"], pk:"1", tip:"1",   htft:"X/1", cs:"2-1", score:"", st:"pending", featured:true },
-      { t:"20:00", lg:"ucl",   h:"Manchester City", a:"Feyenoord",       p:[78,13,9], o:["1.19","7.15","10.33"], pk:"1",  tip:"1",   htft:"1/1", cs:"3-0", score:"", st:"pending", featured:true },
-      { t:"20:00", lg:"ucl",   h:"Juventus",        a:"Barcelona",       p:[30,27,43], o:["3.10","3.44","2.16"], pk:"2", tip:"GG",  htft:"X/2", cs:"1-2", score:"", st:"pending", featured:true },
-      { t:"16:00", lg:"npfl",  h:"Remo Stars",      a:"Plateau United",  p:[46,33,21], o:["2.02","2.82","4.43"], pk:"1", tip:"-2.5",htft:"X/1", cs:"1-0", score:"", st:"pending" }
+      { t:"17:45", lg:"ucl",   h:"Napoli",          a:"Monaco",          p:[52,26,22], o:["1.79","3.58","4.23"], pk:"1", gg:"GG", ggo:"1.65", ou:"Over", ouo:"1.90", tip:"1",   htft:"X/1", cs:"2-1", score:"", st:"pending", featured:true },
+      { t:"20:00", lg:"ucl",   h:"Manchester City", a:"Feyenoord",       p:[78,13,9], o:["1.19","7.15","10.33"], pk:"1", gg:"NG", ggo:"2.05", ou:"Over", ouo:"1.75",  tip:"1",   htft:"1/1", cs:"3-0", score:"", st:"pending", featured:true },
+      { t:"20:00", lg:"ucl",   h:"Juventus",        a:"Barcelona",       p:[30,27,43], o:["3.10","3.44","2.16"], pk:"2", gg:"GG", ggo:"1.80", ou:"Under", ouo:"1.85", tip:"GG",  htft:"X/2", cs:"1-2", score:"", st:"pending", featured:true },
+      { t:"16:00", lg:"npfl",  h:"Remo Stars",      a:"Plateau United",  p:[46,33,21], o:["2.02","2.82","4.43"], pk:"1", gg:"GG", ggo:"1.72", ou:"Under", ouo:"1.95", tip:"-2.5",htft:"X/1", cs:"1-0", score:"", st:"pending" }
     ]
   },
 
@@ -203,21 +204,48 @@ window.PB = {
   /* Best player props: k = market key from propMarkets. Player rows: player, line, pick (Over/Under).
      Team rows: team only.  SAMPLE DATA. */
   playerProps: [
-    { k:"pts",  player:"Luka Doncic",      team:"Real Madrid",  opp:"vs Olympiacos",    line:"28.5", pick:"Over",  odds:"1.85" },
-    { k:"pts",  player:"Mike James",       team:"AS Monaco",    opp:"vs Barcelona",     line:"19.5", pick:"Over",  odds:"1.90" },
-    { k:"reb",  player:"Nikola Mirotic",   team:"Barcelona",    opp:"vs AS Monaco",     line:"7.5",  pick:"Over",  odds:"1.80" },
-    { k:"ast",  player:"Shane Larkin",     team:"Anadolu Efes", opp:"vs Panathinaikos", line:"6.5",  pick:"Over",  odds:"1.90" },
-    { k:"pra",  player:"Luka Doncic",      team:"Real Madrid",  opp:"vs Olympiacos",    line:"45.5", pick:"Over",  odds:"1.95" },
-    { k:"3ps",  player:"Vasilije Micic",   team:"Real Madrid",  opp:"vs Olympiacos",    line:"2.5",  pick:"Over",  odds:"2.05" },
-    { k:"3pa",  player:"Mike James",       team:"AS Monaco",    opp:"vs Barcelona",     line:"6.5",  pick:"Over",  odds:"1.85" },
-    { k:"blk",  player:"Edy Tavares",      team:"Real Madrid",  opp:"vs Olympiacos",    line:"1.5",  pick:"Over",  odds:"1.75" },
-    { k:"stl",  player:"Shane Larkin",     team:"Anadolu Efes", opp:"vs Panathinaikos", line:"1.5",  pick:"Over",  odds:"2.00" },
-    { k:"tov",  player:"Luka Doncic",      team:"Real Madrid",  opp:"vs Olympiacos",    line:"3.5",  pick:"Under", odds:"1.90" },
-    { k:"t3pt", team:"Real Madrid",  opp:"vs Olympiacos",    odds:"1.80" },
-    { k:"treb", team:"Barcelona",    opp:"vs AS Monaco",     odds:"1.85" },
+    { k:"pts", player:"Luka Doncic", team:"Real Madrid", opp:"vs Olympiacos", line:"28.5", pick:"Over", odds:"1.85" },
+    { k:"pts", player:"Mike James", team:"AS Monaco", opp:"vs Barcelona", line:"19.5", pick:"Over", odds:"1.90" },
+    { k:"pts", player:"Shane Larkin", team:"Anadolu Efes", opp:"vs Panathinaikos", line:"17.5", pick:"Over", odds:"1.88" },
+    { k:"pts", player:"Kostas Sloukas", team:"Fenerbahce", opp:"vs Panathinaikos", line:"14.5", pick:"Under", odds:"1.92" },
+    { k:"reb", player:"Nikola Mirotic", team:"Barcelona", opp:"vs AS Monaco", line:"7.5", pick:"Over", odds:"1.80" },
+    { k:"reb", player:"Edy Tavares", team:"Real Madrid", opp:"vs Olympiacos", line:"8.5", pick:"Over", odds:"1.85" },
+    { k:"reb", player:"Chima Moneke", team:"Valencia Basket", opp:"vs Baskonia", line:"6.5", pick:"Under", odds:"1.95" },
+    { k:"ast", player:"Shane Larkin", team:"Anadolu Efes", opp:"vs Panathinaikos", line:"6.5", pick:"Over", odds:"1.90" },
+    { k:"ast", player:"Facundo Campazzo", team:"Real Madrid", opp:"vs Olympiacos", line:"6.5", pick:"Over", odds:"1.83" },
+    { k:"ast", player:"Mike James", team:"AS Monaco", opp:"vs Barcelona", line:"5.5", pick:"Under", odds:"2.00" },
+    { k:"pra", player:"Luka Doncic", team:"Real Madrid", opp:"vs Olympiacos", line:"45.5", pick:"Over", odds:"1.95" },
+    { k:"pra", player:"Mike James", team:"AS Monaco", opp:"vs Barcelona", line:"32.5", pick:"Over", odds:"1.90" },
+    { k:"pra", player:"Nikola Mirotic", team:"Barcelona", opp:"vs AS Monaco", line:"24.5", pick:"Under", odds:"1.87" },
+    { k:"3ps", player:"Vasilije Micic", team:"Real Madrid", opp:"vs Olympiacos", line:"2.5", pick:"Over", odds:"2.05" },
+    { k:"3ps", player:"Mike James", team:"AS Monaco", opp:"vs Barcelona", line:"2.5", pick:"Over", odds:"1.95" },
+    { k:"3ps", player:"Shane Larkin", team:"Anadolu Efes", opp:"vs Panathinaikos", line:"2.5", pick:"Under", odds:"1.85" },
+    { k:"3pa", player:"Mike James", team:"AS Monaco", opp:"vs Barcelona", line:"6.5", pick:"Over", odds:"1.85" },
+    { k:"3pa", player:"Vasilije Micic", team:"Real Madrid", opp:"vs Olympiacos", line:"5.5", pick:"Over", odds:"1.90" },
+    { k:"3pa", player:"Luka Doncic", team:"Real Madrid", opp:"vs Olympiacos", line:"9.5", pick:"Over", odds:"1.80" },
+    { k:"blk", player:"Edy Tavares", team:"Real Madrid", opp:"vs Olympiacos", line:"1.5", pick:"Over", odds:"1.75" },
+    { k:"blk", player:"Nikola Mirotic", team:"Barcelona", opp:"vs AS Monaco", line:"0.5", pick:"Over", odds:"1.70" },
+    { k:"blk", player:"Chima Moneke", team:"Valencia Basket", opp:"vs Baskonia", line:"0.5", pick:"Over", odds:"1.85" },
+    { k:"stl", player:"Shane Larkin", team:"Anadolu Efes", opp:"vs Panathinaikos", line:"1.5", pick:"Over", odds:"2.00" },
+    { k:"stl", player:"Facundo Campazzo", team:"Real Madrid", opp:"vs Olympiacos", line:"1.5", pick:"Over", odds:"1.95" },
+    { k:"stl", player:"Mike James", team:"AS Monaco", opp:"vs Barcelona", line:"1.5", pick:"Under", odds:"1.80" },
+    { k:"tov", player:"Luka Doncic", team:"Real Madrid", opp:"vs Olympiacos", line:"3.5", pick:"Under", odds:"1.90" },
+    { k:"tov", player:"Mike James", team:"AS Monaco", opp:"vs Barcelona", line:"2.5", pick:"Over", odds:"1.85" },
+    { k:"tov", player:"Shane Larkin", team:"Anadolu Efes", opp:"vs Panathinaikos", line:"2.5", pick:"Under", odds:"1.95" },
+    { k:"t3pt", team:"Real Madrid", opp:"vs Olympiacos", odds:"1.80" },
+    { k:"t3pt", team:"Barcelona", opp:"vs AS Monaco", odds:"1.95" },
+    { k:"t3pt", team:"Fenerbahce", opp:"vs Panathinaikos", odds:"2.10" },
+    { k:"treb", team:"Barcelona", opp:"vs AS Monaco", odds:"1.85" },
+    { k:"treb", team:"Real Madrid", opp:"vs Olympiacos", odds:"1.70" },
+    { k:"treb", team:"Valencia Basket", opp:"vs Baskonia", odds:"1.90" },
     { k:"tast", team:"Anadolu Efes", opp:"vs Panathinaikos", odds:"1.90" },
-    { k:"t2fg", team:"AS Monaco",    opp:"vs Barcelona",     odds:"2.05" }
+    { k:"tast", team:"Real Madrid", opp:"vs Olympiacos", odds:"1.80" },
+    { k:"tast", team:"AS Monaco", opp:"vs Barcelona", odds:"2.00" },
+    { k:"t2fg", team:"AS Monaco", opp:"vs Barcelona", odds:"2.05" },
+    { k:"t2fg", team:"Real Madrid", opp:"vs Olympiacos", odds:"1.75" },
+    { k:"t2fg", team:"Fenerbahce", opp:"vs Panathinaikos", odds:"1.95" }
   ],
+
 
 
   /* ---------- VALUE BET OF THE DAY ---------- */

@@ -136,14 +136,15 @@ function scoreLine(m){return m.score?'<span class="sc">'+esc(m.score)+'</span>':
 
 /* ---------- full prediction tables ---------- */
 function oddCell(m,i,k){var v=m.o&&m.o[i]?m.o[i]:"-";return '<td><span class="odd'+(m.pk===k?" pk":"")+'">'+esc(v)+'</span></td>'}
+function extraPick(label,odds){return '<td>'+(label?'<span class="xp"><b>'+esc(label)+'</b><i>'+esc(odds||"")+'</i></span>':'-')+'</td>'}
 function pkBadge(m){return '<span class="tip '+(m.st==="won"?"won":m.st==="lost"?"lost":"")+'" title="'+esc(m.st)+'">'+esc(m.pk||m.tip||"-")+'</span>'}
 function footballTable(list){
   if(!list.length)return '<div class="empty">No football ⚽ predictions for this day yet.</div>';
   var played=list.some(function(m){return m.score});
-  return '<div class="tscroll bwwrap"><table class="pt bw"><thead><tr><th>Time</th><th class="l">Competition</th><th class="l">Home</th><th class="l">Away</th><th>1</th><th>X</th><th>2</th><th>Tips</th><th>CS Tips</th>'+(played?'<th>Result</th>':'')+'</tr></thead><tbody>'+
+  return '<div class="tscroll bwwrap"><table class="pt bw"><thead><tr><th>Time</th><th class="l">Competition</th><th class="l">Home</th><th class="l">Away</th><th>1</th><th>X</th><th>2</th><th>Tips</th><th>GG/NG</th><th>Over/Under 2.5</th><th>CS Tips</th>'+(played?'<th>Result</th>':'')+'</tr></thead><tbody>'+
     sortByLeague(list).map(function(m){
       return '<tr><td class="tm">'+esc(m.t)+'</td><td class="l lgn">'+esc(lgName(m.lg))+'</td><td class="l team"><b>'+esc(m.h)+'</b></td><td class="l team"><b>'+esc(m.a)+'</b></td>'+
-        oddCell(m,0,"1")+oddCell(m,1,"X")+oddCell(m,2,"2")+'<td>'+pkBadge(m)+'</td><td class="cs">'+esc(m.cs)+'</td>'+(played?'<td class="res">'+(m.score?esc(m.score):'-:-')+'</td>':'')+'</tr>';
+        oddCell(m,0,"1")+oddCell(m,1,"X")+oddCell(m,2,"2")+'<td>'+pkBadge(m)+'</td>'+extraPick(m.gg,m.ggo)+extraPick(m.ou?(m.ou==="Over"?"Over 2.5":"Under 2.5"):"",m.ouo)+'<td class="cs">'+esc(m.cs)+'</td>'+(played?'<td class="res">'+(m.score?esc(m.score):'-:-')+'</td>':'')+'</tr>';
     }).join("")+
     '</tbody></table></div>';
 }

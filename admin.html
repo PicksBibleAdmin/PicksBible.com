@@ -107,7 +107,7 @@ th{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.04
     <label for="pw">Password</label>
     <input id="pw" type="password" autocomplete="current-password">
     <div class="row end"><button class="btn" id="loginBtn">Sign in</button></div>
-    <p class="muted" style="font-size:11px;margin:10px 0 0">Build 2026-10-01-E</p>
+    <p class="muted" style="font-size:11px;margin:10px 0 0">Build 2026-10-01-F</p>
     <p id="loginErr" class="muted" style="color:var(--lost)" hidden>Wrong password.</p>
   </div>
 </div>
@@ -170,9 +170,9 @@ th{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.04
 <section id="tab-fbtable" hidden>
   <div class="card">
     <h2>Football table <span class="muted" id="fbCount"></span></h2>
-    <p class="note">One row per football fixture (add fixtures in tab 1). Enter the odds for 1, X and 2, choose your <b>Tip</b> (1, X or 2), add a correct-score tip, then switch the match <b>Live</b>. Changes save automatically.</p>
+    <p class="note">One row per football fixture (add fixtures in tab 1). Enter the odds for 1, X and 2, choose your <b>Tip</b> (1, X or 2), then your <b>GG/NG</b> and <b>Over/Under 2.5</b> picks with their odds, add a correct-score tip, and switch the match <b>Live</b>. Changes save automatically.</p>
     <div class="tbl"><table class="ft">
-      <thead><tr><th>Time</th><th>Competition</th><th>Home</th><th>Away</th><th>1</th><th>X</th><th>2</th><th>Tips</th><th>CS tips</th><th>Live</th></tr></thead>
+      <thead><tr><th>Time</th><th>Competition</th><th>Home</th><th>Away</th><th>1</th><th>X</th><th>2</th><th>Tips</th><th>GG / NG</th><th>Over / Under 2.5</th><th>CS tips</th><th>Live</th></tr></thead>
       <tbody id="fbBody"></tbody>
     </table></div>
   </div>
@@ -371,7 +371,7 @@ function pickFor(id){ resetPick(id); showTab("picks"); }
 
 
 /* ============ FOOTBALL TABLE ============ */
-const fbDefaults = () => ({tip:"",o1:"",oX:"",o2:"",cs:"",live:false});
+const fbDefaults = () => ({tip:"",o1:"",oX:"",o2:"",btts:"",bttsOdds:"",ou:"",ouOdds:"",cs:"",live:false});
 const fbOf = f => { const v = Object.assign(fbDefaults(), f.fb||{}); if(!v.tip && v.pick) v.tip = v.pick; return v; };
 const hhmm = iso => { const d=new Date(iso); return isNaN(d)?"":d.toLocaleTimeString([], {hour:"2-digit",minute:"2-digit",hour12:false}); };
 const dmon = iso => { const d=new Date(iso); return isNaN(d)?"":d.toLocaleDateString([], {day:"2-digit",month:"short"}); };
@@ -387,9 +387,13 @@ function renderFb(){
       <td class="tm"><b>${esc(f.home)}</b></td><td class="tm"><b>${esc(f.away)}</b></td>
       ${oddIn("o1",v)}${oddIn("oX",v)}${oddIn("o2",v)}
       <td><select data-f="tip" class="tipsel"><option value="">-</option>${["1","X","2"].map(k=>`<option ${v.tip===k?"selected":""}>${k}</option>`).join("")}</select></td>
+      <td><select data-f="btts"><option value="">-</option><option ${v.btts==="GG"?"selected":""}>GG</option><option ${v.btts==="NG"?"selected":""}>NG</option></select>
+          <input class="odd" type="number" step="0.01" min="1" data-f="bttsOdds" value="${esc(v.bttsOdds)}" placeholder="odds"></td>
+      <td><select data-f="ou"><option value="">-</option><option value="Over" ${v.ou==="Over"?"selected":""}>Over 2.5</option><option value="Under" ${v.ou==="Under"?"selected":""}>Under 2.5</option></select>
+          <input class="odd" type="number" step="0.01" min="1" data-f="ouOdds" value="${esc(v.ouOdds)}" placeholder="odds"></td>
       <td><input class="cs" data-f="cs" value="${esc(v.cs)}" placeholder="2-1" maxlength="7"></td>
       <td><label class="sw"><input type="checkbox" data-f="live" ${v.live?"checked":""}><i></i></label></td></tr>`;
-  }).join("") : `<tr><td colspan="10" class="empty">No football fixtures yet. Add one in tab 1 (choose Football).</td></tr>`;
+  }).join("") : `<tr><td colspan="12" class="empty">No football fixtures yet. Add one in tab 1 (choose Football).</td></tr>`;
 }
 $("#fbBody").addEventListener("change", e => {
   const el=e.target, tr=el.closest("tr"); if(!tr||!el.dataset.f) return;
