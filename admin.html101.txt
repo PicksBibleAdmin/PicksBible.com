@@ -1,0 +1,300 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>PicksBible Admin</title>
+<link rel="icon" href="img/pb-logo.png">
+<style>
+:root{--bg:#0b0820;--panel:#141032;--panel-2:#1b1642;--line:#2c2660;--cyan:#22d3ee;--cyan-ink:#062a33;--purple:#6d28d9;--text:#eef0ff;--muted:#a3a8d6;--won:#22c55e;--lost:#ef4444;--pend:#f5b301;--r:10px}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font:15px/1.45 Barlow,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+.wrap{max-width:1000px;margin:0 auto;padding:0 16px}
+header{background:var(--panel);border-bottom:1px solid var(--line)}
+header .wrap{display:flex;align-items:center;gap:12px;padding-top:12px;padding-bottom:12px}
+header img{height:32px}
+header h1{font-size:18px;margin:0;flex:1}
+header h1 small{color:var(--muted);font-weight:500;margin-left:6px}
+nav.tabs{display:flex;gap:6px;flex-wrap:wrap;margin:16px 0}
+nav.tabs button{background:var(--panel);color:var(--muted);border:1px solid var(--line);padding:9px 14px;border-radius:8px;cursor:pointer;font:inherit;font-weight:600}
+nav.tabs button[aria-selected=true]{background:var(--purple);color:#fff;border-color:var(--purple)}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:16px;margin-bottom:16px}
+.card h2{margin:0 0 12px;font-size:17px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px}
+label{display:block;font-size:12px;color:var(--muted);margin-bottom:4px;text-transform:uppercase;letter-spacing:.04em}
+input,select,textarea{width:100%;background:var(--bg);color:var(--text);border:1px solid var(--line);border-radius:8px;padding:10px;font:inherit}
+textarea{min-height:80px;resize:vertical}
+input:focus,select:focus,textarea:focus{outline:2px solid var(--cyan);outline-offset:1px}
+.btn{background:var(--cyan);color:var(--cyan-ink);border:0;border-radius:8px;padding:10px 16px;font:inherit;font-weight:700;cursor:pointer}
+.btn.ghost{background:transparent;color:var(--text);border:1px solid var(--line)}
+.btn.danger{background:transparent;color:var(--lost);border:1px solid var(--lost)}
+.btn.sm{padding:5px 10px;font-size:13px}
+.btn[disabled]{opacity:.45;cursor:not-allowed}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.row.end{justify-content:flex-end;margin-top:12px}
+.muted{color:var(--muted)}
+.note{background:var(--panel-2);border-left:3px solid var(--pend);padding:10px 12px;border-radius:6px;font-size:13px;color:var(--muted);margin:0 0 14px}
+table{width:100%;border-collapse:collapse}
+th,td{text-align:left;padding:9px 8px;border-bottom:1px solid var(--line);vertical-align:top;font-size:14px}
+th{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
+.tbl{overflow-x:auto}
+.tag{display:inline-block;padding:2px 8px;border-radius:99px;font-size:12px;font-weight:700;background:var(--panel-2);border:1px solid var(--line)}
+.tag.won{color:var(--won);border-color:var(--won)}.tag.lost{color:var(--lost);border-color:var(--lost)}
+.tag.pending,.tag.draft{color:var(--pend);border-color:var(--pend)}.tag.live{color:var(--cyan);border-color:var(--cyan)}
+.tag.prem{background:var(--purple);border-color:var(--purple)}
+.empty{text-align:center;color:var(--muted);padding:24px}
+#login{max-width:360px;margin:12vh auto;padding:0 16px}
+[hidden]{display:none!important}
+.toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:var(--won);color:#04220f;padding:10px 16px;border-radius:8px;font-weight:700}
+</style></head>
+<body>
+
+<!-- ============ LOGIN ============ -->
+<div id="login">
+  <div class="card">
+    <h2>PicksBible Admin</h2>
+    <p class="note">Temporary password gate. Real account login (Firebase Auth) is added with the backend step.</p>
+    <label for="pw">Password</label>
+    <input id="pw" type="password" autocomplete="current-password">
+    <div class="row end"><button class="btn" id="loginBtn">Sign in</button></div>
+    <p id="loginErr" class="muted" style="color:var(--lost)" hidden>Wrong password.</p>
+  </div>
+</div>
+
+<!-- ============ APP ============ -->
+<div id="app" hidden>
+<header><div class="wrap">
+  <img src="img/pb-logo.png" alt="">
+  <h1>PicksBible Admin <small id="stats"></small></h1>
+  <button class="btn ghost sm" id="logout">Sign out</button>
+</div></header>
+
+<div class="wrap">
+<nav class="tabs" role="tablist">
+  <button role="tab" data-tab="fixtures" aria-selected="true">1. Fixtures</button>
+  <button role="tab" data-tab="picks" aria-selected="false">2. New pick</button>
+  <button role="tab" data-tab="published" aria-selected="false">3. Picks &amp; results</button>
+  <button role="tab" data-tab="data" aria-selected="false">Data</button>
+</nav>
+
+<!-- FIXTURES -->
+<section id="tab-fixtures">
+  <div class="card">
+    <h2>Add fixture</h2>
+    <p class="note">Fixture details (teams, competition, kickoff) will be filled automatically from a sports data API in the backend step. For now, add them by hand or use the button below once the API is connected.</p>
+    <form id="fxForm">
+      <div class="grid">
+        <div><label>Sport</label><select name="sport"><option value="football">Football</option><option value="basketball">Basketball</option></select></div>
+        <div><label>Competition</label><input name="competition" list="comps" required placeholder="e.g. Premier League"></div>
+        <div><label>Home team</label><input name="home" required></div>
+        <div><label>Away team</label><input name="away" required></div>
+        <div><label>Kick-off</label><input name="kickoff" type="datetime-local" required></div>
+      </div>
+      <datalist id="comps"></datalist>
+      <div class="row end">
+        <button type="button" class="btn ghost" disabled title="Connected in the backend step">Load fixtures from API</button>
+        <button class="btn">Add fixture</button>
+      </div>
+    </form>
+  </div>
+  <div class="card">
+    <h2>Fixtures <span class="muted" id="fxCount"></span></h2>
+    <div class="tbl"><table><thead><tr><th>Kick-off</th><th>Match</th><th>Competition</th><th></th></tr></thead><tbody id="fxBody"></tbody></table></div>
+  </div>
+</section>
+
+<!-- NEW PICK -->
+<section id="tab-picks" hidden>
+  <div class="card">
+    <h2 id="pickTitle">New pick</h2>
+    <form id="pkForm">
+      <input type="hidden" name="id">
+      <div class="grid">
+        <div style="grid-column:1/-1"><label>Fixture</label><select name="fixtureId" required></select></div>
+        <div><label>Bet type (market)</label><select name="market" required></select></div>
+        <div><label>Your pick</label><input name="selection" required placeholder="e.g. Over 2.5, 1X, Arsenal -1.5"></div>
+        <div><label>Odds (decimal)</label><input name="odds" type="number" step="0.01" min="1"></div>
+        <div><label>Confidence</label><select name="confidence"><option>High</option><option selected>Medium</option><option>Low</option></select></div>
+        <div><label>Edition</label><select name="slot"><option value="morning">Morning</option><option value="night">Night</option></select></div>
+        <div><label>Access</label><select name="access"><option value="free">Free</option><option value="premium">Premium</option></select></div>
+      </div>
+      <div style="margin-top:12px"><label>Analysis (optional)</label><textarea name="analysis"></textarea></div>
+      <div class="row end">
+        <button type="button" class="btn ghost" id="pkCancel">Cancel</button>
+        <button type="submit" class="btn ghost" data-status="draft">Save draft</button>
+        <button type="submit" class="btn" data-status="published">Publish</button>
+      </div>
+    </form>
+  </div>
+</section>
+
+<!-- PICKS & RESULTS -->
+<section id="tab-published" hidden>
+  <div class="card">
+    <div class="row" style="margin-bottom:10px">
+      <h2 style="margin:0;flex:1">Picks &amp; results</h2>
+      <select id="fStatus" style="width:auto"><option value="">All</option><option value="draft">Drafts</option><option value="published">Published</option></select>
+    </div>
+    <div class="tbl"><table><thead><tr><th>Match</th><th>Pick</th><th>Status</th><th>Result</th><th></th></tr></thead><tbody id="pkBody"></tbody></table></div>
+  </div>
+</section>
+
+<!-- DATA -->
+<section id="tab-data" hidden>
+  <div class="card">
+    <h2>Data</h2>
+    <p class="note">Everything is stored in this browser only until the backend is connected. Export a backup regularly.</p>
+    <div class="row">
+      <button class="btn" id="exp">Download backup (JSON)</button>
+      <label class="btn ghost" style="margin:0;text-transform:none;letter-spacing:0;font-size:15px;color:var(--text)">Import backup<input type="file" id="imp" accept=".json" hidden></label>
+      <button class="btn danger" id="wipe">Erase all</button>
+    </div>
+  </div>
+</section>
+</div>
+</div>
+
+<div class="toast" id="toast" hidden></div>
+
+<script>
+/* ============ CONFIG (edit here) ============ */
+const CONFIG = {
+  ADMIN_PASSWORD: "$1Paraboi",   // temporary gate; anyone who views this file can read it
+  // Bet types offered in the dropdown. To be finalised with the owner.
+  MARKETS: {
+    football:   ["1X2 / Double Chance","Over/Under Goals","Both Teams To Score","Handicap","HT/FT","Correct Score","Other"],
+    basketball: ["Moneyline","Spread","Total Over/Under","Player Prop","Other"]
+  },
+  COMPETITIONS: ["Premier League","La Liga","Bundesliga","Serie A","Ligue 1","Champions League","NPFL","NBA","WNBA","EuroLeague","Liga ACB","NBL","NCAA"]
+};
+
+/* ============ DATA LAYER (swap for Firebase later) ============ */
+const Store = {
+  key:"pb_admin_v1",
+  load(){ try{ return JSON.parse(localStorage.getItem(this.key)) || {fixtures:[],picks:[]}; }catch(e){ return {fixtures:[],picks:[]}; } },
+  save(db){ try{ localStorage.setItem(this.key, JSON.stringify(db)); }catch(e){ toast("Could not save (browser storage blocked)"); } }
+};
+let db = Store.load();
+const uid = () => Date.now().toString(36)+Math.random().toString(36).slice(2,6);
+const esc = s => String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const $ = s => document.querySelector(s);
+const fmt = iso => { const d=new Date(iso); return isNaN(d)?"":d.toLocaleString([], {day:"2-digit",month:"short",hour:"2-digit",minute:"2-digit"}); };
+function toast(m){ const t=$("#toast"); t.textContent=m; t.hidden=false; clearTimeout(toast.t); toast.t=setTimeout(()=>t.hidden=true,2200); }
+function commit(){ Store.save(db); render(); }
+
+/* ============ LOGIN ============ */
+function enter(){ $("#login").hidden=true; $("#app").hidden=false; render(); }
+$("#loginBtn").onclick = () => {
+  if($("#pw").value === CONFIG.ADMIN_PASSWORD){ try{sessionStorage.setItem("pb_in","1")}catch(e){} enter(); }
+  else $("#loginErr").hidden=false;
+};
+$("#pw").addEventListener("keydown",e=>{ if(e.key==="Enter") $("#loginBtn").click(); });
+$("#logout").onclick = () => { try{sessionStorage.removeItem("pb_in")}catch(e){} location.reload(); };
+try{ if(sessionStorage.getItem("pb_in")) enter(); }catch(e){}
+
+/* ============ TABS ============ */
+function showTab(name){
+  document.querySelectorAll("nav.tabs button").forEach(b=>b.setAttribute("aria-selected", b.dataset.tab===name));
+  ["fixtures","picks","published","data"].forEach(t=>$("#tab-"+t).hidden = t!==name);
+}
+document.querySelectorAll("nav.tabs button").forEach(b=>b.onclick=()=>{ if(b.dataset.tab==="picks") resetPick(); showTab(b.dataset.tab); });
+
+/* ============ FIXTURES ============ */
+$("#comps").innerHTML = CONFIG.COMPETITIONS.map(c=>`<option value="${esc(c)}">`).join("");
+$("#fxForm").onsubmit = e => {
+  e.preventDefault();
+  const f = Object.fromEntries(new FormData(e.target));
+  db.fixtures.push({id:uid(), ...f});
+  e.target.reset(); commit(); toast("Fixture added");
+};
+function delFixture(id){
+  if(db.picks.some(p=>p.fixtureId===id) && !confirm("This fixture has picks. Delete it and its picks?")) return;
+  db.fixtures = db.fixtures.filter(f=>f.id!==id);
+  db.picks = db.picks.filter(p=>p.fixtureId!==id); commit();
+}
+function pickFor(id){ resetPick(id); showTab("picks"); }
+
+/* ============ PICKS ============ */
+const pkForm = $("#pkForm");
+function fillMarkets(){
+  const fx = db.fixtures.find(f=>f.id===pkForm.fixtureId.value);
+  const list = CONFIG.MARKETS[fx?.sport] || [].concat(...Object.values(CONFIG.MARKETS));
+  const cur = pkForm.market.value;
+  pkForm.market.innerHTML = list.map(m=>`<option>${esc(m)}</option>`).join("");
+  if(list.includes(cur)) pkForm.market.value = cur;
+}
+pkForm.fixtureId.onchange = fillMarkets;
+function resetPick(fixtureId){
+  pkForm.reset(); pkForm.id.value="";
+  $("#pickTitle").textContent="New pick";
+  pkForm.fixtureId.innerHTML = db.fixtures.length
+    ? db.fixtures.slice().sort((a,b)=>a.kickoff.localeCompare(b.kickoff)).map(f=>`<option value="${f.id}">${esc(f.home)} v ${esc(f.away)} · ${esc(fmt(f.kickoff))}</option>`).join("")
+    : `<option value="">Add a fixture first</option>`;
+  if(fixtureId) pkForm.fixtureId.value = fixtureId;
+  fillMarkets();
+}
+function editPick(id){
+  const p = db.picks.find(x=>x.id===id); if(!p) return;
+  resetPick(p.fixtureId);
+  for(const k of ["id","market","selection","odds","confidence","slot","access","analysis"]) pkForm[k].value = p[k] ?? "";
+  $("#pickTitle").textContent="Edit pick"; showTab("picks");
+}
+let submitStatus="draft";
+pkForm.querySelectorAll("button[type=submit]").forEach(b=>b.onclick=()=>submitStatus=b.dataset.status);
+pkForm.onsubmit = e => {
+  e.preventDefault();
+  if(!pkForm.fixtureId.value) return toast("Add a fixture first");
+  const f = Object.fromEntries(new FormData(pkForm));
+  const existing = db.picks.find(p=>p.id===f.id);
+  const rec = {...(existing||{result:"pending",createdAt:new Date().toISOString()}), ...f, id:f.id||uid(), status:submitStatus, updatedAt:new Date().toISOString()};
+  if(existing) Object.assign(existing, rec); else db.picks.push(rec);
+  commit(); toast(submitStatus==="published"?"Published":"Draft saved"); showTab("published");
+};
+$("#pkCancel").onclick = () => showTab("published");
+
+/* ============ PICKS TABLE ============ */
+function setResult(id,r){ const p=db.picks.find(x=>x.id===id); p.result=r; commit(); }
+function toggleStatus(id){ const p=db.picks.find(x=>x.id===id); p.status = p.status==="published"?"draft":"published"; commit(); }
+function delPick(id){ if(confirm("Delete this pick?")){ db.picks=db.picks.filter(p=>p.id!==id); commit(); } }
+$("#fStatus").onchange = render;
+
+/* ============ RENDER ============ */
+function render(){
+  $("#stats").textContent = `${db.fixtures.length} fixtures · ${db.picks.filter(p=>p.status==="published").length} live`;
+  const fxs = db.fixtures.slice().sort((a,b)=>a.kickoff.localeCompare(b.kickoff));
+  $("#fxCount").textContent = fxs.length?`(${fxs.length})`:"";
+  $("#fxBody").innerHTML = fxs.length ? fxs.map(f=>`<tr>
+    <td>${esc(fmt(f.kickoff))}</td><td><b>${esc(f.home)}</b> v <b>${esc(f.away)}</b><br><span class="muted">${f.sport==="football"?"Football":"Basketball"}</span></td>
+    <td>${esc(f.competition)}</td>
+    <td class="row"><button class="btn sm" onclick="pickFor('${f.id}')">Add pick</button><button class="btn danger sm" onclick="delFixture('${f.id}')">Delete</button></td></tr>`).join("")
+    : `<tr><td colspan="4" class="empty">No fixtures yet.</td></tr>`;
+
+  const flt = $("#fStatus").value;
+  const picks = db.picks.filter(p=>!flt||p.status===flt).slice().sort((a,b)=>b.updatedAt.localeCompare(a.updatedAt));
+  $("#pkBody").innerHTML = picks.length ? picks.map(p=>{
+    const f = db.fixtures.find(x=>x.id===p.fixtureId)||{home:"?",away:"?"};
+    return `<tr>
+      <td><b>${esc(f.home)}</b> v <b>${esc(f.away)}</b><br><span class="muted">${esc(f.competition||"")} · ${esc(p.slot)}</span></td>
+      <td>${esc(p.selection)}<br><span class="muted">${esc(p.market)}${p.odds?` @ ${esc(p.odds)}`:""} · ${esc(p.confidence)}</span> ${p.access==="premium"?'<span class="tag prem">Premium</span>':""}</td>
+      <td><span class="tag ${p.status==="published"?"live":"draft"}">${p.status==="published"?"Live":"Draft"}</span></td>
+      <td><select onchange="setResult('${p.id}',this.value)" style="width:auto">${["pending","won","lost","void"].map(r=>`<option ${p.result===r?"selected":""}>${r}</option>`).join("")}</select></td>
+      <td class="row"><button class="btn ghost sm" onclick="editPick('${p.id}')">Edit</button><button class="btn ghost sm" onclick="toggleStatus('${p.id}')">${p.status==="published"?"Unpublish":"Publish"}</button><button class="btn danger sm" onclick="delPick('${p.id}')">Delete</button></td></tr>`;
+  }).join("") : `<tr><td colspan="5" class="empty">No picks yet.</td></tr>`;
+}
+
+/* ============ DATA TAB ============ */
+$("#exp").onclick = () => {
+  const a=document.createElement("a");
+  a.href=URL.createObjectURL(new Blob([JSON.stringify(db,null,2)],{type:"application/json"}));
+  a.download=`picksbible-backup-${new Date().toISOString().slice(0,10)}.json`; a.click();
+};
+$("#imp").onchange = e => {
+  const file=e.target.files[0]; if(!file) return;
+  file.text().then(t=>{ try{ const d=JSON.parse(t); if(!Array.isArray(d.fixtures)||!Array.isArray(d.picks)) throw 0; db=d; commit(); toast("Imported"); }catch(_){ toast("Not a valid backup file"); } });
+};
+$("#wipe").onclick = () => { if(confirm("Erase all fixtures and picks from this browser?")){ db={fixtures:[],picks:[]}; commit(); } };
+
+resetPick();
+</script>
+</body></html>
+
+
