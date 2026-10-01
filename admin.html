@@ -71,6 +71,8 @@ th{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.04
 .toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:var(--won);color:#04220f;padding:10px 16px;border-radius:8px;font-weight:700}
 </style></head>
 <body>
+<div id="jserr" style="display:none;background:#7f1d1d;color:#fff;padding:10px 14px;font:14px/1.4 system-ui;position:fixed;top:0;left:0;right:0;z-index:99"></div>
+<script>window.addEventListener("error",function(e){var b=document.getElementById("jserr");b.style.display="block";b.textContent="Page script error: "+e.message+" (line "+e.lineno+"). The admin.html file is damaged. Re-upload the original file.";});</script>
 
 <!-- ============ LOGIN ============ -->
 <div id="login">
@@ -80,6 +82,7 @@ th{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.04
     <label for="pw">Password</label>
     <input id="pw" type="password" autocomplete="current-password">
     <div class="row end"><button class="btn" id="loginBtn">Sign in</button></div>
+    <p class="muted" style="font-size:11px;margin:10px 0 0">Build 2026-10-01-C</p>
     <p id="loginErr" class="muted" style="color:var(--lost)" hidden>Wrong password.</p>
   </div>
 </div>
@@ -237,7 +240,7 @@ const LG = window.PB_LEAGUES || {football:[],basketball:[],top:{football:[],bask
 let sport = "football";
 function setLeague(country, league){
   fxForm.country.value = country||""; fxForm.competition.value = league||"";
-  ("#lgBtn").textContent=league?`{country} · ${league} ▾` : "🌍 Select A League ▾";
+  $("#lgBtn").textContent = league ? `${country} · ${league} ▾` : "🌍 Select A League ▾";
 }
 function setSport(sp){
   sport = sp; fxForm.sport.value = sp;
@@ -246,7 +249,7 @@ function setSport(sp){
   setLeague("",""); buildPanel(""); closePanel();
 }
 function groupHtml(key, badge, label, leagues, top){
-  return `<div class="lggroup${top?" lgtop":""}"><button type="button" class="lgcountry" data-key="esc(key)"aria-expanded="false"><spanclass="badge">{esc(badge)}</span><span class="lgname">esc(label)</span><spanclass="toggle">+</span></button><divclass="lgsub"hidden>{leagues.map(([c,l])=>`<button type="button" class="lgleague" data-c="esc(c)"data-l="{esc(l)}"><span>esc(l)</span><span>{sport==="football"?"⚽":"🏀"}</span></button>`).join("")}</div></div>`;
+  return `<div class="lggroup${top?" lgtop":""}"><button type="button" class="lgcountry" data-key="${esc(key)}" aria-expanded="false"><span class="badge">${esc(badge)}</span><span class="lgname">${esc(label)}</span><span class="toggle">+</span></button><div class="lgsub" hidden>${leagues.map(([c,l])=>`<button type="button" class="lgleague" data-c="${esc(c)}" data-l="${esc(l)}"><span>${esc(l)}</span><span>${sport==="football"?"⚽":"🏀"}</span></button>`).join("")}</div></div>`;
 }
 const norm = t => String(t).normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase();
 function buildPanel(q){
@@ -257,7 +260,8 @@ function buildPanel(q){
     const rows = g.l.filter(l=>match(g.c,l)).map(l=>[g.c,l]);
     if(rows.length) html += groupHtml(g.c, g.code, g.c, rows, false);
   }
-  const body = ("#lgBody");body.innerHTML=html||`<divclass="lgempty">{LG[sport].length?"No match.":"leagues.js is missing. Upload it next to admin.html."}</div>`;
+  const body = $("#lgBody");
+  body.innerHTML = html || `<div class="lgempty">${LG[sport].length?"No match.":"leagues.js is missing. Upload it next to admin.html."}</div>`;
   if(q) body.querySelectorAll(".lgcountry").forEach(b=>toggleGroup(b,true));
 }
 function toggleGroup(b, open){
@@ -310,7 +314,9 @@ function fillMarkets(){
 pkForm.fixtureId.onchange = fillMarkets;
 function resetPick(fixtureId){
   pkForm.reset(); pkForm.id.value="";
-  ("#pickTitle").textContent="Newpick";pkForm.fixtureId.innerHTML=db.fixtures.length?db.fixtures.slice().sort((a,b)=>a.kickoff.localeCompare(b.kickoff)).map(f=>`<optionvalue="{f.id}">${esc(f.home)} v ${esc(f.away)} · ${esc(fmt(f.kickoff))}</option>`).join("")
+  $("#pickTitle").textContent="New pick";
+  pkForm.fixtureId.innerHTML = db.fixtures.length
+    ? db.fixtures.slice().sort((a,b)=>a.kickoff.localeCompare(b.kickoff)).map(f=>`<option value="${f.id}">${esc(f.home)} v ${esc(f.away)} · ${esc(fmt(f.kickoff))}</option>`).join("")
     : `<option value="">Add a fixture first</option>`;
   if(fixtureId) pkForm.fixtureId.value = fixtureId;
   fillMarkets();
@@ -342,11 +348,13 @@ $("#fStatus").onchange = render;
 
 /* ============ RENDER ============ */
 function render(){
-  ("#stats").textContent=`{db.fixtures.length} fixtures · ${db.picks.filter(p=>p.status==="published").length} live`;
+  $("#stats").textContent = `${db.fixtures.length} fixtures · ${db.picks.filter(p=>p.status==="published").length} live`;
   const fxs = db.fixtures.slice().sort((a,b)=>a.kickoff.localeCompare(b.kickoff));
-  ("#fxCount").textContent=fxs.length?`({fxs.length})`:"";
-  ("#fxBody").innerHTML=fxs.length?fxs.map(f=>`<tr><td>{esc(fmt(f.kickoff))}</td><td><b>esc(f.home)</b>v<b>{esc(f.away)}</b><br><span class="muted">f.sport==="football"?"Football":"Basketball"</span></td><td>{esc(compLabel(f))}</td>
-    <td class="row"><button class="btn sm" onclick="pickFor('f.id')">Addpick</button><buttonclass="btndangersm"onclick="delFixture('{f.id}')">Delete</button></td></tr>`).join("")
+  $("#fxCount").textContent = fxs.length?`(${fxs.length})`:"";
+  $("#fxBody").innerHTML = fxs.length ? fxs.map(f=>`<tr>
+    <td>${esc(fmt(f.kickoff))}</td><td><b>${esc(f.home)}</b> v <b>${esc(f.away)}</b><br><span class="muted">${f.sport==="football"?"Football":"Basketball"}</span></td>
+    <td>${esc(compLabel(f))}</td>
+    <td class="row"><button class="btn sm" onclick="pickFor('${f.id}')">Add pick</button><button class="btn danger sm" onclick="delFixture('${f.id}')">Delete</button></td></tr>`).join("")
     : `<tr><td colspan="4" class="empty">No fixtures yet.</td></tr>`;
 
   const flt = $("#fStatus").value;
@@ -354,10 +362,11 @@ function render(){
   $("#pkBody").innerHTML = picks.length ? picks.map(p=>{
     const f = db.fixtures.find(x=>x.id===p.fixtureId)||{home:"?",away:"?"};
     return `<tr>
-      <td><b>${esc(f.home)}</b> v <b>esc(f.away)</b><br><spanclass="muted">{esc(compLabel(f))} · esc(p.slot)</span></td><td>{esc(p.selection)}<br><span class="muted">esc(p.market){p.odds?` @ ${esc(p.odds)}`:""} · ${esc(p.confidence)}</span> ${p.access==="premium"?'<span class="tag prem">Premium</span>':""}</td>
-      <td><span class="tag p.status==="published"?"live":"draft"">{p.status==="published"?"Live":"Draft"}</span></td>
-      <td><select onchange="setResult('p.id',this.value)"style="width:auto">{["pending","won","lost","void"].map(r=>`<option p.result===r?"selected":"">{r}</option>`).join("")}</select></td>
-      <td class="row"><button class="btn ghost sm" onclick="editPick('p.id')">Edit</button><buttonclass="btnghostsm"onclick="toggleStatus('{p.id}')">p.status==="published"?"Unpublish":"Publish"</button><buttonclass="btndangersm"onclick="delPick('{p.id}')">Delete</button></td></tr>`;
+      <td><b>${esc(f.home)}</b> v <b>${esc(f.away)}</b><br><span class="muted">${esc(compLabel(f))} · ${esc(p.slot)}</span></td>
+      <td>${esc(p.selection)}<br><span class="muted">${esc(p.market)}${p.odds?` @ ${esc(p.odds)}`:""} · ${esc(p.confidence)}</span> ${p.access==="premium"?'<span class="tag prem">Premium</span>':""}</td>
+      <td><span class="tag ${p.status==="published"?"live":"draft"}">${p.status==="published"?"Live":"Draft"}</span></td>
+      <td><select onchange="setResult('${p.id}',this.value)" style="width:auto">${["pending","won","lost","void"].map(r=>`<option ${p.result===r?"selected":""}>${r}</option>`).join("")}</select></td>
+      <td class="row"><button class="btn ghost sm" onclick="editPick('${p.id}')">Edit</button><button class="btn ghost sm" onclick="toggleStatus('${p.id}')">${p.status==="published"?"Unpublish":"Publish"}</button><button class="btn danger sm" onclick="delPick('${p.id}')">Delete</button></td></tr>`;
   }).join("") : `<tr><td colspan="5" class="empty">No picks yet.</td></tr>`;
 }
 
@@ -376,4 +385,4 @@ $("#wipe").onclick = () => { if(confirm("Erase all fixtures and picks from this 
 resetPick();
 try{ if(sessionStorage.getItem("pb_in")) enter(); }catch(e){}
 </script>
-</body></html> 
+</body></html>
