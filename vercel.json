@@ -1,0 +1,8 @@
+{
+  "buildCommand": "echo 'Static site'",
+  "outputDirectory": ".",
+  "installCommand": "echo 'No dependencies'",
+  "env": {
+    "NODE_ENV": "production"
+  }
+}
