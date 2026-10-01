@@ -103,12 +103,14 @@ th{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.04
 <div id="login">
   <div class="card">
     <h2>PicksBible Admin</h2>
-    <p class="note">Temporary password gate. Real account login (Firebase Auth) is added with the backend step.</p>
-    <label for="pw">Password</label>
+    <p class="note">Sign in with your PicksBible admin account.</p>
+    <label for="em">Email</label>
+    <input id="em" type="email" autocomplete="username">
+    <label for="pw" style="margin-top:10px;display:block">Password</label>
     <input id="pw" type="password" autocomplete="current-password">
     <div class="row end"><button class="btn" id="loginBtn">Sign in</button></div>
-    <p class="muted" style="font-size:11px;margin:10px 0 0">Build 2026-10-01-F</p>
-    <p id="loginErr" class="muted" style="color:var(--lost)" hidden>Wrong password.</p>
+    <p class="muted" style="font-size:11px;margin:10px 0 0">Build 2026-10-01-G (Firebase)</p>
+    <p id="loginErr" class="muted" style="color:var(--lost)" hidden></p>
   </div>
 </div>
 
@@ -116,7 +118,7 @@ th{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.04
 <div id="app" hidden>
 <header><div class="wrap">
   <img src="img/pb-logo.png" alt="">
-  <h1>PicksBible Admin <small id="stats"></small></h1>
+  <h1>PicksBible Admin <small id="stats"></small> <small id="sync" class="muted"></small></h1>
   <button class="btn ghost sm" id="logout">Sign out</button>
 </div></header>
 
@@ -244,7 +246,7 @@ th{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.04
 <section id="tab-data" hidden>
   <div class="card">
     <h2>Data</h2>
-    <p class="note">Everything is stored in this browser only until the backend is connected. Export a backup regularly.</p>
+    <p class="note">Everything is stored in the PicksBible database (Firestore) and saves automatically. Download a backup now and then anyway.</p>
     <div class="row">
       <button class="btn" id="exp">Download backup (JSON)</button>
       <label class="btn ghost" style="margin:0;text-transform:none;letter-spacing:0;font-size:15px;color:var(--text)">Import backup<input type="file" id="imp" accept=".json" hidden></label>
@@ -257,11 +259,23 @@ th{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.04
 
 <div class="toast" id="toast" hidden></div>
 
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
 <script src="leagues.js"></script>
 <script>
 /* ============ CONFIG (edit here) ============ */
 const CONFIG = {
-  ADMIN_PASSWORD: "Ocheroadto23ms",   // temporary gate; anyone who views this file can read it
+  FIREBASE: {
+    apiKey: "AIzaSyBBnSFHx_z1YWwOXz6sdKOSzelTIuvusa8",
+    authDomain: "picksbible-7fa7f.firebaseapp.com",
+    projectId: "picksbible-7fa7f",
+    storageBucket: "picksbible-7fa7f.firebasestorage.app",
+    messagingSenderId: "670341631512",
+    appId: "1:670341631512:web:7478818fbb53b5cec6fd6d"
+  },
+  // Convenience only. The REAL gate is in the Firestore security rules (firestore.rules).
+  ADMINS: ["p.ejigabusiness@gmail.com"],
   // Bet types offered in the dropdown. To be finalised with the owner.
   MARKETS: {
     football:   ["1X2 / Double Chance","Over/Under Goals","Both Teams To Score","Handicap","HT/FT","Correct Score","Other"],
@@ -269,13 +283,65 @@ const CONFIG = {
   },
 };
 
-/* ============ DATA LAYER (swap for Firebase later) ============ */
+/* ============ DATA LAYER (Firebase Auth + Firestore) ============ */
+const COLS = ["fixtures","props","picks"];
+const EMPTY = () => ({fixtures:[],picks:[],props:[]});
+const clean = o => JSON.parse(JSON.stringify(o));                 /* drops undefined (Firestore rejects it) */
+/* `live` is copied to the top level so the security rules can let the public read ONLY live items */
+const liveOf = (col,r) => col==="fixtures" ? !!(r.fb && r.fb.live) : col==="props" ? !!r.live : r.status==="published";
 const Store = {
-  key:"pb_admin_v1",
-  load(){ try{ return JSON.parse(localStorage.getItem(this.key)) || {fixtures:[],picks:[],props:[]}; }catch(e){ return {fixtures:[],picks:[],props:[]}; } },
-  save(db){ try{ localStorage.setItem(this.key, JSON.stringify(db)); }catch(e){ toast("Could not save (browser storage blocked)"); } }
+  fb:null, auth:null, fs:null, last:{fixtures:{},props:{},picks:{}}, timer:null, busy:false, again:false,
+  init(){
+    firebase.initializeApp(CONFIG.FIREBASE);
+    this.auth = firebase.auth(); this.fs = firebase.firestore();
+  },
+  async load(){
+    const out = EMPTY();
+    for(const c of COLS){
+      const snap = await this.fs.collection(c).get();
+      this.last[c] = {};
+      snap.forEach(d => { const r = d.data(); if(c!=="props") delete r.live; r.id = r.id || d.id; if(c==="picks") r.status = r.status || "draft"; out[c].push(r); this.last[c][r.id] = JSON.stringify(this.docOf(c,r)); });
+    }
+    return out;
+  },
+  docOf(c,r){
+    const d = clean(r); d.live = liveOf(c,r);
+    if(c==="props"){ /* copy match info onto the prop so the public site needs no extra reads */
+      const f = (typeof db!=="undefined" && db.fixtures||[]).find(x=>x.id===r.fixtureId);
+      if(f){ d.home=f.home; d.away=f.away; d.competition=f.competition; d.country=f.country||""; d.kickoff=f.kickoff; }
+    }
+    return d;
+  },
+  setSync(t,bad){ const e=document.getElementById("sync"); if(e){ e.textContent=t; e.style.color=bad?"var(--lost)":""; } },
+  save(){ this.setSync("Saving…"); clearTimeout(this.timer); this.timer = setTimeout(()=>this.flush(), 500); },
+  async flush(){
+    if(this.busy){ this.again = true; return; }
+    this.busy = true;
+    try{
+      let batch = this.fs.batch(), n = 0; const commits = [];
+      const push = async () => { if(n){ commits.push(batch.commit()); batch = this.fs.batch(); n = 0; } };
+      const next = {fixtures:{},props:{},picks:{}};
+      for(const c of COLS){
+        const seen = {};
+        for(const r of db[c]){
+          const d = this.docOf(c,r), j = JSON.stringify(d); seen[r.id] = 1; next[c][r.id] = j;
+          if(this.last[c][r.id] !== j){ batch.set(this.fs.collection(c).doc(r.id), d); if(++n >= 400) await push(); }
+        }
+        for(const id in this.last[c]) if(!seen[id]){ batch.delete(this.fs.collection(c).doc(id)); delete next[c][id]; if(++n >= 400) await push(); }
+      }
+      await push(); await Promise.all(commits);
+      this.last = next; this.setSync("Saved ✓");
+    }catch(e){
+      console.error(e); this.setSync("NOT SAVED – "+(e.code||e.message),true); toast("Could not save: "+(e.code||e.message));
+    }
+    this.busy = false;
+    if(this.again){ this.again = false; this.flush(); }
+  },
+  /* one-off: move data that earlier builds kept in this browser into the database */
+  localLeftovers(){ try{ const d = JSON.parse(localStorage.getItem("pb_admin_v1")); return d && (d.fixtures||[]).length ? d : null; }catch(e){ return null; } }
 };
-let db = Store.load(); db.props = db.props || [];
+Store.save = Store.save.bind(Store);
+let db = EMPTY();
 const uid = () => Date.now().toString(36)+Math.random().toString(36).slice(2,6);
 const esc = s => String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const $ = s => document.querySelector(s);
@@ -285,13 +351,46 @@ function commit(){ Store.save(db); render(); }
 function statsText(){ const live=db.picks.filter(p=>p.status==="published").length + db.fixtures.filter(f=>f.fb&&f.fb.live).length + db.props.filter(p=>p.live).length; return `${db.fixtures.length} fixtures · ${live} live`; }
 
 /* ============ LOGIN ============ */
-function enter(){ $("#login").hidden=true; $("#app").hidden=false; render(); }
-$("#loginBtn").onclick = () => {
-  if($("#pw").value === CONFIG.ADMIN_PASSWORD){ try{sessionStorage.setItem("pb_in","1")}catch(e){} enter(); }
-  else $("#loginErr").hidden=false;
+let entered = false;
+function enter(){ $("#login").hidden=true; $("#app").hidden=false; entered=true; render(); }
+function loginMsg(t){ const e=$("#loginErr"); e.textContent=t||""; e.hidden=!t; }
+const AUTH_ERR = {
+  "auth/invalid-credential":"Wrong email or password.", "auth/wrong-password":"Wrong email or password.", "auth/user-not-found":"Wrong email or password.",
+  "auth/invalid-email":"That email address is not valid.", "auth/too-many-requests":"Too many attempts. Wait a few minutes and try again.",
+  "auth/network-request-failed":"No connection. Check your internet and try again.", "auth/user-disabled":"This account has been disabled."
+};
+$("#loginBtn").onclick = async () => {
+  loginMsg(""); const em=$("#em").value.trim(), pw=$("#pw").value;
+  if(!em || !pw) return loginMsg("Enter your email and password.");
+  $("#loginBtn").disabled = true;
+  try{ await Store.auth.signInWithEmailAndPassword(em, pw); }
+  catch(e){ loginMsg(AUTH_ERR[e.code] || ("Sign-in failed: "+(e.code||e.message))); }
+  $("#loginBtn").disabled = false;
 };
 $("#pw").addEventListener("keydown",e=>{ if(e.key==="Enter") $("#loginBtn").click(); });
-$("#logout").onclick = () => { try{sessionStorage.removeItem("pb_in")}catch(e){} location.reload(); };
+$("#em").addEventListener("keydown",e=>{ if(e.key==="Enter") $("#pw").focus(); });
+$("#logout").onclick = async () => { try{ await Store.auth.signOut(); }catch(e){} location.reload(); };
+
+async function onSignedIn(user){
+  if(CONFIG.ADMINS.length && !CONFIG.ADMINS.map(x=>x.toLowerCase()).includes((user.email||"").toLowerCase())){
+    await Store.auth.signOut(); return loginMsg("This account is not an admin.");
+  }
+  loginMsg(""); $("#loginBtn").disabled = true; $("#loginBtn").textContent = "Loading…";
+  try{
+    db = await Store.load(); db.props = db.props || [];
+    db.props.forEach(p=>{ if(PROP_KEY_MIGRATE[p.market]) p.market = PROP_KEY_MIGRATE[p.market]; });
+    const old = Store.localLeftovers();
+    if(old && !db.fixtures.length && !db.props.length && confirm("This browser has "+old.fixtures.length+" fixture(s) saved from before the database was connected.\n\nUpload them to the database now?")){
+      db = old; db.props = db.props || []; db.picks = db.picks || []; Store.save();
+    }
+    Store.setSync("Saved ✓"); resetPick(); enter();
+  }catch(e){
+    console.error(e);
+    loginMsg(e.code==="permission-denied" ? "Signed in, but the database refused access. The security rules do not list this email yet." : "Could not load the database: "+(e.code||e.message));
+    try{ await Store.auth.signOut(); }catch(_){}
+  }
+  $("#loginBtn").disabled = false; $("#loginBtn").textContent = "Sign in";
+}
 
 /* ============ TABS ============ */
 function showTab(name){
@@ -556,9 +655,13 @@ $("#imp").onchange = e => {
   const file=e.target.files[0]; if(!file) return;
   file.text().then(t=>{ try{ const d=JSON.parse(t); if(!Array.isArray(d.fixtures)||!Array.isArray(d.picks)) throw 0; d.props=d.props||[]; db=d; commit(); toast("Imported"); }catch(_){ toast("Not a valid backup file"); } });
 };
-$("#wipe").onclick = () => { if(confirm("Erase all fixtures and picks from this browser?")){ db={fixtures:[],picks:[],props:[]}; commit(); } };
+$("#wipe").onclick = () => { if(confirm("Erase ALL fixtures, props and picks from the database? This cannot be undone.")){ db={fixtures:[],picks:[],props:[]}; commit(); } };
 
 resetPick();
-try{ if(sessionStorage.getItem("pb_in")) enter(); }catch(e){}
+try{
+  if(typeof firebase === "undefined") throw new Error("Firebase library did not load (check your internet / ad-blocker).");
+  Store.init();
+  Store.auth.onAuthStateChanged(u => { if(u && !entered) onSignedIn(u); });
+}catch(e){ loginMsg(e.message); }
 </script>
 </body></html>
