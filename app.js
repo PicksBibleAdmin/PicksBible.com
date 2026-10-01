@@ -135,10 +135,16 @@ function firstIdx(list,lg){for(var i=0;i<list.length;i++)if(list[i].lg===lg)retu
 function scoreLine(m){return m.score?'<span class="sc">'+esc(m.score)+'</span>':'<span class="sc" style="color:var(--muted)">-:-</span>'}
 
 /* ---------- full prediction tables ---------- */
+function oddCell(m,i,k){var v=m.o&&m.o[i]?m.o[i]:"-";return '<td><span class="odd'+(m.pk===k?" pk":"")+'">'+esc(v)+'</span></td>'}
+function pkBadge(m){return '<span class="tip '+(m.st==="won"?"won":m.st==="lost"?"lost":"")+'" title="'+esc(m.st)+'">'+esc(m.pk||m.tip||"-")+'</span>'}
 function footballTable(list){
   if(!list.length)return '<div class="empty">No football ⚽ predictions for this day yet.</div>';
-  return '<div class="tscroll"><table class="pt"><thead><tr><th>Time</th><th>Match</th><th>1</th><th>X</th><th>2</th><th>Tips</th><th>HT/FT</th><th>CS Tips</th></tr></thead><tbody>'+
-    groupRows(sortByLeague(list),8,function(m){return '<tr><td>'+esc(m.t)+'</td><td class="m"><b>'+esc(m.h)+'</b>'+scoreLine(m)+'<b>'+esc(m.a)+'</b></td><td>'+ring(m.p[0])+'</td><td>'+ring(m.p[1])+'</td><td>'+ring(m.p[2])+'</td><td>'+tipBadge(m)+'</td><td>'+esc(m.htft)+'</td><td>'+esc(m.cs)+'</td></tr>'})+
+  var played=list.some(function(m){return m.score});
+  return '<div class="tscroll bwwrap"><table class="pt bw"><thead><tr><th>Time</th><th class="l">Competition</th><th class="l">Home</th><th class="l">Away</th><th>1</th><th>X</th><th>2</th><th>Tips</th><th>CS Tips</th>'+(played?'<th>Result</th>':'')+'</tr></thead><tbody>'+
+    sortByLeague(list).map(function(m){
+      return '<tr><td class="tm">'+esc(m.t)+'</td><td class="l lgn">'+esc(lgName(m.lg))+'</td><td class="l team"><b>'+esc(m.h)+'</b></td><td class="l team"><b>'+esc(m.a)+'</b></td>'+
+        oddCell(m,0,"1")+oddCell(m,1,"X")+oddCell(m,2,"2")+'<td>'+pkBadge(m)+'</td><td class="cs">'+esc(m.cs)+'</td>'+(played?'<td class="res">'+(m.score?esc(m.score):'-:-')+'</td>':'')+'</tr>';
+    }).join("")+
     '</tbody></table></div>';
 }
 function basketballTable(list){
@@ -274,17 +280,30 @@ $$("[data-valuebet]").forEach(function(el){
     '<div class="vb-foot"><a class="btn ghost" href="expert-tips.html">View tips</a></div>';
 });
 
-/* ---------- best player props of the day (basketball) ---------- */
+/* ---------- best player props of the day (basketball) with prop-type dropdown ---------- */
 $$("[data-props]").forEach(function(el){
-  el.innerHTML=D.playerProps.map(function(p){
+  var sec=el.closest(".props-section"), sel=sec&&$("[data-propsel]",sec);
+  var markets=D.propMarkets||[];
+  function mk(k){for(var i=0;i<markets.length;i++)if(markets[i].k===k)return markets[i];return {k:k,name:k,kind:"player"}}
+  function card(p){
+    var m=mk(p.k), team=m.kind==="team";
     return '<div class="propcard">'+
-      '<div class="propav">'+p.photo+'</div>'+
-      '<div class="propinfo"><b>'+esc(p.player)+'</b><span>'+esc(p.team)+' '+esc(p.opp)+'</span></div>'+
-      '<div class="propmkt">'+esc(p.market)+'</div>'+
-      '<div class="proppick"><span class="pick">'+esc(p.pick)+' '+esc(p.line)+'</span><span class="o">@ '+esc(p.odds)+'</span></div>'+
-      '<div class="propconf"><span class="ring" style="--p:'+(+p.conf)+'"><b>'+(+p.conf).toFixed(0)+'%</b></span></div>'+
+      '<div class="propav">🏀</div>'+
+      '<div class="propinfo"><b>'+esc(team?p.team:p.player)+'</b><span>'+esc(team?"":p.team+" ")+esc(p.opp||"")+'</span></div>'+
+      '<div class="propmkt">'+esc(m.name)+'</div>'+
+      '<div class="proppick"><span class="pick">'+esc(team?(m.short||"Pick"):p.pick+" "+p.line)+'</span><span class="o">@ '+esc(p.odds)+'</span></div>'+
     '</div>';
-  }).join("");
+  }
+  function draw(k){
+    var list=D.playerProps.filter(function(p){return p.k===k});
+    el.innerHTML=list.length?list.map(card).join(""):'<div class="empty">No '+esc(mk(k).name)+' props posted yet.</div>';
+  }
+  var cur=store("pb.propmkt"); if(!markets.some(function(m){return m.k===cur}))cur=markets[0]&&markets[0].k;
+  if(sel){
+    sel.innerHTML=markets.map(function(m){return '<option value="'+esc(m.k)+'"'+(m.k===cur?" selected":"")+'>'+esc(m.name)+'</option>'}).join("");
+    sel.addEventListener("change",function(){cur=sel.value;store("pb.propmkt",cur);draw(cur)});
+  }
+  draw(cur);
 });
 
 /* ---------- VIP results strip ---------- */

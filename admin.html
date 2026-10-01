@@ -8,7 +8,7 @@
 :root{--bg:#0b0820;--panel:#141032;--panel-2:#1b1642;--line:#2c2660;--cyan:#22d3ee;--cyan-ink:#062a33;--purple:#6d28d9;--text:#eef0ff;--muted:#a3a8d6;--won:#22c55e;--lost:#ef4444;--pend:#f5b301;--r:10px}
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--text);font:15px/1.45 Barlow,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
-.wrap{max-width:1000px;margin:0 auto;padding:0 16px}
+.wrap{max-width:1180px;margin:0 auto;padding:0 16px}
 header{background:var(--panel);border-bottom:1px solid var(--line)}
 header .wrap{display:flex;align-items:center;gap:12px;padding-top:12px;padding-bottom:12px}
 header img{height:32px}
@@ -67,6 +67,31 @@ th{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.04
 .lgleague{display:flex;justify-content:space-between;gap:10px;background:none;border:0;color:#2d4373;text-align:left;padding:9px 16px 9px 52px;cursor:pointer;font:600 13.5px inherit;width:100%}
 .lgleague:hover{background:#eef2fb;color:#1447e6}
 .lgempty{padding:18px;text-align:center;color:#6b7290;font-size:14px}
+
+/* spreadsheet-style tables: no vertical column lines */
+.ft{border-collapse:collapse;min-width:100%}
+.ft th,.ft td{border:0;border-bottom:1px solid var(--line);padding:8px 5px;white-space:nowrap;text-align:left}
+.ft th{font-size:11px}
+.ft tbody tr:hover{background:#ffffff08}
+.ft td.lg,.ft td.tm{white-space:normal;min-width:110px;max-width:150px}
+.ft td.tm{min-width:90px;max-width:130px}
+.ft .t{font-weight:700}.ft .t small,.ft .lg small{color:var(--muted);font-weight:400}
+.ft input,.ft select{width:auto;padding:6px 6px;background:transparent;border:0;border-bottom:1px solid transparent;border-radius:0}
+.ft input:hover,.ft select:hover{border-bottom-color:var(--line)}
+.ft input:focus,.ft select:focus{outline:0;border-bottom-color:var(--cyan);background:var(--panel-2)}
+.ft input.odd{width:58px}
+.ft select.tipsel{min-width:52px;font-weight:800}.ft input.cs{width:58px}
+.ft input[type=number]{-moz-appearance:textfield;appearance:textfield}
+.ft input[type=number]::-webkit-outer-spin-button,.ft input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+.ft select{background:var(--bg);border:1px solid var(--line);border-radius:6px}
+.ft .pickcell{display:flex;align-items:center;gap:2px}
+.ft .pickcell input[type=radio]{width:16px;height:16px;accent-color:var(--cyan);padding:0}
+.ft .pickcell.sel input.odd{color:var(--cyan);font-weight:800}
+.sw{position:relative;display:inline-block;width:38px;height:22px}
+.ft .sw input{position:absolute;opacity:0;width:100%;height:100%;margin:0;cursor:pointer;padding:0}
+.sw i{position:absolute;inset:0;background:var(--line);border-radius:99px;transition:.15s;pointer-events:none}
+.sw i:after{content:"";position:absolute;top:3px;left:3px;width:16px;height:16px;background:#fff;border-radius:50%;transition:.15s}
+.sw input:checked+i{background:var(--won)}.sw input:checked+i:after{left:19px}
 [hidden]{display:none!important}
 .toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:var(--won);color:#04220f;padding:10px 16px;border-radius:8px;font-weight:700}
 </style></head>
@@ -82,7 +107,7 @@ th{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.04
     <label for="pw">Password</label>
     <input id="pw" type="password" autocomplete="current-password">
     <div class="row end"><button class="btn" id="loginBtn">Sign in</button></div>
-    <p class="muted" style="font-size:11px;margin:10px 0 0">Build 2026-10-01-C</p>
+    <p class="muted" style="font-size:11px;margin:10px 0 0">Build 2026-10-01-E</p>
     <p id="loginErr" class="muted" style="color:var(--lost)" hidden>Wrong password.</p>
   </div>
 </div>
@@ -98,8 +123,10 @@ th{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.04
 <div class="wrap">
 <nav class="tabs" role="tablist">
   <button role="tab" data-tab="fixtures" aria-selected="true">1. Fixtures</button>
-  <button role="tab" data-tab="picks" aria-selected="false">2. New pick</button>
-  <button role="tab" data-tab="published" aria-selected="false">3. Picks &amp; results</button>
+  <button role="tab" data-tab="fbtable" aria-selected="false">2. Football table</button>
+  <button role="tab" data-tab="bbprops" aria-selected="false">3. Basketball props</button>
+  <button role="tab" data-tab="picks" aria-selected="false">New pick</button>
+  <button role="tab" data-tab="published" aria-selected="false">Picks &amp; results</button>
   <button role="tab" data-tab="data" aria-selected="false">Data</button>
 </nav>
 
@@ -135,6 +162,45 @@ th{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.04
   <div class="card">
     <h2>Fixtures <span class="muted" id="fxCount"></span></h2>
     <div class="tbl"><table><thead><tr><th>Kick-off</th><th>Match</th><th>Competition</th><th></th></tr></thead><tbody id="fxBody"></tbody></table></div>
+  </div>
+</section>
+
+
+<!-- FOOTBALL TABLE -->
+<section id="tab-fbtable" hidden>
+  <div class="card">
+    <h2>Football table <span class="muted" id="fbCount"></span></h2>
+    <p class="note">One row per football fixture (add fixtures in tab 1). Enter the odds for 1, X and 2, choose your <b>Tip</b> (1, X or 2), add a correct-score tip, then switch the match <b>Live</b>. Changes save automatically.</p>
+    <div class="tbl"><table class="ft">
+      <thead><tr><th>Time</th><th>Competition</th><th>Home</th><th>Away</th><th>1</th><th>X</th><th>2</th><th>Tips</th><th>CS tips</th><th>Live</th></tr></thead>
+      <tbody id="fbBody"></tbody>
+    </table></div>
+  </div>
+</section>
+
+<!-- BASKETBALL PROPS -->
+<section id="tab-bbprops" hidden>
+  <div class="card">
+    <h2>Add player / team prop</h2>
+    <form id="bbForm">
+      <div class="grid">
+        <div style="grid-column:1/-1"><label>Basketball game</label><select name="fixtureId" required></select></div>
+        <div><label>Prop type</label><select name="market" id="bbMarket"></select></div>
+        <div id="bbPlayerW"><label>Player</label><input name="player" placeholder="e.g. Nikola Jokic"></div>
+        <div id="bbTeamW"><label>Team</label><select name="team"></select></div>
+        <div id="bbLineW"><label>Line</label><input name="line" type="number" step="0.5" placeholder="e.g. 24.5"></div>
+        <div id="bbSideW"><label>Over / Under</label><select name="side"><option>Over</option><option>Under</option></select></div>
+        <div><label>Odds (decimal)</label><input name="odds" type="number" step="0.01" min="1"></div>
+      </div>
+      <div class="row end"><button class="btn">Add prop</button></div>
+    </form>
+  </div>
+  <div class="card">
+    <h2>Props <span class="muted" id="bbCount"></span></h2>
+    <div class="tbl"><table class="ft">
+      <thead><tr><th>Game</th><th>Prop</th><th>Pick</th><th>Odds</th><th>Live</th><th></th></tr></thead>
+      <tbody id="bbBody"></tbody>
+    </table></div>
   </div>
 </section>
 
@@ -206,16 +272,17 @@ const CONFIG = {
 /* ============ DATA LAYER (swap for Firebase later) ============ */
 const Store = {
   key:"pb_admin_v1",
-  load(){ try{ return JSON.parse(localStorage.getItem(this.key)) || {fixtures:[],picks:[]}; }catch(e){ return {fixtures:[],picks:[]}; } },
+  load(){ try{ return JSON.parse(localStorage.getItem(this.key)) || {fixtures:[],picks:[],props:[]}; }catch(e){ return {fixtures:[],picks:[],props:[]}; } },
   save(db){ try{ localStorage.setItem(this.key, JSON.stringify(db)); }catch(e){ toast("Could not save (browser storage blocked)"); } }
 };
-let db = Store.load();
+let db = Store.load(); db.props = db.props || [];
 const uid = () => Date.now().toString(36)+Math.random().toString(36).slice(2,6);
 const esc = s => String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const $ = s => document.querySelector(s);
 const fmt = iso => { const d=new Date(iso); return isNaN(d)?"":d.toLocaleString([], {day:"2-digit",month:"short",hour:"2-digit",minute:"2-digit"}); };
 function toast(m){ const t=$("#toast"); t.textContent=m; t.hidden=false; clearTimeout(toast.t); toast.t=setTimeout(()=>t.hidden=true,2200); }
 function commit(){ Store.save(db); render(); }
+function statsText(){ const live=db.picks.filter(p=>p.status==="published").length + db.fixtures.filter(f=>f.fb&&f.fb.live).length + db.props.filter(p=>p.live).length; return `${db.fixtures.length} fixtures · ${live} live`; }
 
 /* ============ LOGIN ============ */
 function enter(){ $("#login").hidden=true; $("#app").hidden=false; render(); }
@@ -229,7 +296,7 @@ $("#logout").onclick = () => { try{sessionStorage.removeItem("pb_in")}catch(e){}
 /* ============ TABS ============ */
 function showTab(name){
   document.querySelectorAll("nav.tabs button").forEach(b=>b.setAttribute("aria-selected", b.dataset.tab===name));
-  ["fixtures","picks","published","data"].forEach(t=>$("#tab-"+t).hidden = t!==name);
+  ["fixtures","fbtable","bbprops","picks","published","data"].forEach(t=>$("#tab-"+t).hidden = t!==name);
 }
 document.querySelectorAll("nav.tabs button").forEach(b=>b.onclick=()=>{ if(b.dataset.tab==="picks") resetPick(); showTab(b.dataset.tab); });
 
@@ -298,9 +365,114 @@ fxForm.onsubmit = e => {
 function delFixture(id){
   if(db.picks.some(p=>p.fixtureId===id) && !confirm("This fixture has picks. Delete it and its picks?")) return;
   db.fixtures = db.fixtures.filter(f=>f.id!==id);
-  db.picks = db.picks.filter(p=>p.fixtureId!==id); commit();
+  db.picks = db.picks.filter(p=>p.fixtureId!==id); db.props = db.props.filter(p=>p.fixtureId!==id); commit();
 }
 function pickFor(id){ resetPick(id); showTab("picks"); }
+
+
+/* ============ FOOTBALL TABLE ============ */
+const fbDefaults = () => ({tip:"",o1:"",oX:"",o2:"",cs:"",live:false});
+const fbOf = f => { const v = Object.assign(fbDefaults(), f.fb||{}); if(!v.tip && v.pick) v.tip = v.pick; return v; };
+const hhmm = iso => { const d=new Date(iso); return isNaN(d)?"":d.toLocaleTimeString([], {hour:"2-digit",minute:"2-digit",hour12:false}); };
+const dmon = iso => { const d=new Date(iso); return isNaN(d)?"":d.toLocaleDateString([], {day:"2-digit",month:"short"}); };
+const oddIn = (key,v) => `<td><input class="odd" type="number" step="0.01" min="1" data-f="${key}" value="${esc(v[key])}" placeholder="-"></td>`;
+function renderFb(){
+  const rows = db.fixtures.filter(f=>f.sport==="football").sort((a,b)=>a.kickoff.localeCompare(b.kickoff));
+  $("#fbCount").textContent = rows.length?`(${rows.length})`:"";
+  $("#fbBody").innerHTML = rows.length ? rows.map(f=>{
+    const v=fbOf(f);
+    return `<tr data-id="${f.id}">
+      <td class="t">${esc(hhmm(f.kickoff))}<br><small>${esc(dmon(f.kickoff))}</small></td>
+      <td class="lg">${esc(f.competition)}<br><small>${esc(f.country||"")}</small></td>
+      <td class="tm"><b>${esc(f.home)}</b></td><td class="tm"><b>${esc(f.away)}</b></td>
+      ${oddIn("o1",v)}${oddIn("oX",v)}${oddIn("o2",v)}
+      <td><select data-f="tip" class="tipsel"><option value="">-</option>${["1","X","2"].map(k=>`<option ${v.tip===k?"selected":""}>${k}</option>`).join("")}</select></td>
+      <td><input class="cs" data-f="cs" value="${esc(v.cs)}" placeholder="2-1" maxlength="7"></td>
+      <td><label class="sw"><input type="checkbox" data-f="live" ${v.live?"checked":""}><i></i></label></td></tr>`;
+  }).join("") : `<tr><td colspan="10" class="empty">No football fixtures yet. Add one in tab 1 (choose Football).</td></tr>`;
+}
+$("#fbBody").addEventListener("change", e => {
+  const el=e.target, tr=el.closest("tr"); if(!tr||!el.dataset.f) return;
+  const f=db.fixtures.find(x=>x.id===tr.dataset.id); if(!f) return;
+  f.fb = fbOf(f);
+  f.fb[el.dataset.f] = el.type==="checkbox" ? el.checked : el.value.trim();
+  Store.save(db); $("#stats").textContent = statsText();
+});
+
+/* ============ BASKETBALL PROPS ============ */
+const PROP_MARKETS = [
+  {k:"pts",   name:"Player Points (Over/Under)",                 type:"player"},
+  {k:"reb",   name:"Player Rebounds (Over/Under)",               type:"player"},
+  {k:"ast",   name:"Player Assists (Over/Under)",                type:"player"},
+  {k:"pra",   name:"Player Points + Rebounds + Assists (PRA) (Over/Under)", type:"player"},
+  {k:"3ps",   name:"Player 3PT Shots Scored",                    type:"player"},
+  {k:"3pa",   name:"Player 3PT Shots Attempted",                 type:"player"},
+  {k:"blk",   name:"Player Blocks",                              type:"player"},
+  {k:"stl",   name:"Player Steals",                              type:"player"},
+  {k:"tov",   name:"Player Turnovers",                           type:"player"},
+  {k:"t3pt",  name:"Team With Most 3PTs Scored",                 type:"teampick"},
+  {k:"treb",  name:"Team With Most Rebounds",                    type:"teampick"},
+  {k:"tast",  name:"Team With Most Assists",                     type:"teampick"},
+  {k:"t2fg",  name:"Team With Most 2PT Field Goals Scored",      type:"teampick"}
+];
+/* old keys saved by earlier builds */
+const PROP_KEY_MIGRATE = {"3pm":"3ps","most3":"t3pt"};
+db.props.forEach(p=>{ if(PROP_KEY_MIGRATE[p.market]) p.market = PROP_KEY_MIGRATE[p.market]; });
+const bbForm=$("#bbForm");
+$("#bbMarket").innerHTML = PROP_MARKETS.map(m=>`<option value="${m.k}">${esc(m.name)}</option>`).join("");
+const propType = () => (PROP_MARKETS.find(m=>m.k===bbForm.market.value)||{type:"player"}).type;
+function syncPropForm(){
+  const t=propType(), g=bbForm.fixtureId.value && db.fixtures.find(f=>f.id===bbForm.fixtureId.value);
+  $("#bbPlayerW").hidden = t!=="player";
+  $("#bbTeamW").hidden   = t==="player";
+  $("#bbLineW").hidden   = t==="teampick";
+  $("#bbSideW").hidden   = t==="teampick";
+  bbForm.team.innerHTML = g ? [g.home,g.away].map(n=>`<option>${esc(n)}</option>`).join("") : "";
+}
+function fillPropFixtures(){
+  const cur=bbForm.fixtureId.value;
+  const rows=db.fixtures.filter(f=>f.sport==="basketball").sort((a,b)=>a.kickoff.localeCompare(b.kickoff));
+  bbForm.fixtureId.innerHTML = rows.length ? rows.map(f=>`<option value="${f.id}">${esc(f.home)} v ${esc(f.away)} · ${esc(fmt(f.kickoff))}</option>`).join("") : `<option value="">Add a basketball game in tab 1 first</option>`;
+  if(rows.some(f=>f.id===cur)) bbForm.fixtureId.value=cur;
+  syncPropForm();
+}
+bbForm.market.onchange = syncPropForm; bbForm.fixtureId.onchange = syncPropForm;
+const propPick = p => {
+  const m=PROP_MARKETS.find(x=>x.k===p.market)||{type:"player",name:p.market};
+  if(m.type==="teampick") return `${p.team}`;
+  return `${m.type==="player"?p.player+" · ":p.team+" · "}${p.side} ${p.line}`;
+};
+bbForm.onsubmit = e => {
+  e.preventDefault();
+  const f=Object.fromEntries(new FormData(bbForm)), t=propType();
+  if(!f.fixtureId) return toast("Add a basketball game first");
+  if(t==="player" && !f.player.trim()) return toast("Enter the player's name");
+  if(t!=="teampick" && f.line==="") return toast("Enter the line");
+  db.props.push({id:uid(), fixtureId:f.fixtureId, market:f.market, player:t==="player"?f.player.trim():"", team:t==="player"?"":f.team,
+                 line:t==="teampick"?"":f.line, side:t==="teampick"?"":f.side, odds:f.odds, live:false, createdAt:new Date().toISOString()});
+  bbForm.player.value=""; bbForm.line.value=""; bbForm.odds.value=""; commit(); toast("Prop added");
+};
+function renderProps(){
+  fillPropFixtures();
+  const rows=db.props.slice().reverse();
+  $("#bbCount").textContent = rows.length?`(${rows.length})`:"";
+  $("#bbBody").innerHTML = rows.length ? rows.map(p=>{
+    const f=db.fixtures.find(x=>x.id===p.fixtureId)||{home:"?",away:"?"}, m=PROP_MARKETS.find(x=>x.k===p.market);
+    return `<tr data-id="${p.id}"><td><b>${esc(f.home)}</b> v <b>${esc(f.away)}</b><br><small class="muted">${esc(fmt(f.kickoff))}</small></td>
+      <td>${esc(m?m.name:p.market)}</td><td>${esc(propPick(p))}</td>
+      <td><input class="odd" type="number" step="0.01" min="1" data-f="odds" value="${esc(p.odds)}" placeholder="-"></td>
+      <td><label class="sw"><input type="checkbox" data-f="live" ${p.live?"checked":""}><i></i></label></td>
+      <td><button class="btn danger sm" data-del="${p.id}">Delete</button></td></tr>`;
+  }).join("") : `<tr><td colspan="6" class="empty">No props yet.</td></tr>`;
+}
+$("#bbBody").addEventListener("change", e => {
+  const el=e.target, tr=el.closest("tr"); if(!tr||!el.dataset.f) return;
+  const p=db.props.find(x=>x.id===tr.dataset.id); if(!p) return;
+  p[el.dataset.f] = el.type==="checkbox" ? el.checked : el.value.trim(); Store.save(db);
+});
+$("#bbBody").addEventListener("click", e => {
+  const id=e.target.dataset.del; if(id && confirm("Delete this prop?")){ db.props=db.props.filter(p=>p.id!==id); commit(); }
+});
 
 /* ============ PICKS ============ */
 const pkForm = $("#pkForm");
@@ -348,7 +520,7 @@ $("#fStatus").onchange = render;
 
 /* ============ RENDER ============ */
 function render(){
-  $("#stats").textContent = `${db.fixtures.length} fixtures · ${db.picks.filter(p=>p.status==="published").length} live`;
+  $("#stats").textContent = statsText(); renderFb(); renderProps();
   const fxs = db.fixtures.slice().sort((a,b)=>a.kickoff.localeCompare(b.kickoff));
   $("#fxCount").textContent = fxs.length?`(${fxs.length})`:"";
   $("#fxBody").innerHTML = fxs.length ? fxs.map(f=>`<tr>
@@ -378,9 +550,9 @@ $("#exp").onclick = () => {
 };
 $("#imp").onchange = e => {
   const file=e.target.files[0]; if(!file) return;
-  file.text().then(t=>{ try{ const d=JSON.parse(t); if(!Array.isArray(d.fixtures)||!Array.isArray(d.picks)) throw 0; db=d; commit(); toast("Imported"); }catch(_){ toast("Not a valid backup file"); } });
+  file.text().then(t=>{ try{ const d=JSON.parse(t); if(!Array.isArray(d.fixtures)||!Array.isArray(d.picks)) throw 0; d.props=d.props||[]; db=d; commit(); toast("Imported"); }catch(_){ toast("Not a valid backup file"); } });
 };
-$("#wipe").onclick = () => { if(confirm("Erase all fixtures and picks from this browser?")){ db={fixtures:[],picks:[]}; commit(); } };
+$("#wipe").onclick = () => { if(confirm("Erase all fixtures and picks from this browser?")){ db={fixtures:[],picks:[],props:[]}; commit(); } };
 
 resetPick();
 try{ if(sessionStorage.getItem("pb_in")) enter(); }catch(e){}
