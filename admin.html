@@ -340,7 +340,15 @@ const Store = {
       };
       const sj = JSON.stringify(snap);
       if(sj !== this.lastSnap){ snap.updatedAt = new Date().toISOString(); await this.fs.collection("public").doc("live").set(snap); this.lastSnap = sj; }
-      this.setSync("Saved ✓");
+      /* tell the editor exactly what the public site will show (it only shows yesterday / today / tomorrow, Nigerian time) */
+      const wat = o => { const t = new Date(new Intl.DateTimeFormat("en-CA",{timeZone:"Africa/Lagos"}).format(new Date())+"T12:00:00Z"); t.setUTCDate(t.getUTCDate()+o); return t.toISOString().slice(0,10); };
+      const dayOf = r => String(r.kickoff||"").slice(0,10);
+      const showFx = snap.fixtures.filter(f=>[wat(-1),wat(0),wat(1)].includes(dayOf(f))).length;
+      const showPr = snap.props.filter(r=>[wat(0),wat(1)].includes(dayOf(r))).length;
+      const liveFx = db.fixtures.filter(f=>liveOf("fixtures",f)).length, livePr = db.props.filter(r=>liveOf("props",r)).length;
+      const hidden = (liveFx-showFx)+(livePr-showPr);
+      this.setSync("Saved ✓ · on the site now: "+showFx+" match"+(showFx===1?"":"es")+", "+showPr+" prop"+(showPr===1?"":"s")
+        + (hidden>0 ? " · "+hidden+" Live item"+(hidden===1?"":"s")+" NOT shown: kickoff date must be yesterday, today or tomorrow (props: today or tomorrow)" : ""), hidden>0);
     }catch(e){
       console.error(e); this.setSync("NOT SAVED – "+(e.code||e.message),true); toast("Could not save: "+(e.code||e.message));
     }
