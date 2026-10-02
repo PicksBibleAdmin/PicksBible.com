@@ -1,4 +1,71 @@
 (function(){
+/* ======================================================================
+   LIVE DATA: one public document in Firestore (public/live), written by the admin
+   panel on every save. The site shows ONLY what is in it (= items switched to Live).
+   One read per page view keeps the free quota safe.
+   ====================================================================== */
+var LIVE_URL="https://firestore.googleapis.com/v1/projects/picksbible-7fa7f/databases/(default)/documents/public/live?key=AIzaSyBBnSFHx_z1YWwOXz6sdKOSzelTIuvusa8";
+function fsVal(v){
+  if(!v)return null;
+  if("stringValue" in v)return v.stringValue;
+  if("integerValue" in v)return Number(v.integerValue);
+  if("doubleValue" in v)return v.doubleValue;
+  if("booleanValue" in v)return v.booleanValue;
+  if("timestampValue" in v)return v.timestampValue;
+  if("mapValue" in v)return fsMap(v.mapValue.fields||{});
+  if("arrayValue" in v)return (v.arrayValue.values||[]).map(fsVal);
+  return null;
+}
+function fsMap(f){var o={};Object.keys(f).forEach(function(k){o[k]=fsVal(f[k])});return o}
+function wat(dOffset){ /* yyyy-mm-dd in Nigerian time, shifted by dOffset days */
+  var p=new Intl.DateTimeFormat("en-CA",{timeZone:"Africa/Lagos",year:"numeric",month:"2-digit",day:"2-digit"}).format(new Date());
+  var t=new Date(p+"T12:00:00Z");t.setUTCDate(t.getUTCDate()+(dOffset||0));return t.toISOString().slice(0,10);
+}
+function flagOf(country){
+  var c=(window.PB.countryFlags||{})[country];
+  if(!c||c.length!==2)return "";
+  return c.toUpperCase().split("").map(function(x){return String.fromCodePoint(127397+x.charCodeAt(0))}).join("");
+}
+function lgKey(P,sport,comp,country){
+  var n=String(comp||"").toLowerCase();
+  for(var k in P.leagues){var l=P.leagues[k];if(l.sport===sport&&String(l.name).toLowerCase()===n)return k}
+  var key="db_"+sport+"_"+n.replace(/[^a-z0-9]+/g,"-");
+  P.leagues[key]={name:comp||"Other",sport:sport,flag:flagOf(country),country:country||"Other"};
+  return key;
+}
+function applyLive(P,live){
+  var days={}; days[wat(-1)]="yesterday"; days[wat(0)]="today"; days[wat(1)]="tomorrow";
+  P.football={yesterday:[],today:[],tomorrow:[]};
+  P.basketball={yesterday:[],today:[],tomorrow:[]};
+  P.playerProps=[];
+  var d=new Date(wat(0)+"T12:00:00Z");
+  P.site.today=d.getUTCDate()+" "+["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"][d.getUTCMonth()]+" "+d.getUTCFullYear();
+  var fixtures=(live&&live.fixtures)||[], props=(live&&live.props)||[];
+  fixtures.sort(function(a,b){return String(a.kickoff).localeCompare(String(b.kickoff))});
+  fixtures.forEach(function(f){
+    var day=days[String(f.kickoff||"").slice(0,10)]; if(!day||f.sport!=="football")return;
+    var v=f.fb||{}, list=P.football[day];
+    list.push({lg:lgKey(P,"football",f.competition,f.country),t:String(f.kickoff).slice(11,16),h:f.home,a:f.away,
+      o:[v.o1||"",v.oX||"",v.o2||""],pk:v.tip||"",tip:v.tip||"-",gg:v.btts||"",ggo:v.bttsOdds||"",ou:v.ou||"",ouo:v.ouOdds||"",cs:v.cs||"",
+      st:"pending",score:"",featured:list.length<6});
+  });
+  props.sort(function(a,b){return String(a.kickoff).localeCompare(String(b.kickoff))});
+  props.forEach(function(p){
+    var k=String(p.kickoff||"").slice(0,10); if(k!==wat(0)&&k!==wat(1))return;
+    var team=p.team||"", other=team===p.home?p.away:p.home;
+    P.playerProps.push({k:p.market,player:p.player||"",team:team,opp:team?("vs "+other):(p.home+" v "+p.away),line:p.line||"",pick:p.side||"",odds:p.odds||""});
+  });
+}
+function loadLive(done){
+  var finished=false;
+  function fin(live){ if(finished)return; finished=true; try{applyLive(window.PB,live)}catch(e){try{console.error(e)}catch(_){}} done(); }
+  var timer=setTimeout(function(){fin(null)},6000);
+  try{
+    fetch(LIVE_URL).then(function(r){return r.ok?r.json():{}}).then(function(j){clearTimeout(timer);fin(j&&j.fields?fsMap(j.fields):null)}).catch(function(){clearTimeout(timer);fin(null)});
+  }catch(e){clearTimeout(timer);fin(null)}
+}
+
+function main(){
 "use strict";
 var D = window.PB, S = D.site;
 var $ = function(s,r){return (r||document).querySelector(s)};
@@ -426,4 +493,6 @@ $$("form[data-local]").forEach(function(f){
   });
   $$("input,textarea",f).forEach(function(i){i.addEventListener("input",function(){var er=i.parentNode.querySelector(".err");if(er)er.remove()})});
 });
+}
+loadLive(main);
 })();

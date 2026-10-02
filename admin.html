@@ -290,7 +290,7 @@ const clean = o => JSON.parse(JSON.stringify(o));                 /* drops undef
 /* `live` is copied to the top level so the security rules can let the public read ONLY live items */
 const liveOf = (col,r) => col==="fixtures" ? !!(r.fb && r.fb.live) : col==="props" ? !!r.live : r.status==="published";
 const Store = {
-  fb:null, auth:null, fs:null, last:{fixtures:{},props:{},picks:{}}, timer:null, busy:false, again:false,
+  lastSnap:null, fb:null, auth:null, fs:null, last:{fixtures:{},props:{},picks:{}}, timer:null, busy:false, again:false,
   init(){
     firebase.initializeApp(CONFIG.FIREBASE);
     this.auth = firebase.auth(); this.fs = firebase.firestore();
@@ -330,7 +330,17 @@ const Store = {
         for(const id in this.last[c]) if(!seen[id]){ batch.delete(this.fs.collection(c).doc(id)); delete next[c][id]; if(++n >= 400) await push(); }
       }
       await push(); await Promise.all(commits);
-      this.last = next; this.setSync("Saved ✓");
+      this.last = next;
+      /* public snapshot: ONE document holding everything that is Live. The public site reads only this. */
+      const cutoff = new Date(Date.now()-3*864e5).toISOString().slice(0,10);
+      const recent = r => String(r.kickoff||"").slice(0,10) >= cutoff;
+      const snap = {
+        fixtures: db.fixtures.filter(f=>liveOf("fixtures",f) && recent(f)).map(f=>this.docOf("fixtures",f)),
+        props:    db.props.filter(r=>liveOf("props",r)).map(r=>this.docOf("props",r)).filter(recent)
+      };
+      const sj = JSON.stringify(snap);
+      if(sj !== this.lastSnap){ snap.updatedAt = new Date().toISOString(); await this.fs.collection("public").doc("live").set(snap); this.lastSnap = sj; }
+      this.setSync("Saved ✓");
     }catch(e){
       console.error(e); this.setSync("NOT SAVED – "+(e.code||e.message),true); toast("Could not save: "+(e.code||e.message));
     }
@@ -383,7 +393,7 @@ async function onSignedIn(user){
     if(old && !db.fixtures.length && !db.props.length && confirm("This browser has "+old.fixtures.length+" fixture(s) saved from before the database was connected.\n\nUpload them to the database now?")){
       db = old; db.props = db.props || []; db.picks = db.picks || []; Store.save();
     }
-    Store.setSync("Saved ✓"); resetPick(); enter();
+    Store.lastSnap = null; Store.save(); resetPick(); enter();
   }catch(e){
     console.error(e);
     loginMsg(e.code==="permission-denied" ? "Signed in, but the database refused access. The security rules do not list this email yet." : "Could not load the database: "+(e.code||e.message));
