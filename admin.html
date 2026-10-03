@@ -73,6 +73,8 @@ th{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.04
 #tab-home td select{background:#0b0818;border:1px solid var(--line);color:inherit;border-radius:8px;padding:7px 9px}
 #tab-home td input.odd,#tab-home td input.cs{width:90px}
 select.res.won{color:#22c55e;border-color:#22c55e}select.res.lost{color:#ef4444;border-color:#ef4444}
+.viewbar{display:flex;align-items:center;gap:10px;margin:0 0 14px;flex-wrap:wrap}.viewbar label{margin:0}.viewbar select{width:auto;min-width:260px}
+tr.gmhead td{padding:8px 8px 8px 22px;border-bottom:1px solid var(--line);color:var(--muted)}
 tr.lghead td{background:#ffffff0d;padding:10px 8px;border-bottom:1px solid var(--line)}
 .ft{border-collapse:collapse;min-width:100%}
 .ft th,.ft td{border:0;border-bottom:1px solid var(--line);padding:8px 5px;white-space:nowrap;text-align:left}
@@ -114,7 +116,7 @@ tr.lghead td{background:#ffffff0d;padding:10px 8px;border-bottom:1px solid var(-
     <label for="pw" style="margin-top:10px;display:block">Password</label>
     <input id="pw" type="password" autocomplete="current-password">
     <div class="row end"><button class="btn" id="loginBtn">Sign in</button></div>
-    <p class="muted" style="font-size:11px;margin:10px 0 0">Build 2026-10-03-M (Firebase)</p>
+    <p class="muted" style="font-size:11px;margin:10px 0 0">Build 2026-10-03-Q (Firebase)</p>
     <p id="loginErr" class="muted" style="color:var(--lost)" hidden></p>
   </div>
 </div>
@@ -138,6 +140,7 @@ tr.lghead td{background:#ffffff0d;padding:10px 8px;border-bottom:1px solid var(-
   <button role="tab" data-tab="published" aria-selected="false">Picks &amp; results</button>
   <button role="tab" data-tab="data" aria-selected="false">Data</button>
 </nav>
+<div class="viewbar"><label for="viewMode">Showing</label><select id="viewMode"><option value="current">Current matches (hidden 48 hours after kick-off)</option><option value="past">Past matches (archive, older than 48 hours)</option><option value="all">All matches</option></select><span class="muted" id="viewNote"></span></div>
 
 <!-- FIXTURES -->
 <section id="tab-fixtures">
@@ -557,10 +560,20 @@ const fbOf = f => { const v = Object.assign(fbDefaults(), f.fb||{}); if(!v.tip &
 const hhmm = iso => { const d=new Date(iso); return isNaN(d)?"":d.toLocaleTimeString([], {hour:"2-digit",minute:"2-digit",hour12:false}); };
 const dmon = iso => { const d=new Date(iso); return isNaN(d)?"":d.toLocaleDateString([], {day:"2-digit",month:"short"}); };
 const oddIn = (key,v) => `<td><input class="odd" type="number" step="0.01" min="1" data-f="${key}" value="${esc(v[key])}" placeholder="-"></td>`;
+const watDay = o => { const t = new Date(new Intl.DateTimeFormat("en-CA",{timeZone:"Africa/Lagos"}).format(new Date())+"T12:00:00Z"); t.setUTCDate(t.getUTCDate()+o); return t.toISOString().slice(0,10); };
+const HIDE_AFTER_HOURS = 48;   /* a match leaves the working lists this many hours after kick-off (it stays in the database / Past view) */
+const inView = f => { const m=$("#viewMode").value; if(m==="all") return true; const t=new Date(f.kickoff).getTime(), old=!isNaN(t) && t < Date.now()-HIDE_AFTER_HOURS*36e5; return m==="past" ? old : !old; };
+const lgSort = (a,b) => ((a.country||"")+"|"+(a.competition||"")).localeCompare((b.country||"")+"|"+(b.competition||"")) || a.kickoff.localeCompare(b.kickoff);
+const lgHead = (f,n,cols,emoji) => `<tr class="lghead"><td colspan="${cols}">${emoji} <b>${esc(compLabel(f))}</b> <span class="muted">(${n})</span></td></tr>`;
+function leagueGrouped(rows, cols, emoji, rowFn){
+  const cnt = {}, key = f => (f.country||"")+"|"+(f.competition||""); rows.forEach(f=>{ cnt[key(f)] = (cnt[key(f)]||0)+1; });
+  let last = null;
+  return rows.map(f=>{ let h=""; if(key(f)!==last){ last=key(f); h=lgHead(f,cnt[last],cols,emoji); } return h+rowFn(f); }).join("");
+}
 function renderFb(){
-  const rows = db.fixtures.filter(f=>f.sport==="football").sort((a,b)=>a.kickoff.localeCompare(b.kickoff));
+  const rows = db.fixtures.filter(f=>f.sport==="football"&&inView(f)).sort(lgSort);
   $("#fbCount").textContent = rows.length?`(${rows.length})`:"";
-  $("#fbBody").innerHTML = rows.length ? rows.map(f=>{
+  $("#fbBody").innerHTML = rows.length ? leagueGrouped(rows,14,"⚽",f=>{
     const v=fbOf(f);
     return `<tr data-id="${f.id}">
       <td class="t">${esc(hhmm(f.kickoff))}<br><small>${esc(dmon(f.kickoff))}</small></td>
@@ -577,15 +590,15 @@ function renderFb(){
           <input class="odd" type="number" step="0.01" min="1" data-f="dcOdds" value="${esc(v.dcOdds)}" placeholder="odds"></td>
       <td><input class="cs" data-f="cs" value="${esc(v.cs)}" placeholder="2-1" maxlength="7"></td>
       <td><label class="sw"><input type="checkbox" data-f="live" ${v.live?"checked":""}><i></i></label></td></tr>`;
-  }).join("") : `<tr><td colspan="14" class="empty">No football fixtures yet. Add one in tab 1 (choose Football).</td></tr>`;
+  }) : `<tr><td colspan="14" class="empty">No football fixtures yet. Add one in tab 1 (choose Football).</td></tr>`;
 }
 /* ============ BASKETBALL TABLE ============ */
 const bbDefaults = () => ({o1:"",o2:"",tip:"",spread:"",totalSide:"",totalLine:"",ps:"",live:false});
 const bbOf = f => Object.assign(bbDefaults(), f.bb||{});
 function renderBb(){
-  const rows = db.fixtures.filter(f=>f.sport==="basketball").sort((a,b)=>a.kickoff.localeCompare(b.kickoff));
+  const rows = db.fixtures.filter(f=>f.sport==="basketball"&&inView(f)).sort(lgSort);
   $("#bbCount").textContent = rows.length?`(${rows.length})`:"";
-  $("#bbBody").innerHTML = rows.length ? rows.map(f=>{
+  $("#bbBody").innerHTML = rows.length ? leagueGrouped(rows,11,"🏀",f=>{
     const v=bbOf(f);
     return `<tr data-id="${f.id}">
       <td class="t">${esc(hhmm(f.kickoff))}<br><small>${esc(dmon(f.kickoff))}</small></td>
@@ -598,7 +611,7 @@ function renderBb(){
           <input class="odd" data-f="totalLine" value="${esc(v.totalLine)}" placeholder="165.5" maxlength="7"></td>
       <td><input class="cs" data-f="ps" value="${esc(v.ps)}" placeholder="98-91" maxlength="9"></td>
       <td><label class="sw"><input type="checkbox" data-f="live" ${v.live?"checked":""}><i></i></label></td></tr>`;
-  }).join("") : `<tr><td colspan="11" class="empty">No basketball fixtures yet. Add one in tab 1 (choose Basketball).</td></tr>`;
+  }) : `<tr><td colspan="11" class="empty">No basketball fixtures yet. Add one in tab 1 (choose Basketball).</td></tr>`;
 }
 $("#bbBody").addEventListener("change", e => {
   const el=e.target, tr=el.closest("tr"); if(!tr||!el.dataset.f) return;
@@ -643,6 +656,7 @@ function renderHome(){
   }
   $("#vpBody").innerHTML = h;
 }
+$("#viewMode").onchange = render;
 $("#hbDate").onchange = renderHome; $("#vpMonth").onchange = renderHome;
 $("#hbBody").addEventListener("change", e => {
   const el=e.target, tr=el.closest("tr"); if(!tr||!el.dataset.g) return;
@@ -698,8 +712,8 @@ function syncPropForm(){
 }
 function fillPropFixtures(){
   const cur=bbForm.fixtureId.value;
-  const rows=db.fixtures.filter(f=>f.sport==="basketball").sort((a,b)=>a.kickoff.localeCompare(b.kickoff));
-  bbForm.fixtureId.innerHTML = rows.length ? rows.map(f=>`<option value="${f.id}">${esc(f.home)} v ${esc(f.away)} · ${esc(fmt(f.kickoff))}</option>`).join("") : `<option value="">Add a basketball game in tab 1 first</option>`;
+  const rows=db.fixtures.filter(f=>f.sport==="basketball"&&inView(f)).sort(lgSort);
+  bbForm.fixtureId.innerHTML = rows.length ? rows.map(f=>`<option value="${f.id}">${esc(f.competition)} · ${esc(f.home)} v ${esc(f.away)} · ${esc(fmt(f.kickoff))}</option>`).join("") : `<option value="">Add a basketball game in tab 1 first</option>`;
   if(rows.some(f=>f.id===cur)) bbForm.fixtureId.value=cur;
   syncPropForm();
 }
@@ -744,13 +758,16 @@ function editProp(id){
 function renderProps(){
   fillPropFixtures();
   const fxOf = p => db.fixtures.find(x=>x.id===p.fixtureId)||{home:"?",away:"?",kickoff:""};
-  const rows=db.props.slice().sort((a,b)=>String(fxOf(a).kickoff).localeCompare(String(fxOf(b).kickoff)) || String(a.fixtureId).localeCompare(String(b.fixtureId)) || String(a.createdAt||"").localeCompare(String(b.createdAt||"")));
+  const lgKeyOf = f => (f.country||"")+"|"+(f.competition||"");
+  const rows=db.props.filter(p=>inView(fxOf(p))).sort((x,y)=>{ const fx=fxOf(x), fy=fxOf(y); return lgKeyOf(fx).localeCompare(lgKeyOf(fy)) || String(fx.kickoff).localeCompare(String(fy.kickoff)) || String(x.fixtureId).localeCompare(String(y.fixtureId)) || String(x.createdAt||"").localeCompare(String(y.createdAt||"")); });
   $("#propsCount").textContent = rows.length?`(${rows.length})`:"";
-  const pcnt = {}; rows.forEach(p=>{ pcnt[p.fixtureId]=(pcnt[p.fixtureId]||0)+1; });
-  let lastG = null;
+  const pcnt = {}, lcnt = {}; rows.forEach(p=>{ pcnt[p.fixtureId]=(pcnt[p.fixtureId]||0)+1; const k=lgKeyOf(fxOf(p)); lcnt[k]=(lcnt[k]||0)+1; });
+  let lastG = null, lastL = null;
   $("#propsBody").innerHTML = rows.length ? rows.map(p=>{
     const f=fxOf(p), m=PROP_MARKETS.find(x=>x.k===p.market);
-    let head=""; if(p.fixtureId!==lastG){ lastG=p.fixtureId; head=`<tr class="lghead"><td colspan="7">🏀 <b>${esc(f.home)} v ${esc(f.away)}</b> <span class="muted">· ${esc(fmt(f.kickoff))} · ${pcnt[p.fixtureId]} prop${pcnt[p.fixtureId]===1?"":"s"}</span></td></tr>`; }
+    let head=""; const lk=lgKeyOf(f);
+    if(lk!==lastL){ lastL=lk; head+=`<tr class="lghead"><td colspan="7">🏆 <b>${esc(compLabel(f)||"No league")}</b> <span class="muted">(${lcnt[lk]} prop${lcnt[lk]===1?"":"s"})</span></td></tr>`; }
+    if(p.fixtureId!==lastG){ lastG=p.fixtureId; head+=`<tr class="gmhead"><td colspan="7">🏀 <b>${esc(f.home)} v ${esc(f.away)}</b> <span class="muted">· ${esc(fmt(f.kickoff))} · ${pcnt[p.fixtureId]} prop${pcnt[p.fixtureId]===1?"":"s"}</span></td></tr>`; }
     return head+`<tr data-id="${p.id}"><td><b>${esc(f.home)}</b> v <b>${esc(f.away)}</b><br><small class="muted">${esc(fmt(f.kickoff))}</small></td>
       <td>${esc(m?m.name:p.market)}</td><td>${esc(propPick(p))}</td>
       <td><input class="odd" type="number" step="0.01" min="1" data-f="odds" value="${esc(p.odds)}" placeholder="-"></td>
@@ -816,8 +833,9 @@ $("#fStatus").onchange = render;
 /* ============ RENDER ============ */
 function render(){
   $("#stats").textContent = statsText(); renderFb(); renderBb(); renderProps(); renderHome();
-  const fxs = db.fixtures.slice().sort((a,b)=>a.kickoff.localeCompare(b.kickoff));
+  const fxs = db.fixtures.filter(inView).sort((a,b)=>a.kickoff.localeCompare(b.kickoff));
   $("#fxCount").textContent = fxs.length?`(${fxs.length})`:"";
+  { const older = db.fixtures.filter(f=>!inView(f)).length; $("#viewNote").textContent = older ? `${older} other match${older===1?"":"es"} stored, hidden from this view` : ""; }
   const gk = f => (f.sport==="football"?"0":"1")+"|"+(f.country||"")+"|"+(f.competition||"");
   fxs.sort((a,b)=>gk(a).localeCompare(gk(b)) || a.kickoff.localeCompare(b.kickoff));
   const cnt = {}; fxs.forEach(f=>{ cnt[gk(f)] = (cnt[gk(f)]||0)+1; });

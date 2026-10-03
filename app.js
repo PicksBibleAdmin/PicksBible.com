@@ -520,9 +520,11 @@ $$("[data-props]").forEach(function(el){
     var list=D.playerProps.filter(function(p){return p.k===k});
     el.innerHTML=list.length?list.map(card).join(""):'<div class="empty">No '+esc(mk(k).name)+' props posted yet.</div>';
   }
+  function cnt(k){return D.playerProps.filter(function(p){return p.k===k}).length}
   var cur=store("pb.propmkt"); if(!markets.some(function(m){return m.k===cur}))cur=markets[0]&&markets[0].k;
+  if(!cnt(cur)){for(var i=0;i<markets.length;i++)if(cnt(markets[i].k)){cur=markets[i].k;break}}   /* open on a prop type that actually has props */
   if(sel){
-    sel.innerHTML=markets.map(function(m){return '<option value="'+esc(m.k)+'"'+(m.k===cur?" selected":"")+'>'+esc(m.name)+'</option>'}).join("");
+    sel.innerHTML=markets.map(function(m){var n=cnt(m.k);return '<option value="'+esc(m.k)+'"'+(m.k===cur?" selected":"")+'>'+esc(m.name)+(n?' ('+n+')':'')+'</option>'}).join("");
     sel.addEventListener("change",function(){cur=sel.value;store("pb.propmkt",cur);draw(cur)});
   }
   draw(cur);
