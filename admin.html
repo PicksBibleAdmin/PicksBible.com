@@ -109,7 +109,7 @@ th{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.04
     <label for="pw" style="margin-top:10px;display:block">Password</label>
     <input id="pw" type="password" autocomplete="current-password">
     <div class="row end"><button class="btn" id="loginBtn">Sign in</button></div>
-    <p class="muted" style="font-size:11px;margin:10px 0 0">Build 2026-10-01-G (Firebase)</p>
+    <p class="muted" style="font-size:11px;margin:10px 0 0">Build 2026-10-03-H (Firebase)</p>
     <p id="loginErr" class="muted" style="color:var(--lost)" hidden></p>
   </div>
 </div>
@@ -174,7 +174,7 @@ th{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.04
     <h2>Football table <span class="muted" id="fbCount"></span></h2>
     <p class="note">One row per football fixture (add fixtures in tab 1). Enter the odds for 1, X and 2, choose your <b>Tip</b> (1, X or 2), then your <b>GG/NG</b> and <b>Over/Under 2.5</b> picks with their odds, add a correct-score tip, and switch the match <b>Live</b>. Changes save automatically.</p>
     <div class="tbl"><table class="ft">
-      <thead><tr><th>Time</th><th>Competition</th><th>Home</th><th>Away</th><th>1</th><th>X</th><th>2</th><th>Tips</th><th>GG / NG</th><th>Over / Under 2.5</th><th>CS tips</th><th>Live</th></tr></thead>
+      <thead><tr><th>Time</th><th>Competition</th><th>Home</th><th>Away</th><th>1</th><th>X</th><th>2</th><th>1X2 Tip</th><th>Confidence %</th><th>Over / Under 2.5</th><th>BTTS</th><th>Double chance</th><th>CS tip</th><th>Live</th></tr></thead>
       <tbody id="fbBody"></tbody>
     </table></div>
   </div>
@@ -218,8 +218,7 @@ th{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.04
         <div><label>Your pick</label><input name="selection" required placeholder="e.g. Over 2.5, 1X, Arsenal -1.5"></div>
         <div><label>Odds (decimal)</label><input name="odds" type="number" step="0.01" min="1"></div>
         <div><label>Confidence</label><select name="confidence"><option>High</option><option selected>Medium</option><option>Low</option></select></div>
-        <div><label>Edition</label><select name="slot"><option value="morning">Morning</option><option value="night">Night</option></select></div>
-        <div><label>Access</label><select name="access"><option value="free">Free</option><option value="premium">Premium</option></select></div>
+                <div><label>Access</label><select name="access"><option value="free">Free</option><option value="premium">Premium</option></select></div>
       </div>
       <div style="margin-top:12px"><label>Analysis (optional)</label><textarea name="analysis"></textarea></div>
       <div class="row end">
@@ -488,7 +487,7 @@ function pickFor(id){ resetPick(id); showTab("picks"); }
 
 
 /* ============ FOOTBALL TABLE ============ */
-const fbDefaults = () => ({tip:"",o1:"",oX:"",o2:"",btts:"",bttsOdds:"",ou:"",ouOdds:"",cs:"",live:false});
+const fbDefaults = () => ({tip:"",o1:"",oX:"",o2:"",btts:"",bttsOdds:"",ou:"",ouOdds:"",conf:"",dc:"",dcOdds:"",cs:"",live:false});
 const fbOf = f => { const v = Object.assign(fbDefaults(), f.fb||{}); if(!v.tip && v.pick) v.tip = v.pick; return v; };
 const hhmm = iso => { const d=new Date(iso); return isNaN(d)?"":d.toLocaleTimeString([], {hour:"2-digit",minute:"2-digit",hour12:false}); };
 const dmon = iso => { const d=new Date(iso); return isNaN(d)?"":d.toLocaleDateString([], {day:"2-digit",month:"short"}); };
@@ -504,13 +503,16 @@ function renderFb(){
       <td class="tm"><b>${esc(f.home)}</b></td><td class="tm"><b>${esc(f.away)}</b></td>
       ${oddIn("o1",v)}${oddIn("oX",v)}${oddIn("o2",v)}
       <td><select data-f="tip" class="tipsel"><option value="">-</option>${["1","X","2"].map(k=>`<option ${v.tip===k?"selected":""}>${k}</option>`).join("")}</select></td>
-      <td><select data-f="btts"><option value="">-</option><option ${v.btts==="GG"?"selected":""}>GG</option><option ${v.btts==="NG"?"selected":""}>NG</option></select>
-          <input class="odd" type="number" step="0.01" min="1" data-f="bttsOdds" value="${esc(v.bttsOdds)}" placeholder="odds"></td>
+      <td><input class="odd" type="number" step="1" min="0" max="100" data-f="conf" value="${esc(String(v.conf||"").replace("%",""))}" placeholder="%"></td>
       <td><select data-f="ou"><option value="">-</option><option value="Over" ${v.ou==="Over"?"selected":""}>Over 2.5</option><option value="Under" ${v.ou==="Under"?"selected":""}>Under 2.5</option></select>
           <input class="odd" type="number" step="0.01" min="1" data-f="ouOdds" value="${esc(v.ouOdds)}" placeholder="odds"></td>
+      <td><select data-f="btts"><option value="">-</option><option ${v.btts==="GG"?"selected":""}>GG</option><option ${v.btts==="NG"?"selected":""}>NG</option></select>
+          <input class="odd" type="number" step="0.01" min="1" data-f="bttsOdds" value="${esc(v.bttsOdds)}" placeholder="odds"></td>
+      <td><select data-f="dc"><option value="">-</option>${["1X","12","X2"].map(k=>`<option ${v.dc===k?"selected":""}>${k}</option>`).join("")}</select>
+          <input class="odd" type="number" step="0.01" min="1" data-f="dcOdds" value="${esc(v.dcOdds)}" placeholder="odds"></td>
       <td><input class="cs" data-f="cs" value="${esc(v.cs)}" placeholder="2-1" maxlength="7"></td>
       <td><label class="sw"><input type="checkbox" data-f="live" ${v.live?"checked":""}><i></i></label></td></tr>`;
-  }).join("") : `<tr><td colspan="12" class="empty">No football fixtures yet. Add one in tab 1 (choose Football).</td></tr>`;
+  }).join("") : `<tr><td colspan="14" class="empty">No football fixtures yet. Add one in tab 1 (choose Football).</td></tr>`;
 }
 $("#fbBody").addEventListener("change", e => {
   const el=e.target, tr=el.closest("tr"); if(!tr||!el.dataset.f) return;
@@ -617,7 +619,7 @@ function resetPick(fixtureId){
 function editPick(id){
   const p = db.picks.find(x=>x.id===id); if(!p) return;
   resetPick(p.fixtureId);
-  for(const k of ["id","market","selection","odds","confidence","slot","access","analysis"]) pkForm[k].value = p[k] ?? "";
+  for(const k of ["id","market","selection","odds","confidence","access","analysis"]) pkForm[k].value = p[k] ?? "";
   $("#pickTitle").textContent="Edit pick"; showTab("picks");
 }
 let submitStatus="draft";
@@ -655,7 +657,7 @@ function render(){
   $("#pkBody").innerHTML = picks.length ? picks.map(p=>{
     const f = db.fixtures.find(x=>x.id===p.fixtureId)||{home:"?",away:"?"};
     return `<tr>
-      <td><b>${esc(f.home)}</b> v <b>${esc(f.away)}</b><br><span class="muted">${esc(compLabel(f))} · ${esc(p.slot)}</span></td>
+      <td><b>${esc(f.home)}</b> v <b>${esc(f.away)}</b><br><span class="muted">${esc(compLabel(f))}</span></td>
       <td>${esc(p.selection)}<br><span class="muted">${esc(p.market)}${p.odds?` @ ${esc(p.odds)}`:""} · ${esc(p.confidence)}</span> ${p.access==="premium"?'<span class="tag prem">Premium</span>':""}</td>
       <td><span class="tag ${p.status==="published"?"live":"draft"}">${p.status==="published"?"Live":"Draft"}</span></td>
       <td><select onchange="setResult('${p.id}',this.value)" style="width:auto">${["pending","won","lost","void"].map(r=>`<option ${p.result===r?"selected":""}>${r}</option>`).join("")}</select></td>

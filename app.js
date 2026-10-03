@@ -48,7 +48,7 @@ function applyLive(P,live){
     var date=String(f.kickoff||"").slice(0,10), day=days[date]; if(!date)return;
     var v=f.fb||{};
     var m={lg:lgKey(P,"football",f.competition,f.country),t:String(f.kickoff).slice(11,16),h:f.home,a:f.away,
-      o:[v.o1||"",v.oX||"",v.o2||""],pk:v.tip||"",tip:v.tip||"-",gg:v.btts||"",ggo:v.bttsOdds||"",ou:v.ou||"",ouo:v.ouOdds||"",cs:v.cs||"",
+      o:[v.o1||"",v.oX||"",v.o2||""],pk:v.tip||"",tip:v.tip||"-",gg:v.btts||"",ggo:v.bttsOdds||"",ou:v.ou||"",ouo:v.ouOdds||"",conf:v.conf||"",dc:v.dc||"",dco:v.dcOdds||"",cs:v.cs||"",
       st:"pending",score:""};
     (P.byDate.football[date]=P.byDate.football[date]||[]).push(m);   /* any date: used by the calendar picker */
     if(day){var list=P.football[day];m.featured=list.length<6;list.push(m)}
@@ -206,23 +206,27 @@ function firstIdx(list,lg){for(var i=0;i<list.length;i++)if(list[i].lg===lg)retu
 function scoreLine(m){return m.score?'<span class="sc">'+esc(m.score)+'</span>':'<span class="sc" style="color:var(--muted)">-:-</span>'}
 
 /* ---------- full prediction tables ---------- */
-function oddCell(m,i,k){var v=m.o&&m.o[i]?m.o[i]:"-";return '<td><span class="odd'+(m.pk===k?" pk":"")+'">'+esc(v)+'</span></td>'}
-function extraPick(label,odds){return '<td>'+(label?'<span class="xp"><b>'+esc(label)+'</b><i>'+esc(odds||"")+'</i></span>':'-')+'</td>'}
+function oddCell(m,i,k){var v=m.o&&m.o[i]?m.o[i]:"-";return '<td class="od" data-l="'+k+'"><span class="odd'+(m.pk===k?" pk":"")+'">'+esc(v)+'</span></td>'}
 function pkBadge(m){return '<span class="tip '+(m.st==="won"?"won":m.st==="lost"?"lost":"")+'" title="'+esc(m.st)+'">'+esc(m.pk||m.tip||"-")+'</span>'}
+function dcCell(m){return m.dc?'<td class="kv" data-l="Double Chance"><span class="xp"><b>'+esc(m.dc)+'</b>'+(m.dco?'<i>('+esc(m.dco)+')</i>':'')+'</span></td>':'<td class="kv na" data-l="Double Chance">-</td>'}
+function confCell(m){return m.conf?'<td class="kv" data-l="Confidence"><span class="conf">'+esc(String(m.conf).replace("%",""))+'%</span></td>':'<td class="kv na" data-l="Confidence">-</td>'}
+function extraPick(label,odds,name){return '<td class="kv'+(label?'':' na')+'" data-l="'+esc(name||"")+'">'+(label?'<span class="xp"><b>'+esc(label)+'</b>'+(odds?'<i>('+esc(odds)+')</i>':'')+'</span>':'-')+'</td>'}
 function footballTable(list){
   if(!list.length)return '<div class="empty">No football ⚽ predictions for this day yet.</div>';
   var played=list.some(function(m){return m.score});
-  return '<div class="tscroll bwwrap"><table class="pt bw"><thead><tr><th>Time</th><th class="l">Competition</th><th class="l">Home</th><th class="l">Away</th><th>1</th><th>X</th><th>2</th><th>Tips</th><th>GG/NG</th><th>Over/Under 2.5</th><th>CS Tips</th>'+(played?'<th>Result</th>':'')+'</tr></thead><tbody>'+
+  return '<div class="tscroll bwwrap"><table class="pt bw"><thead><tr><th>Time</th><th class="l">Competition</th><th class="l">Home</th><th class="l">Away</th><th>Home Win (1)</th><th>Draw (X)</th><th>Away Win (2)</th><th>1X2 Tip</th><th>Confidence</th><th>Over/Under 2.5</th><th>BTTS</th><th>Double Chance</th><th>CS Tip</th>'+(played?'<th>Result</th>':'')+'</tr></thead><tbody>'+
     sortByLeague(list).map(function(m){
       return '<tr><td class="tm">'+esc(m.t)+'</td><td class="l lgn">'+esc(lgName(m.lg))+'</td><td class="l team"><b>'+esc(m.h)+'</b></td><td class="l team"><b>'+esc(m.a)+'</b></td>'+
-        oddCell(m,0,"1")+oddCell(m,1,"X")+oddCell(m,2,"2")+'<td>'+pkBadge(m)+'</td>'+extraPick(m.gg,m.ggo)+extraPick(m.ou?(m.ou==="Over"?"Over 2.5":"Under 2.5"):"",m.ouo)+'<td class="cs">'+esc(m.cs)+'</td>'+(played?'<td class="res">'+(m.score?esc(m.score):'-:-')+'</td>':'')+'</tr>';
+        oddCell(m,0,"1")+oddCell(m,1,"X")+oddCell(m,2,"2")+'<td class="kv" data-l="1X2 Tip">'+pkBadge(m)+'</td>'+confCell(m)+
+        extraPick(m.ou?(m.ou==="Over"?"Over 2.5":"Under 2.5"):"",m.ouo,"Over/Under 2.5")+extraPick(m.gg,m.ggo,"BTTS")+dcCell(m)+
+        '<td class="cs kv'+(m.cs?'':' na')+'" data-l="CS Tip">'+esc(m.cs||"-")+'</td>'+(played?'<td class="res kv" data-l="Result">'+(m.score?esc(m.score):'-:-')+'</td>':'')+'</tr>';
     }).join("")+
     '</tbody></table></div>';
 }
 function basketballTable(list){
   if(!list.length)return '<div class="empty">No basketball 🏀 predictions for this day yet.</div>';
-  return '<div class="tscroll"><table class="pt"><thead><tr><th>Time</th><th>Match</th><th>1</th><th>2</th><th>Tips</th><th>Spread</th><th>Total</th><th>Pred. score</th></tr></thead><tbody>'+
-    groupRows(sortByLeague(list),8,function(m){return '<tr><td>'+esc(m.t)+'</td><td class="m"><b>'+esc(m.h)+'</b>'+scoreLine(m)+'<b>'+esc(m.a)+'</b></td><td>'+ring(m.p[0])+'</td><td>'+ring(m.p[1])+'</td><td>'+tipBadge(m)+'</td><td>'+esc(m.spread)+'</td><td>'+esc(m.total)+'</td><td>'+esc(m.ps)+'</td></tr>'})+
+  return '<div class="tscroll bbwrap"><table class="pt bb"><thead><tr><th>Time</th><th>Match</th><th>1</th><th>2</th><th>Tips</th><th>Spread</th><th>Total</th><th>Pred. score</th></tr></thead><tbody>'+
+    groupRows(sortByLeague(list),8,function(m){return '<tr><td class="tm">'+esc(m.t)+'</td><td class="m"><b>'+esc(m.h)+'</b>'+scoreLine(m)+'<b>'+esc(m.a)+'</b></td><td class="rg" data-l="Home win">'+ring(m.p[0])+'</td><td class="rg" data-l="Away win">'+ring(m.p[1])+'</td><td class="kv" data-l="Tip">'+tipBadge(m)+'</td><td class="kv" data-l="Spread">'+esc(m.spread)+'</td><td class="kv" data-l="Total">'+esc(m.total)+'</td><td class="kv" data-l="Pred. score">'+esc(m.ps)+'</td></tr>'})+
     '</tbody></table></div>';
 }
 function compactTable(list,sport){
