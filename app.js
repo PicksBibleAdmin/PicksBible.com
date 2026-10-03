@@ -403,11 +403,11 @@ $$("[data-home]").forEach(function(hero){
   function etHalf(sp){
     var v=getET(sp,selYmd());
     var head='<div class="ethalf"><h3>'+(sp==="football"?"&#9917; Football":"&#127936; Basketball")+'</h3>';
-    if(!v)return head+'<div class="empty">No expert tip posted for this date yet.</div></div>';
+    if(!v)return head+'<div class="empty">No matches available.</div></div>';
     return head+
       '<div class="vb-main"><div>'+crest(v.h,v.hc||hueOf(v.h))+'<div class="vb-team">'+esc(v.h)+'</div></div><div class="vb-mid"><strong>'+esc(v.t)+'</strong>vs<br>'+esc(v.lg)+'</div><div>'+crest(v.a,v.ac||hueOf(v.a))+'<div class="vb-team">'+esc(v.a)+'</div></div></div>'+
       '<a class="etlock" href="expert-tips.html?s='+sp+'&d='+selYmd()+'" aria-label="Open the reasoning for this expert tip"><span class="lockico" aria-hidden="true">&#128274;</span><span class="locktxt">View expert tip</span></a>'+
-      '<div class="vb-by"><span>EXPERT TIP BY: <b>'+esc(v.by)+'</b></span><span>'+(sp==="football"?"Football &#9917;":"Basketball &#127936;")+'</span></div>'+
+      '<div class="vb-by"><span>EXPERT TIP BY: <b>'+esc(v.by)+'</b></span><span>'+(sp==="football"?"&#9917; Football":"&#127936; Basketball")+'</span></div>'+
       '</div>';
   }
   var etMode="both";
@@ -427,7 +427,7 @@ $$("[data-home]").forEach(function(hero){
     var rows=getBO(sport,selYmd()).slice(0,5);
     $("[data-botdlist]",botd).innerHTML=rows.length?rows.map(function(r){
       return '<div class="bdrow"><div class="bdlg">'+esc(r.lg)+'</div><div class="bdmain"><span class="bdt">'+esc(r.t)+'</span><span class="bdm"><b>'+esc(r.h)+'</b>'+(r.sc?'<i>'+esc(r.sc)+'</i>':'<i>vs</i>')+'<b>'+esc(r.a)+'</b></span><span class="bdpick '+(r.st==="won"?"won":r.st==="lost"?"lost":"")+'">'+esc(r.pick)+'</span></div></div>';
-    }).join(""):'<div class="empty">No Bets of the Day for this date yet.</div>';
+    }).join(""):'<div class="empty">No matches available.</div>';
   }
   $$("[data-bsport]",botd).forEach(function(b){b.addEventListener("click",function(){setSport(b.dataset.bsport)})});
 
@@ -462,9 +462,10 @@ $$("[data-home]").forEach(function(hero){
       }else{list=D[sport][day]||[];title=DAYLABEL[day]}
     }
     var t=$("[data-slot=title]",sure);
-    t.textContent="Sure "+(sport==="football"?"Football ⚽":"Basketball 🏀")+" Predictions for "+title;
+    t.textContent="Sure "+(sport==="football"?"⚽ Football":"🏀 Basketball")+" Predictions for "+title;
+    var all=$("[data-sureall]",sure.parentNode)||$("[data-sureall]");if(all)all.href=sport==="football"?"football-predictions.html":"basketball-predictions.html";
     var short=list.slice(0,10);
-    $("[data-slot=table]",sure).innerHTML=short.length?(sport==="football"?footballTable(short):basketballTable(short)):'<p class="note center" style="padding:28px 10px">No published predictions for this date yet.</p>';
+    $("[data-slot=table]",sure).innerHTML=short.length?(sport==="football"?footballTable(short):basketballTable(short)):'<p class="note center" style="padding:28px 10px">No matches available.</p>';
     if(propsWrap)propsWrap.hidden=(sport!=="basketball");
   }
   function syncHero(){
