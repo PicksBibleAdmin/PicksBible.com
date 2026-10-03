@@ -73,7 +73,7 @@ function applyLive(P,live){
   props.forEach(function(p){
     var k=String(p.kickoff||"").slice(0,10); if(k!==wat(0)&&k!==wat(1))return;
     var team=p.team||"", other=team===p.home?p.away:p.home;
-    P.playerProps.push({k:p.market,player:p.player||"",team:team,opp:team?("vs "+other):(p.home+" v "+p.away),line:p.line||"",pick:p.side||"",odds:p.odds||""});
+    P.playerProps.push({k:p.market,player:p.player||"",team:team,opp:team?("vs "+other):(p.home+" v "+p.away),line:p.line||"",pick:p.side||"",odds:p.odds||"",st:p.st||"pending"});
   });
 }
 function loadLive(done){
@@ -509,11 +509,11 @@ $$("[data-props]").forEach(function(el){
   function mk(k){for(var i=0;i<markets.length;i++)if(markets[i].k===k)return markets[i];return {k:k,name:k,kind:"player"}}
   function card(p){
     var m=mk(p.k), team=m.kind==="team";
-    return '<div class="propcard">'+
+    return '<div class="propcard'+(p.st==="won"?" won":p.st==="lost"?" lost":"")+'">'+
       '<div class="propav">🏀</div>'+
       '<div class="propinfo"><b>'+esc(team?p.team:p.player)+'</b><span>'+esc(team?"":p.team+" ")+esc(p.opp||"")+'</span></div>'+
       '<div class="propmkt">'+esc(m.name)+'</div>'+
-      '<div class="proppick"><span class="pick">'+esc(team?(m.short||"Pick"):p.pick+" "+p.line)+'</span><span class="o">@ '+esc(p.odds)+'</span></div>'+
+      '<div class="proppick"><span class="pick">'+esc(team?(m.short||"Pick"):p.pick+" "+p.line)+'</span><span class="o">@ '+esc(p.odds)+'</span></div>'+(p.st==="won"?'<span class="bigmark won" aria-label="Won">&#10003;</span>':p.st==="lost"?'<span class="bigmark lost" aria-label="Did not land"></span>':'')+
     '</div>';
   }
   function draw(k){

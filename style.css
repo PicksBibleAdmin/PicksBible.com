@@ -549,3 +549,30 @@ table.pt.bw{min-width:0;width:100%}
 .anmatch{padding:10px 0 4px}.anlock{max-width:420px;margin:10px auto 4px}
 .fmrow{display:flex;gap:6px}.fm{display:grid;place-items:center;width:30px;height:30px;border-radius:50%;font:800 13px var(--body);font-style:normal}
 .fm.w{background:var(--won);color:#04220f}.fm.d{background:#57557a;color:#fff}.fm.l{background:var(--lost);color:#fff}
+
+/* player props: won / lost result */
+.propcard.won{border-color:#16a34a66}.propcard.lost{border-color:#dc262666}
+.propcard.lost .proppick .pick{color:#ef4444;background:#dc262622;text-decoration:line-through}
+.propcard.won,.propcard.lost{grid-template-columns:auto 1fr auto auto auto}
+@media (max-width:640px){.propcard,.propcard.won,.propcard.lost{grid-template-columns:auto 1fr auto auto;grid-template-areas:"av info pick mark" "av mkt mkt mkt"}.propcard .bigmark{grid-area:mark}}
+
+/* basketball table on phones: wider team columns so names like Panathinaikos / Fenerbahce are not split mid-word */
+@media (max-width:700px){
+  .pt.bw.bk td.team{width:86px;max-width:86px}
+  .pt.bw.bk td.team b{font-size:9.5px;letter-spacing:-.1px;overflow-wrap:normal;word-break:normal}
+  .pt.bw.bk td.lgn{width:48px;max-width:48px;font-size:9.5px}
+}
+
+/* player props: big won / lost marks (lost = plain gray circle, no cross) */
+.bigmark{flex:none;width:46px;height:46px;border-radius:50%;display:grid;place-items:center;font:900 26px/1 var(--body)}
+.bigmark.won{background:#22c55e;color:#032b12;box-shadow:0 0 0 4px #22c55e33,0 4px 16px #22c55e66}
+.bigmark.lost{background:#6b7280}
+.propcard.won{background:#16a34a1f;border-color:#22c55e99}
+.propcard.lost{border-color:var(--line)}
+.propcard.lost .proppick .pick{color:#9ca3af;background:#6b728033;text-decoration:none}
+@media(max-width:700px){.bigmark{width:40px;height:40px;font-size:22px}}
+
+/* player props: pending pick is yellow (green is reserved for won) */
+.propcard .proppick .pick{color:var(--pend);background:#f5b30124}
+.propcard.won .proppick .pick{color:var(--won);background:#16a34a22}
+.propcard.lost .proppick .pick{color:#9ca3af;background:#6b728033}

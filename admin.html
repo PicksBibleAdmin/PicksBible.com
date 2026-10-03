@@ -72,6 +72,7 @@ th{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.04
 #tab-home td input:not([type=checkbox]){background:#0b0818;border:1px solid var(--line);color:inherit;border-radius:8px;padding:7px 9px;font:inherit}
 #tab-home td select{background:#0b0818;border:1px solid var(--line);color:inherit;border-radius:8px;padding:7px 9px}
 #tab-home td input.odd,#tab-home td input.cs{width:90px}
+select.res.won{color:#22c55e;border-color:#22c55e}select.res.lost{color:#ef4444;border-color:#ef4444}
 tr.lghead td{background:#ffffff0d;padding:10px 8px;border-bottom:1px solid var(--line)}
 .ft{border-collapse:collapse;min-width:100%}
 .ft th,.ft td{border:0;border-bottom:1px solid var(--line);padding:8px 5px;white-space:nowrap;text-align:left}
@@ -113,7 +114,7 @@ tr.lghead td{background:#ffffff0d;padding:10px 8px;border-bottom:1px solid var(-
     <label for="pw" style="margin-top:10px;display:block">Password</label>
     <input id="pw" type="password" autocomplete="current-password">
     <div class="row end"><button class="btn" id="loginBtn">Sign in</button></div>
-    <p class="muted" style="font-size:11px;margin:10px 0 0">Build 2026-10-03-K (Firebase)</p>
+    <p class="muted" style="font-size:11px;margin:10px 0 0">Build 2026-10-03-M (Firebase)</p>
     <p id="loginErr" class="muted" style="color:var(--lost)" hidden></p>
   </div>
 </div>
@@ -223,6 +224,7 @@ tr.lghead td{background:#ffffff0d;padding:10px 8px;border-bottom:1px solid var(-
 <section id="tab-bbprops" hidden>
   <div class="card">
     <h2>Add player / team prop</h2>
+    <div id="propEditing" class="note" hidden style="border-left-color:var(--pend)"></div>
     <form id="bbForm">
       <div class="grid">
         <div style="grid-column:1/-1"><label>Basketball game</label><select name="fixtureId" required></select></div>
@@ -233,14 +235,14 @@ tr.lghead td{background:#ffffff0d;padding:10px 8px;border-bottom:1px solid var(-
         <div id="bbSideW"><label>Over / Under</label><select name="side"><option>Over</option><option>Under</option></select></div>
         <div><label>Odds (decimal)</label><input name="odds" type="number" step="0.01" min="1"></div>
       </div>
-      <div class="row end"><button class="btn">Add prop</button></div>
+      <div class="row end"><button type="button" class="btn ghost" id="propCancel" hidden>Cancel edit</button><button class="btn" id="propSubmit">Add prop</button></div>
     </form>
   </div>
   <div class="card">
-    <h2>Props <span class="muted" id="bbCount"></span></h2>
+    <h2>Props <span class="muted" id="propsCount"></span></h2>
     <div class="tbl"><table class="ft">
-      <thead><tr><th>Game</th><th>Prop</th><th>Pick</th><th>Odds</th><th>Live</th><th></th></tr></thead>
-      <tbody id="bbBody"></tbody>
+      <thead><tr><th>Game</th><th>Prop</th><th>Pick</th><th>Odds</th><th>Result</th><th>Live</th><th></th></tr></thead>
+      <tbody id="propsBody"></tbody>
     </table></div>
   </div>
 </section>
@@ -713,30 +715,58 @@ bbForm.onsubmit = e => {
   if(!f.fixtureId) return toast("Add a basketball game first");
   if(t==="player" && !f.player.trim()) return toast("Enter the player's name");
   if(t!=="teampick" && f.line==="") return toast("Enter the line");
-  db.props.push({id:uid(), fixtureId:f.fixtureId, market:f.market, player:t==="player"?f.player.trim():"", team:t==="player"?"":f.team,
-                 line:t==="teampick"?"":f.line, side:t==="teampick"?"":f.side, odds:f.odds, live:false, createdAt:new Date().toISOString()});
+  const rec = {fixtureId:f.fixtureId, market:f.market, player:t==="player"?f.player.trim():"", team:t==="player"?"":f.team,
+               line:t==="teampick"?"":f.line, side:t==="teampick"?"":f.side, odds:f.odds};
+  if(editingProp){
+    const x=db.props.find(q=>q.id===editingProp);
+    if(x) Object.assign(x, rec);
+    stopPropEdit(); commit(); toast("Prop updated"); return;
+  }
+  db.props.push({id:uid(), ...rec, live:false, createdAt:new Date().toISOString()});
   bbForm.player.value=""; bbForm.line.value=""; bbForm.odds.value=""; commit(); toast("Prop added");
 };
+let editingProp = null;
+function stopPropEdit(){
+  editingProp = null; bbForm.player.value=""; bbForm.line.value=""; bbForm.odds.value="";
+  $("#propSubmit").textContent="Add prop"; $("#propCancel").hidden=true; $("#propEditing").hidden=true;
+}
+$("#propCancel").onclick = stopPropEdit;
+function editProp(id){
+  const p=db.props.find(x=>x.id===id); if(!p) return;
+  editingProp = id; bbForm.fixtureId.value=p.fixtureId; bbForm.market.value=p.market; syncPropForm();
+  bbForm.player.value=p.player||""; if(p.team) bbForm.team.value=p.team;
+  bbForm.line.value=p.line||""; if(p.side) bbForm.side.value=p.side; bbForm.odds.value=p.odds||"";
+  const f=db.fixtures.find(x=>x.id===p.fixtureId)||{home:"?",away:"?"};
+  $("#propSubmit").textContent="Save changes"; $("#propCancel").hidden=false;
+  const n=$("#propEditing"); n.hidden=false; n.innerHTML="Editing a prop for <b>"+esc(f.home)+" v "+esc(f.away)+"</b>. Change the game, prop type, player, line or odds, then press Save changes. Live stays as it is.";
+  showTab("bbprops"); window.scrollTo({top:0,behavior:"smooth"});
+}
 function renderProps(){
   fillPropFixtures();
-  const rows=db.props.slice().reverse();
-  $("#bbCount").textContent = rows.length?`(${rows.length})`:"";
-  $("#bbBody").innerHTML = rows.length ? rows.map(p=>{
-    const f=db.fixtures.find(x=>x.id===p.fixtureId)||{home:"?",away:"?"}, m=PROP_MARKETS.find(x=>x.k===p.market);
-    return `<tr data-id="${p.id}"><td><b>${esc(f.home)}</b> v <b>${esc(f.away)}</b><br><small class="muted">${esc(fmt(f.kickoff))}</small></td>
+  const fxOf = p => db.fixtures.find(x=>x.id===p.fixtureId)||{home:"?",away:"?",kickoff:""};
+  const rows=db.props.slice().sort((a,b)=>String(fxOf(a).kickoff).localeCompare(String(fxOf(b).kickoff)) || String(a.fixtureId).localeCompare(String(b.fixtureId)) || String(a.createdAt||"").localeCompare(String(b.createdAt||"")));
+  $("#propsCount").textContent = rows.length?`(${rows.length})`:"";
+  const pcnt = {}; rows.forEach(p=>{ pcnt[p.fixtureId]=(pcnt[p.fixtureId]||0)+1; });
+  let lastG = null;
+  $("#propsBody").innerHTML = rows.length ? rows.map(p=>{
+    const f=fxOf(p), m=PROP_MARKETS.find(x=>x.k===p.market);
+    let head=""; if(p.fixtureId!==lastG){ lastG=p.fixtureId; head=`<tr class="lghead"><td colspan="7">🏀 <b>${esc(f.home)} v ${esc(f.away)}</b> <span class="muted">· ${esc(fmt(f.kickoff))} · ${pcnt[p.fixtureId]} prop${pcnt[p.fixtureId]===1?"":"s"}</span></td></tr>`; }
+    return head+`<tr data-id="${p.id}"><td><b>${esc(f.home)}</b> v <b>${esc(f.away)}</b><br><small class="muted">${esc(fmt(f.kickoff))}</small></td>
       <td>${esc(m?m.name:p.market)}</td><td>${esc(propPick(p))}</td>
       <td><input class="odd" type="number" step="0.01" min="1" data-f="odds" value="${esc(p.odds)}" placeholder="-"></td>
+      <td><select data-f="st" class="res ${p.st||"pending"}">${["pending","won","lost"].map(r=>`<option ${(p.st||"pending")===r?"selected":""}>${r}</option>`).join("")}</select></td>
       <td><label class="sw"><input type="checkbox" data-f="live" ${p.live?"checked":""}><i></i></label></td>
-      <td><button class="btn danger sm" data-del="${p.id}">Delete</button></td></tr>`;
-  }).join("") : `<tr><td colspan="6" class="empty">No props yet.</td></tr>`;
+      <td class="row"><button class="btn ghost sm" data-edit="${p.id}">Edit</button><button class="btn danger sm" data-del="${p.id}">Delete</button></td></tr>`;
+  }).join("") : `<tr><td colspan="7" class="empty">No props yet.</td></tr>`;
 }
-$("#bbBody").addEventListener("change", e => {
+$("#propsBody").addEventListener("change", e => {
   const el=e.target, tr=el.closest("tr"); if(!tr||!el.dataset.f) return;
   const p=db.props.find(x=>x.id===tr.dataset.id); if(!p) return;
-  p[el.dataset.f] = el.type==="checkbox" ? el.checked : el.value.trim(); Store.save(db);
+  p[el.dataset.f] = el.type==="checkbox" ? el.checked : el.value.trim(); if(el.dataset.f==="st") el.className="res "+el.value; Store.save(db);
 });
-$("#bbBody").addEventListener("click", e => {
-  const id=e.target.dataset.del; if(id && confirm("Delete this prop?")){ db.props=db.props.filter(p=>p.id!==id); commit(); }
+$("#propsBody").addEventListener("click", e => {
+  if(e.target.dataset.edit) return editProp(e.target.dataset.edit);
+  const id=e.target.dataset.del; if(id && confirm("Delete this prop?")){ db.props=db.props.filter(p=>p.id!==id); if(editingProp===id) stopPropEdit(); commit(); }
 });
 
 /* ============ PICKS ============ */
