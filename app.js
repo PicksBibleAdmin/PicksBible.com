@@ -42,12 +42,16 @@ function applyLive(P,live){
   P.site.today=d.getUTCDate()+" "+["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"][d.getUTCMonth()]+" "+d.getUTCFullYear();
   var fixtures=(live&&live.fixtures)||[], props=(live&&live.props)||[];
   fixtures.sort(function(a,b){return String(a.kickoff).localeCompare(String(b.kickoff))});
+  P.byDate={football:{},basketball:{}};
   fixtures.forEach(function(f){
-    var day=days[String(f.kickoff||"").slice(0,10)]; if(!day||f.sport!=="football")return;
-    var v=f.fb||{}, list=P.football[day];
-    list.push({lg:lgKey(P,"football",f.competition,f.country),t:String(f.kickoff).slice(11,16),h:f.home,a:f.away,
+    if(f.sport!=="football")return;
+    var date=String(f.kickoff||"").slice(0,10), day=days[date]; if(!date)return;
+    var v=f.fb||{};
+    var m={lg:lgKey(P,"football",f.competition,f.country),t:String(f.kickoff).slice(11,16),h:f.home,a:f.away,
       o:[v.o1||"",v.oX||"",v.o2||""],pk:v.tip||"",tip:v.tip||"-",gg:v.btts||"",ggo:v.bttsOdds||"",ou:v.ou||"",ouo:v.ouOdds||"",cs:v.cs||"",
-      st:"pending",score:"",featured:list.length<6});
+      st:"pending",score:""};
+    (P.byDate.football[date]=P.byDate.football[date]||[]).push(m);   /* any date: used by the calendar picker */
+    if(day){var list=P.football[day];m.featured=list.length<6;list.push(m)}
   });
   props.sort(function(a,b){return String(a.kickoff).localeCompare(String(b.kickoff))});
   props.forEach(function(p){
@@ -261,6 +265,9 @@ $$("[data-bigtable]").forEach(function(el){
     if(propsWrap)propsWrap.hidden=(sport!=="basketball");
     if(customDate){
       if(title)title.textContent=(sport==="football"?"Football ⚽":"Basketball 🏀")+" prediction & tips for "+customDate.toLocaleDateString(undefined,{weekday:"long",month:"short",day:"numeric"});
+      var ymd=customDate.getFullYear()+"-"+("0"+(customDate.getMonth()+1)).slice(-2)+"-"+("0"+customDate.getDate()).slice(-2);
+      var cl=((D.byDate&&D.byDate[sport]&&D.byDate[sport][ymd])||[]).filter(function(m){return !league||m.lg===league});
+      if(cl.length){$("[data-slot=table]",el).innerHTML=sport==="football"?footballTable(cl):basketballTable(cl);return}
       $("[data-slot=table]",el).innerHTML='<p class="note center" style="padding:28px 10px">No published predictions for this date yet. Try Yesterday, Today or Tomorrow above, or pick another date.</p>';
       return;
     }
