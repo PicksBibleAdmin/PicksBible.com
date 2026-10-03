@@ -132,9 +132,9 @@ table.pt.compact{min-width:0}
 .pt tr.lg td{background:#1d2a5a;color:#cfe9ff;text-align:left;font-weight:600;font-size:12.5px;padding:7px 10px}
 .pt tr.lg td span.flag{margin-right:8px}
 .pt tr:hover td:not(.lgc){background:#ffffff06}
-.ring{--p:50;display:inline-grid;place-items:center;width:40px;height:40px;border-radius:50%;background:conic-gradient(var(--cyan) calc(var(--p)*1%),#2c2660 0);position:relative}
+.ring{--p:50;display:inline-grid;place-items:center;width:52px;height:52px;border-radius:50%;background:conic-gradient(var(--cyan) calc(var(--p)*1%),#2c2660 0);position:relative}
 .ring::before{content:"";position:absolute;inset:4px;border-radius:50%;background:var(--panel)}
-.ring b{position:relative;font:600 10px var(--body)}
+.ring b{position:relative;font:700 11px var(--body)}
 .tip{display:inline-grid;place-items:center;min-width:34px;height:34px;padding:0 10px;border-radius:999px;font:800 13px var(--body);background:var(--pend);color:var(--pend-ink);white-space:nowrap}
 .tip.won{background:var(--won);color:#04220f}
 .tip.lost{background:var(--lost);color:#fff}
@@ -383,3 +383,47 @@ table.pt.bw{min-width:780px;font-size:14px;color:#1b2433;background:#fff}
 .pt.bw .xp b{display:inline-block;min-width:44px;padding:6px 12px;border-radius:999px;background:#eef1f6;border:1px solid #cfd5e1;font:700 13px var(--body);white-space:nowrap}
 .pt.bw .xp i{font:600 12px var(--body);font-style:normal;color:#5b6577}
 table.pt.bw{min-width:980px}
+
+.pt.bw .conf{display:inline-block;min-width:54px;padding:6px 10px;border-radius:999px;background:#e8f7ee;border:1px solid #b6e3c6;color:#14532d;font:700 13px var(--body)}
+table.pt.bw{min-width:0;width:100%}
+.pt.bw th{font-size:12px;padding:12px 6px;letter-spacing:.01em}
+.pt.bw td{padding:12px 6px}
+.pt.bw td.lgn{min-width:100px}
+.pt.bw td.team b{min-width:90px}
+.pt.bw .odd{min-width:46px;height:46px}
+
+
+/* ---- phones & tablets: the SAME table as desktop, just compacted so almost everything
+   fits on screen. Same columns, same order, same look (no cards). Desktop (>1180px) untouched. ---- */
+@media (max-width:1180px){
+  .tscroll.bwwrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+  table.pt.bw{min-width:0;width:100%;font-size:11px}
+  .pt.bw th{font-size:9px;line-height:1.15;padding:8px 2px;letter-spacing:0}
+  .pt.bw td{padding:7px 2px;line-height:1.2}
+  .pt.bw td.tm{font-size:11px}
+  .pt.bw td.lgn{min-width:0;width:54px;max-width:54px;font-size:10px;line-height:1.15}
+  .pt.bw td.team{width:60px;max-width:60px}
+  .pt.bw td.team b{min-width:0;font-size:11px;line-height:1.15;overflow-wrap:break-word;hyphens:manual;font-size:10.5px}
+  .pt.bw .odd{min-width:31px;height:31px;border-width:2px;font-size:10px;padding:0 1px}
+  .pt.bw .tip{min-width:34px;height:30px;padding:0 8px;font-size:13px}
+  .pt.bw .conf{min-width:0;padding:4px 6px;font-size:10.5px}
+  .pt.bw .xp{gap:2px}
+  .pt.bw .xp b{min-width:0;padding:4px 7px;font-size:10px}
+  .pt.bw .xp i{font-size:9.5px}
+  .pt.bw td.cs,.pt.bw td.res{font-size:11.5px}
+}
+@media (max-width:720px){
+  .tscroll.bbwrap{-webkit-overflow-scrolling:touch}
+  table.pt.bb{min-width:0;font-size:10.5px}
+  .pt.bb th{font-size:9px;padding:8px 2px;letter-spacing:0;line-height:1.15}
+  .pt.bb td{padding:7px 2px}
+  .pt.bb td.m{min-width:84px;font-size:11px;line-height:1.2}
+  .pt.bb td.m b{overflow-wrap:break-word}
+  .pt.bb td.tm{font-weight:600;white-space:nowrap;font-size:10.5px}
+  .pt.bb tr.lg td{font-size:11px;padding:6px 8px}
+  .pt.bb .ring{width:38px;height:38px}
+  .pt.bb .ring::before{inset:3px}
+  .pt.bb .ring b{font-size:8.5px;letter-spacing:-.2px}
+  .pt.bb .tip{min-width:28px;height:26px;padding:0 6px;font-size:11px}
+  .pt.bb td:nth-child(n+6){font-size:10.5px;white-space:nowrap}
+}
