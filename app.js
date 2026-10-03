@@ -43,7 +43,23 @@ function applyLive(P,live){
   var fixtures=(live&&live.fixtures)||[], props=(live&&live.props)||[];
   fixtures.sort(function(a,b){return String(a.kickoff).localeCompare(String(b.kickoff))});
   P.byDate={football:{},basketball:{}};
+  P.home={et:{football:{},basketball:{}},bo:{football:{},basketball:{}},vip:{}};
+  (live&&live.vip||[]).forEach(function(x){if(x&&x.ymd)P.home.vip[x.ymd]={odds:x.odds||"",st:x.st||""}});
   fixtures.forEach(function(f){
+    var hd=String(f.kickoff||"").slice(0,10), sp=f.sport==="basketball"?"basketball":"football";
+    var cname=(f.country&&String(f.competition||"").toLowerCase().indexOf(String(f.country).toLowerCase())!==0?f.country+" ":"")+(f.competition||"");
+    if(f.et&&f.et.on&&hd)P.home.et[sp][hd]={h:f.home,a:f.away,lg:f.competition||"",t:String(f.kickoff).slice(11,16),by:f.et.by||"PB Analyst",reasoning:f.et.reasoning||""};
+    if(f.bo&&f.bo.on&&hd){var bl=P.home.bo[sp][hd]=P.home.bo[sp][hd]||[];bl.push({lg:cname,t:(f.bo.st==="won"||f.bo.st==="lost")?"FT":String(f.kickoff).slice(11,16),h:f.home,a:f.away,pick:f.bo.pick||"",st:f.bo.st||"pending",sc:f.bo.score||""})}
+    if(!((f.fb&&f.fb.live)||(f.bb&&f.bb.live)))return;
+    if(f.sport==="basketball"){
+      var bd=String(f.kickoff||"").slice(0,10), bday=days[bd]; if(!bd)return;
+      var b=f.bb||{};
+      var bm={lg:lgKey(P,"basketball",f.competition,f.country),t:String(f.kickoff).slice(11,16),h:f.home,a:f.away,
+        o:[b.o1||"",b.o2||""],pk:b.tip||"",tip:b.tip||"-",spread:b.spread||"",ts:b.totalSide||"",tl:b.totalLine||"",ps:b.ps||"",st:"pending",score:""};
+      (P.byDate.basketball[bd]=P.byDate.basketball[bd]||[]).push(bm);
+      if(bday){var bl=P.basketball[bday];bm.featured=bl.length<6;bl.push(bm)}
+      return;
+    }
     if(f.sport!=="football")return;
     var date=String(f.kickoff||"").slice(0,10), day=days[date]; if(!date)return;
     var v=f.fb||{};
@@ -223,10 +239,16 @@ function footballTable(list){
     }).join("")+
     '</tbody></table></div>';
 }
+function bbOdd(m,i,k){var v=m.o&&m.o[i]?m.o[i]:"-";return '<td class="od"><span class="odd'+(m.pk===k?" pk":"")+'">'+esc(v)+'</span></td>'}
 function basketballTable(list){
   if(!list.length)return '<div class="empty">No basketball 🏀 predictions for this day yet.</div>';
-  return '<div class="tscroll bbwrap"><table class="pt bb"><thead><tr><th>Time</th><th>Match</th><th>1</th><th>2</th><th>Tips</th><th>Spread</th><th>Total</th><th>Pred. score</th></tr></thead><tbody>'+
-    groupRows(sortByLeague(list),8,function(m){return '<tr><td class="tm">'+esc(m.t)+'</td><td class="m"><b>'+esc(m.h)+'</b>'+scoreLine(m)+'<b>'+esc(m.a)+'</b></td><td class="rg" data-l="Home win">'+ring(m.p[0])+'</td><td class="rg" data-l="Away win">'+ring(m.p[1])+'</td><td class="kv" data-l="Tip">'+tipBadge(m)+'</td><td class="kv" data-l="Spread">'+esc(m.spread)+'</td><td class="kv" data-l="Total">'+esc(m.total)+'</td><td class="kv" data-l="Pred. score">'+esc(m.ps)+'</td></tr>'})+
+  var played=list.some(function(m){return m.score});
+  return '<div class="tscroll bwwrap"><table class="pt bw bk"><thead><tr><th>Time</th><th class="l">Competition</th><th class="l">Home</th><th class="l">Away</th><th>Home Win (1)</th><th>Away Win (2)</th><th>Tip</th><th>Projected Spread</th><th>Point Total Tip</th><th>Projected Score</th>'+(played?'<th>Result</th>':'')+'</tr></thead><tbody>'+
+    sortByLeague(list).map(function(m){
+      var tot=m.ts?'<span class="xp"><b>'+esc(m.ts)+(m.tl?' '+esc(m.tl):'')+'</b></span>':'-';
+      return '<tr><td class="tm">'+esc(m.t)+'</td><td class="l lgn">'+esc(lgName(m.lg))+'</td><td class="l team"><b>'+esc(m.h)+'</b></td><td class="l team"><b>'+esc(m.a)+'</b></td>'+
+        bbOdd(m,0,"1")+bbOdd(m,1,"2")+'<td>'+pkBadge(m)+'</td><td class="cs">'+esc(m.spread||"-")+'</td><td>'+tot+'</td><td class="cs">'+esc(m.ps||"-")+'</td>'+(played?'<td class="res">'+(m.score?esc(m.score):'-:-')+'</td>':'')+'</tr>';
+    }).join("")+
     '</tbody></table></div>';
 }
 function compactTable(list,sport){
@@ -251,7 +273,7 @@ $$("[data-featured]").forEach(function(el){
 /* big table with sport toggle, day switch, calendar date picker and league accordion filter */
 $$("[data-bigtable]").forEach(function(el){
   var fixed=el.dataset.sport||"";
-  var sport=fixed||store("pb.sport")||"basketball";
+  var sport=fixed||store("pb.sport")||"football";
   var day=el.dataset.day||"today";
   var hash=(location.hash||"").slice(1);
   var league=D.leagues[hash]?hash:"";
@@ -262,7 +284,7 @@ $$("[data-bigtable]").forEach(function(el){
   if(!propsWrap||!propsWrap.hasAttribute("data-props-wrap"))propsWrap=null;
 
   function draw(){
-    $$(".toggle button",el).forEach(function(b){b.setAttribute("aria-pressed",String(b.dataset.sport===sport))});
+    $$(".toggle button[data-sport]",el).forEach(function(b){b.setAttribute("aria-pressed",String(b.dataset.sport===sport))});
     $$(".tabs button",el).forEach(function(b){b.setAttribute("aria-pressed",String(!customDate&&b.dataset.day===day))});
     var lgBtn=$("[data-lgopen]",el);
     if(lgBtn)lgBtn.innerHTML="🌍 "+(league?esc(D.leagues[league].name):"All Leagues")+" ▾";
@@ -280,7 +302,8 @@ $$("[data-bigtable]").forEach(function(el){
     $("[data-slot=table]",el).innerHTML=sport==="football"?footballTable(list):basketballTable(list);
   }
 
-  $$(".toggle button",el).forEach(function(b){b.addEventListener("click",function(){sport=b.dataset.sport;league="";lgBuilt=false;store("pb.sport",sport);draw()})});
+  $$("[data-goto]",el).forEach(function(b){b.addEventListener("click",function(){store("pb.sport",b.dataset.goto.indexOf("basketball")===0?"basketball":"football");location.href=b.dataset.goto})});
+  $$(".toggle button[data-sport]",el).forEach(function(b){b.addEventListener("click",function(){sport=b.dataset.sport;league="";lgBuilt=false;store("pb.sport",sport);draw()})});
   $$(".tabs button",el).forEach(function(b){b.addEventListener("click",function(){day=b.dataset.day;customDate=null;draw()})});
 
   /* league accordion (same seamless country > league picker as the homepage,
@@ -347,13 +370,144 @@ $$("[data-bigtable]").forEach(function(el){
   draw();
 });
 
+
+/* ---------- HOME PAGE: hero filters, Expert Tip, Bets of the Day, VIP, Sure Predictions (10 max) ----------
+   Expert Tip, Bets of the Day and VIP Results come from the admin page ("5. Home boxes" tab) through the public snapshot. */
+function ymdOf(d){return d.getFullYear()+"-"+("0"+(d.getMonth()+1)).slice(-2)+"-"+("0"+d.getDate()).slice(-2)}
+function hueOf(n){var h=0;for(var i=0;i<n.length;i++)h=(h*31+n.charCodeAt(i))%360;return "hsl("+h+",45%,38%)"}
+function getET(sport,ymd){
+  var H=D.home||{}, v=H.et&&H.et[sport]&&H.et[sport][ymd]; if(!v)return null;
+  return v;
+}
+function getBO(sport,ymd){
+  var H=D.home||{}, l=H.bo&&H.bo[sport]&&H.bo[sport][ymd]; return l||[];
+}
+function getVIP(year,month){ /* month is 0-11; one entry per calendar day */
+  var n=new Date(year,month+1,0).getDate(), today=wat(0), out=[], V=(D.home&&D.home.vip)||{};
+  for(var d=1;d<=n;d++){
+    var ymd=year+"-"+("0"+(month+1)).slice(-2)+"-"+("0"+d).slice(-2), x=V[ymd];
+    if(x&&(x.st==="won"||x.st==="lost")){out.push({ymd:ymd,d:d,odds:x.odds||"",st:x.st});continue}
+    out.push({ymd:ymd,d:d,odds:(x&&x.odds)||"",st:ymd>today?"soon":"none"});
+  }
+  return out;
+}
+
+$$("[data-home]").forEach(function(hero){
+  var sport="football", day="today", customDate=null;
+  var sure=$("[data-sure]"), botd=$("[data-botd]"), propsWrap=$("[data-props-wrap]"), et=$("[data-experttip]"), vipbox=$("[data-vipbox]");
+  var MON=["January","February","March","April","May","June","July","August","September","October","November","December"];
+  function selYmd(){return customDate?ymdOf(customDate):wat({yesterday:-1,today:0,tomorrow:1}[day])}
+  function setSport(sp){sport=sp;store("pb.sport",sp);if(etMode!=="both")etMode=sp;drawAll()}
+
+  function crest(n,c){return '<div class="crest" style="background:'+esc(c)+'">'+esc(n.split(" ").map(function(w){return w[0]}).join("").slice(0,3))+'</div>'}
+  function etHalf(sp){
+    var v=getET(sp,selYmd());
+    var head='<div class="ethalf"><h3>'+(sp==="football"?"&#9917; Football":"&#127936; Basketball")+'</h3>';
+    if(!v)return head+'<div class="empty">No expert tip posted for this date yet.</div></div>';
+    return head+
+      '<div class="vb-main"><div>'+crest(v.h,v.hc||hueOf(v.h))+'<div class="vb-team">'+esc(v.h)+'</div></div><div class="vb-mid"><strong>'+esc(v.t)+'</strong>vs<br>'+esc(v.lg)+'</div><div>'+crest(v.a,v.ac||hueOf(v.a))+'<div class="vb-team">'+esc(v.a)+'</div></div></div>'+
+      '<a class="etlock" href="expert-tips.html?s='+sp+'&d='+selYmd()+'" aria-label="Open the reasoning for this expert tip"><span class="lockico" aria-hidden="true">&#128274;</span><span class="locktxt">View expert tip</span></a>'+
+      '<div class="vb-by"><span>EXPERT TIP BY: <b>'+esc(v.by)+'</b></span><span>'+(sp==="football"?"Football &#9917;":"Basketball &#127936;")+'</span></div>'+
+      '</div>';
+  }
+  var etMode="both";
+  function drawET(){
+    var phone=window.matchMedia("(max-width:700px)").matches;
+    var m=etMode; if(phone&&m==="both")m=sport;
+    $$("[data-et]",et).forEach(function(b){b.setAttribute("aria-pressed",String(b.dataset.et===m))});
+    var body=$("[data-etbody]",et);
+    body.className="etbody "+(m==="both"?"split":"full");
+    body.innerHTML=m==="both"?etHalf("football")+etHalf("basketball"):etHalf(m);
+  }
+  $$("[data-et]",et).forEach(function(b){b.addEventListener("click",function(){etMode=b.dataset.et;if(etMode!=="both"){sport=etMode;store("pb.sport",sport)}drawAll()})});
+  window.addEventListener("resize",drawET);
+
+  function drawBO(){
+    $$("[data-bsport]",botd).forEach(function(b){b.setAttribute("aria-pressed",String(b.dataset.bsport===sport))});
+    var rows=getBO(sport,selYmd()).slice(0,5);
+    $("[data-botdlist]",botd).innerHTML=rows.length?rows.map(function(r){
+      return '<div class="bdrow"><div class="bdlg">'+esc(r.lg)+'</div><div class="bdmain"><span class="bdt">'+esc(r.t)+'</span><span class="bdm"><b>'+esc(r.h)+'</b>'+(r.sc?'<i>'+esc(r.sc)+'</i>':'<i>vs</i>')+'<b>'+esc(r.a)+'</b></span><span class="bdpick '+(r.st==="won"?"won":r.st==="lost"?"lost":"")+'">'+esc(r.pick)+'</span></div></div>';
+    }).join(""):'<div class="empty">No Bets of the Day for this date yet.</div>';
+  }
+  $$("[data-bsport]",botd).forEach(function(b){b.addEventListener("click",function(){setSport(b.dataset.bsport)})});
+
+  /* ---- VIP results: one column per day of the month, scrollable ---- */
+  var vipY,vipM;
+  (function(){var t=wat(0).split("-");vipY=+t[0];vipM=+t[1]-1})();
+  function drawVIP(){
+    var sel=selYmd(), today=wat(0), data=getVIP(vipY,vipM), won=0,lost=0;
+    var wrap=$("[data-vipdays]",vipbox);
+    wrap.innerHTML=data.map(function(x){
+      if(x.st==="won")won++; if(x.st==="lost")lost++;
+      var mark=x.st==="won"?'<span class="vmark won" aria-label="Won">&#10003;</span>':x.st==="lost"?'<span class="vmark lost" aria-label="Lost">&#10005;</span>':'<span class="vmark none" aria-label="No result yet">&ndash;</span>';
+      var dow=new Date(vipY,vipM,x.d).toLocaleDateString("en-GB",{weekday:"short"});
+      return '<div class="vcol'+(x.ymd===sel?" sel":"")+(x.ymd===today?" today":"")+'" data-ymd="'+x.ymd+'"><span class="vdow">'+dow+'</span><b class="vday">'+x.d+'</b><span class="vodds">'+(x.odds?esc(x.odds):'&ndash;')+'</span><span class="voddsl">odds</span>'+mark+'</div>';
+    }).join("");
+    $("[data-vipmonth]",vipbox).textContent=MON[vipM]+" "+vipY;
+    $("[data-vipstat]",vipbox).innerHTML=(won+lost)?'<b>'+won+'</b> won &middot; <b>'+lost+'</b> lost':'No results yet';
+    var target=$(".vcol.sel",wrap)||$(".vcol.today",wrap);
+    if(target)wrap.scrollLeft=Math.max(0,target.offsetLeft-wrap.clientWidth/2+target.offsetWidth/2);
+  }
+  function vipTo(d){vipY=d.getFullYear();vipM=d.getMonth()}
+  var vcal=$("[data-vipcal]",vipbox);
+  if(vcal)vcal.addEventListener("change",function(){if(!vcal.value)return;var p=vcal.value.split("-");customDate=new Date(+p[0],+p[1]-1,+p[2]);var c=$("[data-hcal]",hero);if(c)c.value=vcal.value;vipTo(customDate);drawAll()});
+
+  function drawSure(){
+    var list,title,ymd=selYmd();
+    if(customDate||day==="tomorrow"||day==="yesterday"||true){
+      if(customDate){
+        list=(D.byDate&&D.byDate[sport]&&D.byDate[sport][ymd])||[];
+        title=customDate.toLocaleDateString(undefined,{weekday:"long",month:"short",day:"numeric"});
+        if(!list.length&&D[sport]){var rel=wat(-1)===ymd?"yesterday":wat(0)===ymd?"today":wat(1)===ymd?"tomorrow":null;if(rel)list=D[sport][rel]}
+      }else{list=D[sport][day]||[];title=DAYLABEL[day]}
+    }
+    var t=$("[data-slot=title]",sure);
+    t.textContent="Sure "+(sport==="football"?"Football ⚽":"Basketball 🏀")+" Predictions for "+title;
+    var short=list.slice(0,10);
+    $("[data-slot=table]",sure).innerHTML=short.length?(sport==="football"?footballTable(short):basketballTable(short)):'<p class="note center" style="padding:28px 10px">No published predictions for this date yet.</p>';
+    if(propsWrap)propsWrap.hidden=(sport!=="basketball");
+  }
+  function syncHero(){
+    $$("[data-ssport]",sure).forEach(function(b){b.setAttribute("aria-pressed",String(b.dataset.ssport===sport))});
+    $$("[data-hday]",hero).forEach(function(b){b.setAttribute("aria-pressed",String(!customDate&&b.dataset.hday===day))});
+  }
+  function drawAll(){syncHero();drawET();drawBO();drawVIP();drawSure()}
+  $$("[data-ssport]",sure).forEach(function(b){b.addEventListener("click",function(){setSport(b.dataset.ssport)})});
+  $$("[data-hday]",hero).forEach(function(b){b.addEventListener("click",function(){
+    day=b.dataset.hday;customDate=null;var c=$("[data-hcal]",hero);if(c)c.value="";if(vcal)vcal.value="";
+    var t=selYmd().split("-");vipY=+t[0];vipM=+t[1]-1;drawAll()})});
+  var cal=$("[data-hcal]",hero);
+  if(cal)cal.addEventListener("change",function(){
+    if(!cal.value){customDate=null}else{var p=cal.value.split("-");customDate=new Date(+p[0],+p[1]-1,+p[2]);vipTo(customDate);if(vcal)vcal.value=cal.value}
+    drawAll()});
+  drawAll();
+});
+
+
+/* ---------- MATCH ANALYSIS page (the reasoning behind an Expert Tip, written in the admin page) ---------- */
+$$("[data-analysis]").forEach(function(el){
+  if(!new URLSearchParams(location.search).get("s"))return;
+  $$("[data-tipslist]").forEach(function(x){x.hidden=true});
+  function crest(n,c){return '<div class="crest" style="background:'+esc(c)+'">'+esc(n.split(" ").map(function(w){return w[0]}).join("").slice(0,3))+'</div>'}
+  var q=new URLSearchParams(location.search), sp=q.get("s")==="basketball"?"basketball":"football", ymd=q.get("d")||wat(0);
+  var v=getET(sp,ymd);
+  if(!v){el.innerHTML='<div class="panel"><h2>Reasoning not available</h2><p>There is no published expert tip for this date yet.</p><a class="btn" href="index.html">Back to home</a></div>';return}
+  var paras=String(v.reasoning||"").split(/\n+/).map(function(t){return t.trim()}).filter(Boolean);
+  el.innerHTML=
+   '<div class="panel anhead"><div class="crumbs"><a href="index.html">Home</a> &rsaquo; <a href="expert-tips.html">Expert Tips</a> &rsaquo; Reasoning</div>'+
+   '<div class="vb-main anmatch"><div>'+crest(v.h,v.hc||hueOf(v.h))+'<div class="vb-team">'+esc(v.h)+'</div></div><div class="vb-mid"><strong>'+esc(v.t)+'</strong>vs<br>'+esc(v.lg)+'<br>'+esc(ymd)+'</div><div>'+crest(v.a,v.ac||hueOf(v.a))+'<div class="vb-team">'+esc(v.a)+'</div></div></div>'+
+   '<div class="etlock anlock" role="img" aria-label="Expert tip, locked"><span class="lockico" aria-hidden="true">&#128274;</span><span class="locktxt">Expert tip</span></div></div>'+
+   '<div class="panel"><h2>Expert reasoning</h2>'+(paras.length?paras.map(function(t){return '<p>'+esc(t)+'</p>'}).join(""):'<p>The reasoning for this tip has not been written yet.</p>')+'<p class="note">Expert analysis by '+esc(v.by)+'.</p></div>'+
+   '<p class="note center" style="margin-top:14px">'+(sp==="football"?"Football":"Basketball")+' predictions are based on statistical analysis and are not guaranteed. Please bet responsibly.</p>';
+});
+
 /* ---------- value bet ---------- */
 $$("[data-valuebet]").forEach(function(el){
   var v=D.valueBet;
   function crest(n,c){return '<div class="crest" style="background:'+esc(c)+'">'+esc(n.split(" ").map(function(w){return w[0]}).join("").slice(0,3))+'</div>'}
-  el.innerHTML='<div class="vb-main"><div>'+crest(v.h,v.hc)+'<div class="vb-team">'+esc(v.h)+'</div></div>'+
+  el.innerHTML='<div class="vb-main"><div>'+crest(v.h,v.hc||hueOf(v.h))+'<div class="vb-team">'+esc(v.h)+'</div></div>'+
     '<div class="vb-mid"><strong>'+esc(v.t)+'</strong>vs<br>'+esc(lgName(v.lg))+'</div>'+
-    '<div>'+crest(v.a,v.ac)+'<div class="vb-team">'+esc(v.a)+'</div></div></div>'+
+    '<div>'+crest(v.a,v.ac||hueOf(v.a))+'<div class="vb-team">'+esc(v.a)+'</div></div></div>'+
     '<div class="odds"><span>1 &nbsp;'+esc(v.odds.h)+'</span><span>X &nbsp;'+esc(v.odds.x)+'</span><span>2 &nbsp;'+esc(v.odds.a)+'</span><span class="pick">'+esc(v.pick)+' @ '+esc(v.pickOdds)+'</span></div>'+
     '<div class="vb-by"><span>EXPERT TIPS BY: <b>'+esc(v.tipster)+'</b></span><span>'+esc(v.sport==="football"?"Football ⚽":"Basketball 🏀")+' value pick</span></div>'+
     '<div class="vb-foot"><a class="btn ghost" href="expert-tips.html">View tips</a></div>';

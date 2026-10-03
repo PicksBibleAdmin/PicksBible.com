@@ -69,6 +69,9 @@ th{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.04
 .lgempty{padding:18px;text-align:center;color:#6b7290;font-size:14px}
 
 /* spreadsheet-style tables: no vertical column lines */
+#tab-home td input:not([type=checkbox]){background:#0b0818;border:1px solid var(--line);color:inherit;border-radius:8px;padding:7px 9px;font:inherit}
+#tab-home td select{background:#0b0818;border:1px solid var(--line);color:inherit;border-radius:8px;padding:7px 9px}
+#tab-home td input.odd,#tab-home td input.cs{width:90px}
 .ft{border-collapse:collapse;min-width:100%}
 .ft th,.ft td{border:0;border-bottom:1px solid var(--line);padding:8px 5px;white-space:nowrap;text-align:left}
 .ft th{font-size:11px}
@@ -109,7 +112,7 @@ th{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.04
     <label for="pw" style="margin-top:10px;display:block">Password</label>
     <input id="pw" type="password" autocomplete="current-password">
     <div class="row end"><button class="btn" id="loginBtn">Sign in</button></div>
-    <p class="muted" style="font-size:11px;margin:10px 0 0">Build 2026-10-03-H (Firebase)</p>
+    <p class="muted" style="font-size:11px;margin:10px 0 0">Build 2026-10-03-J (Firebase)</p>
     <p id="loginErr" class="muted" style="color:var(--lost)" hidden></p>
   </div>
 </div>
@@ -126,7 +129,9 @@ th{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.04
 <nav class="tabs" role="tablist">
   <button role="tab" data-tab="fixtures" aria-selected="true">1. Fixtures</button>
   <button role="tab" data-tab="fbtable" aria-selected="false">2. Football table</button>
-  <button role="tab" data-tab="bbprops" aria-selected="false">3. Basketball props</button>
+  <button role="tab" data-tab="bbtable" aria-selected="false">3. Basketball table</button>
+  <button role="tab" data-tab="bbprops" aria-selected="false">4. Basketball props</button>
+  <button role="tab" data-tab="home" aria-selected="false">5. Home boxes</button>
   <button role="tab" data-tab="picks" aria-selected="false">New pick</button>
   <button role="tab" data-tab="published" aria-selected="false">Picks &amp; results</button>
   <button role="tab" data-tab="data" aria-selected="false">Data</button>
@@ -177,6 +182,37 @@ th{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.04
       <thead><tr><th>Time</th><th>Competition</th><th>Home</th><th>Away</th><th>1</th><th>X</th><th>2</th><th>1X2 Tip</th><th>Confidence %</th><th>Over / Under 2.5</th><th>BTTS</th><th>Double chance</th><th>CS tip</th><th>Live</th></tr></thead>
       <tbody id="fbBody"></tbody>
     </table></div>
+  </div>
+</section>
+
+<!-- BASKETBALL TABLE -->
+<section id="tab-bbtable" hidden>
+  <div class="card">
+    <h2>Basketball table <span class="muted" id="bbCount"></span></h2>
+    <p class="note">One row per basketball fixture (add fixtures in tab 1, choose Basketball). Enter the odds for Home and Away, choose your <b>Tip</b> (1 or 2), the <b>projected spread</b> (e.g. -6.5 or +20.5), the <b>point total tip</b> (Over/Under and the line) and the <b>projected score</b>, then switch the game <b>Live</b>. Changes save automatically.</p>
+    <div class="tbl"><table class="ft">
+      <thead><tr><th>Time</th><th>Competition</th><th>Home</th><th>Away</th><th>Home win (1)</th><th>Away win (2)</th><th>Tip</th><th>Projected spread</th><th>Point total tip</th><th>Projected score</th><th>Live</th></tr></thead>
+      <tbody id="bbBody"></tbody>
+    </table></div>
+  </div>
+</section>
+
+<!-- HOME BOXES -->
+<section id="tab-home" hidden>
+  <div class="card">
+    <h2>Home page boxes</h2>
+    <p class="note">Pick a date. Tick <b>Expert tip</b> on ONE match per sport and write the reasoning (it appears on the Expert reasoning page). Tick <b>Bet of the day</b> on up to FIVE matches per sport, write the pick (e.g. <i>1X</i>, <i>Over 2.5</i>) and, after the game, set the result and score. Matches come from tab 1. Changes save automatically.</p>
+    <div class="row" style="margin-bottom:10px"><div><label>Date</label><input type="date" id="hbDate"></div></div>
+    <div class="tbl"><table class="ft">
+      <thead><tr><th>Time</th><th>Match</th><th>Expert tip</th><th>Reasoning &amp; By</th><th>Bet of the day</th><th>Pick</th><th>Result</th><th>Score</th></tr></thead>
+      <tbody id="hbBody"></tbody>
+    </table></div>
+  </div>
+  <div class="card">
+    <h2>VIP results <span class="muted">(one box per day)</span></h2>
+    <p class="note">Enter the day's VIP odds and mark it Won or Lost. Days left empty show a dash on the site.</p>
+    <div class="row" style="margin-bottom:10px"><div><label>Month</label><input type="month" id="vpMonth"></div></div>
+    <div class="tbl"><table class="ft"><thead><tr><th>Day</th><th>Odds</th><th>Result</th></tr></thead><tbody id="vpBody"></tbody></table></div>
   </div>
 </section>
 
@@ -284,10 +320,10 @@ const CONFIG = {
 
 /* ============ DATA LAYER (Firebase Auth + Firestore) ============ */
 const COLS = ["fixtures","props","picks"];
-const EMPTY = () => ({fixtures:[],picks:[],props:[]});
+const EMPTY = () => ({fixtures:[],picks:[],props:[],vip:[]});
 const clean = o => JSON.parse(JSON.stringify(o));                 /* drops undefined (Firestore rejects it) */
 /* `live` is copied to the top level so the security rules can let the public read ONLY live items */
-const liveOf = (col,r) => col==="fixtures" ? !!(r.fb && r.fb.live) : col==="props" ? !!r.live : r.status==="published";
+const liveOf = (col,r) => col==="fixtures" ? !!((r.fb && r.fb.live) || (r.bb && r.bb.live) || (r.et && r.et.on) || (r.bo && r.bo.on)) : col==="props" ? !!r.live : r.status==="published";
 const Store = {
   lastSnap:null, fb:null, auth:null, fs:null, last:{fixtures:{},props:{},picks:{}}, timer:null, busy:false, again:false,
   init(){
@@ -299,7 +335,7 @@ const Store = {
     for(const c of COLS){
       const snap = await this.fs.collection(c).get();
       this.last[c] = {};
-      snap.forEach(d => { const r = d.data(); if(c!=="props") delete r.live; r.id = r.id || d.id; if(c==="picks") r.status = r.status || "draft"; out[c].push(r); this.last[c][r.id] = JSON.stringify(this.docOf(c,r)); });
+      snap.forEach(d => { const r = d.data(); if(c!=="props") delete r.live; r.id = r.id || d.id; if(c==="picks"){ if(r.kind==="vip"){ out.vip.push(r); this.last[c][r.id] = JSON.stringify(this.docOf(c,r)); return; } r.status = r.status || "draft"; } out[c].push(r); this.last[c][r.id] = JSON.stringify(this.docOf(c,r)); });
     }
     return out;
   },
@@ -322,7 +358,7 @@ const Store = {
       const next = {fixtures:{},props:{},picks:{}};
       for(const c of COLS){
         const seen = {};
-        for(const r of db[c]){
+        for(const r of (c==="picks" ? db.picks.concat(db.vip||[]) : db[c])){
           const d = this.docOf(c,r), j = JSON.stringify(d); seen[r.id] = 1; next[c][r.id] = j;
           if(this.last[c][r.id] !== j){ batch.set(this.fs.collection(c).doc(r.id), d); if(++n >= 400) await push(); }
         }
@@ -332,9 +368,12 @@ const Store = {
       this.last = next;
       /* public snapshot: ONE document holding everything that is Live. The public site reads only this. */
       const cutoff = new Date(Date.now()-3*864e5).toISOString().slice(0,10), farOut = new Date(Date.now()+30*864e5).toISOString().slice(0,10);
+      const cut120 = new Date(Date.now()-120*864e5).toISOString().slice(0,10), cut45 = new Date(Date.now()-45*864e5).toISOString().slice(0,10);
+      const homeBox = f => { const k=String(f.kickoff||"").slice(0,10); return k>=cut45 && k<=farOut && ((f.et&&f.et.on)||(f.bo&&f.bo.on)); };
       const recent = r => { const k=String(r.kickoff||"").slice(0,10); return k >= cutoff && k <= farOut; };
       const snap = {
-        fixtures: db.fixtures.filter(f=>liveOf("fixtures",f) && recent(f)).map(f=>this.docOf("fixtures",f)),
+        fixtures: db.fixtures.filter(f=>liveOf("fixtures",f) && (recent(f) || homeBox(f))).map(f=>this.docOf("fixtures",f)),
+        vip:      (db.vip||[]).filter(v=>v.ymd>=cut120).map(v=>({ymd:v.ymd,odds:v.odds||"",st:v.st||""})),
         props:    db.props.filter(r=>liveOf("props",r)).map(r=>this.docOf("props",r)).filter(recent)
       };
       const sj = JSON.stringify(snap);
@@ -365,7 +404,7 @@ const $ = s => document.querySelector(s);
 const fmt = iso => { const d=new Date(iso); return isNaN(d)?"":d.toLocaleString([], {day:"2-digit",month:"short",hour:"2-digit",minute:"2-digit"}); };
 function toast(m){ const t=$("#toast"); t.textContent=m; t.hidden=false; clearTimeout(toast.t); toast.t=setTimeout(()=>t.hidden=true,2200); }
 function commit(){ Store.save(db); render(); }
-function statsText(){ const live=db.picks.filter(p=>p.status==="published").length + db.fixtures.filter(f=>f.fb&&f.fb.live).length + db.props.filter(p=>p.live).length; return `${db.fixtures.length} fixtures · ${live} live`; }
+function statsText(){ const live=db.picks.filter(p=>p.status==="published").length + db.fixtures.filter(f=>(f.fb&&f.fb.live)||(f.bb&&f.bb.live)||(f.et&&f.et.on)||(f.bo&&f.bo.on)).length + db.props.filter(p=>p.live).length; return `${db.fixtures.length} fixtures · ${live} live`; }
 
 /* ============ LOGIN ============ */
 let entered = false;
@@ -394,7 +433,7 @@ async function onSignedIn(user){
   }
   loginMsg(""); $("#loginBtn").disabled = true; $("#loginBtn").textContent = "Loading…";
   try{
-    db = await Store.load(); db.props = db.props || [];
+    db = await Store.load(); db.props = db.props || []; db.vip = db.vip || [];
     db.props.forEach(p=>{ if(PROP_KEY_MIGRATE[p.market]) p.market = PROP_KEY_MIGRATE[p.market]; });
     const old = Store.localLeftovers();
     if(old && !db.fixtures.length && !db.props.length && confirm("This browser has "+old.fixtures.length+" fixture(s) saved from before the database was connected.\n\nUpload them to the database now?")){
@@ -412,7 +451,7 @@ async function onSignedIn(user){
 /* ============ TABS ============ */
 function showTab(name){
   document.querySelectorAll("nav.tabs button").forEach(b=>b.setAttribute("aria-selected", b.dataset.tab===name));
-  ["fixtures","fbtable","bbprops","picks","published","data"].forEach(t=>$("#tab-"+t).hidden = t!==name);
+  ["fixtures","fbtable","bbtable","bbprops","home","picks","published","data"].forEach(t=>$("#tab-"+t).hidden = t!==name);
 }
 document.querySelectorAll("nav.tabs button").forEach(b=>b.onclick=()=>{ if(b.dataset.tab==="picks") resetPick(); showTab(b.dataset.tab); });
 
@@ -514,11 +553,90 @@ function renderFb(){
       <td><label class="sw"><input type="checkbox" data-f="live" ${v.live?"checked":""}><i></i></label></td></tr>`;
   }).join("") : `<tr><td colspan="14" class="empty">No football fixtures yet. Add one in tab 1 (choose Football).</td></tr>`;
 }
+/* ============ BASKETBALL TABLE ============ */
+const bbDefaults = () => ({o1:"",o2:"",tip:"",spread:"",totalSide:"",totalLine:"",ps:"",live:false});
+const bbOf = f => Object.assign(bbDefaults(), f.bb||{});
+function renderBb(){
+  const rows = db.fixtures.filter(f=>f.sport==="basketball").sort((a,b)=>a.kickoff.localeCompare(b.kickoff));
+  $("#bbCount").textContent = rows.length?`(${rows.length})`:"";
+  $("#bbBody").innerHTML = rows.length ? rows.map(f=>{
+    const v=bbOf(f);
+    return `<tr data-id="${f.id}">
+      <td class="t">${esc(hhmm(f.kickoff))}<br><small>${esc(dmon(f.kickoff))}</small></td>
+      <td class="lg">${esc(f.competition)}<br><small>${esc(f.country||"")}</small></td>
+      <td class="tm"><b>${esc(f.home)}</b></td><td class="tm"><b>${esc(f.away)}</b></td>
+      ${oddIn("o1",v)}${oddIn("o2",v)}
+      <td><select data-f="tip" class="tipsel"><option value="">-</option>${["1","2"].map(k=>`<option ${v.tip===k?"selected":""}>${k}</option>`).join("")}</select></td>
+      <td><input class="odd" data-f="spread" value="${esc(v.spread)}" placeholder="-6.5" maxlength="7"></td>
+      <td><select data-f="totalSide"><option value="">-</option><option value="Over" ${v.totalSide==="Over"?"selected":""}>Over</option><option value="Under" ${v.totalSide==="Under"?"selected":""}>Under</option></select>
+          <input class="odd" data-f="totalLine" value="${esc(v.totalLine)}" placeholder="165.5" maxlength="7"></td>
+      <td><input class="cs" data-f="ps" value="${esc(v.ps)}" placeholder="98-91" maxlength="9"></td>
+      <td><label class="sw"><input type="checkbox" data-f="live" ${v.live?"checked":""}><i></i></label></td></tr>`;
+  }).join("") : `<tr><td colspan="11" class="empty">No basketball fixtures yet. Add one in tab 1 (choose Basketball).</td></tr>`;
+}
+$("#bbBody").addEventListener("change", e => {
+  const el=e.target, tr=el.closest("tr"); if(!tr||!el.dataset.f) return;
+  const f=db.fixtures.find(x=>x.id===tr.dataset.id); if(!f) return;
+  f.bb = bbOf(f);
+  f.bb[el.dataset.f] = el.type==="checkbox" ? el.checked : el.value.trim();
+  Store.save(db); $("#stats").textContent = statsText();
+});
 $("#fbBody").addEventListener("change", e => {
   const el=e.target, tr=el.closest("tr"); if(!tr||!el.dataset.f) return;
   const f=db.fixtures.find(x=>x.id===tr.dataset.id); if(!f) return;
   f.fb = fbOf(f);
   f.fb[el.dataset.f] = el.type==="checkbox" ? el.checked : el.value.trim();
+  Store.save(db); $("#stats").textContent = statsText();
+});
+
+
+/* ============ HOME BOXES (Expert tip, Bets of the day, VIP results) ============ */
+const todayStr = () => new Intl.DateTimeFormat("en-CA",{timeZone:"Africa/Lagos"}).format(new Date());
+$("#hbDate").value = todayStr(); $("#vpMonth").value = todayStr().slice(0,7);
+function renderHome(){
+  const day = $("#hbDate").value, rows = db.fixtures.filter(f=>String(f.kickoff||"").slice(0,10)===day).sort((a,b)=>a.kickoff.localeCompare(b.kickoff));
+  $("#hbBody").innerHTML = rows.length ? rows.map(f=>{
+    const e=f.et||{}, b=f.bo||{};
+    return `<tr data-id="${f.id}">
+      <td class="t">${esc(hhmm(f.kickoff))}</td>
+      <td class="tm"><b>${esc(f.home)}</b> v <b>${esc(f.away)}</b><br><small>${f.sport==="football"?"Football":"Basketball"} · ${esc(f.competition)}</small></td>
+      <td><label class="sw"><input type="checkbox" data-g="et" data-f="on" ${e.on?"checked":""}><i></i></label></td>
+      <td>${e.on?`<textarea data-g="et" data-f="reasoning" rows="3" style="min-width:240px" placeholder="Why this tip? (new line = new paragraph)">${esc(e.reasoning||"")}</textarea><br><input data-g="et" data-f="by" value="${esc(e.by||"PB Analyst")}" placeholder="By" style="width:140px">`:'<span class="muted">-</span>'}</td>
+      <td><label class="sw"><input type="checkbox" data-g="bo" data-f="on" ${b.on?"checked":""}><i></i></label></td>
+      <td>${b.on?`<input data-g="bo" data-f="pick" value="${esc(b.pick||"")}" placeholder="1X" style="width:110px">`:'<span class="muted">-</span>'}</td>
+      <td>${b.on?`<select data-g="bo" data-f="st">${["pending","won","lost"].map(r=>`<option ${(b.st||"pending")===r?"selected":""}>${r}</option>`).join("")}</select>`:'<span class="muted">-</span>'}</td>
+      <td>${b.on?`<input class="cs" data-g="bo" data-f="score" value="${esc(b.score||"")}" placeholder="2-1" maxlength="9">`:'<span class="muted">-</span>'}</td></tr>`;
+  }).join("") : `<tr><td colspan="8" class="empty">No fixtures on this date. Add them in tab 1.</td></tr>`;
+  const ym=$("#vpMonth").value||todayStr().slice(0,7), [y,m]=ym.split("-").map(Number), n=new Date(y,m,0).getDate();
+  let h="";
+  for(let d=1; d<=n; d++){
+    const ymd=`${ym}-${String(d).padStart(2,"0")}`, v=(db.vip||[]).find(x=>x.ymd===ymd)||{};
+    h+=`<tr data-ymd="${ymd}"><td>${d} ${new Date(y,m-1,d).toLocaleDateString("en-GB",{weekday:"short"})}</td>
+      <td><input class="odd" data-v="odds" value="${esc(v.odds||"")}" placeholder="2.43" maxlength="7"></td>
+      <td><select data-v="st"><option value="">-</option>${["won","lost"].map(r=>`<option ${v.st===r?"selected":""}>${r}</option>`).join("")}</select></td></tr>`;
+  }
+  $("#vpBody").innerHTML = h;
+}
+$("#hbDate").onchange = renderHome; $("#vpMonth").onchange = renderHome;
+$("#hbBody").addEventListener("change", e => {
+  const el=e.target, tr=el.closest("tr"); if(!tr||!el.dataset.g) return;
+  const f=db.fixtures.find(x=>x.id===tr.dataset.id); if(!f) return;
+  const g=el.dataset.g, val = el.type==="checkbox" ? el.checked : el.value.trim();
+  if(el.dataset.f==="on" && val){
+    const day=String(f.kickoff).slice(0,10), lim = g==="et"?1:5;
+    const n = db.fixtures.filter(x=>x.id!==f.id && x.sport===f.sport && String(x.kickoff).slice(0,10)===day && x[g] && x[g].on).length;
+    if(n>=lim){ toast(g==="et" ? "Only one Expert tip per sport per day. Untick the other one first." : "Maximum 5 Bets of the day per sport. Untick one first."); el.checked=false; return; }
+  }
+  f[g] = f[g] || {}; f[g][el.dataset.f] = val;
+  if(g==="bo" && el.dataset.f==="on" && val && !f.bo.st) f.bo.st="pending";
+  commit();
+});
+$("#vpBody").addEventListener("change", e => {
+  const el=e.target, tr=el.closest("tr"); if(!tr||!el.dataset.v) return;
+  db.vip = db.vip||[]; let v=db.vip.find(x=>x.ymd===tr.dataset.ymd);
+  if(!v){ v={id:"vip-"+tr.dataset.ymd, kind:"vip", status:"vip", ymd:tr.dataset.ymd, odds:"", st:""}; db.vip.push(v); }
+  v[el.dataset.v]=el.value.trim();
+  if(!v.odds && !v.st) db.vip = db.vip.filter(x=>x!==v);
   Store.save(db); $("#stats").textContent = statsText();
 });
 
@@ -643,7 +761,7 @@ $("#fStatus").onchange = render;
 
 /* ============ RENDER ============ */
 function render(){
-  $("#stats").textContent = statsText(); renderFb(); renderProps();
+  $("#stats").textContent = statsText(); renderFb(); renderBb(); renderProps(); renderHome();
   const fxs = db.fixtures.slice().sort((a,b)=>a.kickoff.localeCompare(b.kickoff));
   $("#fxCount").textContent = fxs.length?`(${fxs.length})`:"";
   $("#fxBody").innerHTML = fxs.length ? fxs.map(f=>`<tr>
@@ -673,9 +791,9 @@ $("#exp").onclick = () => {
 };
 $("#imp").onchange = e => {
   const file=e.target.files[0]; if(!file) return;
-  file.text().then(t=>{ try{ const d=JSON.parse(t); if(!Array.isArray(d.fixtures)||!Array.isArray(d.picks)) throw 0; d.props=d.props||[]; db=d; commit(); toast("Imported"); }catch(_){ toast("Not a valid backup file"); } });
+  file.text().then(t=>{ try{ const d=JSON.parse(t); if(!Array.isArray(d.fixtures)||!Array.isArray(d.picks)) throw 0; d.props=d.props||[]; d.vip=d.vip||[]; db=d; commit(); toast("Imported"); }catch(_){ toast("Not a valid backup file"); } });
 };
-$("#wipe").onclick = () => { if(confirm("Erase ALL fixtures, props and picks from the database? This cannot be undone.")){ db={fixtures:[],picks:[],props:[]}; commit(); } };
+$("#wipe").onclick = () => { if(confirm("Erase ALL fixtures, props and picks from the database? This cannot be undone.")){ db={fixtures:[],picks:[],props:[],vip:[]}; commit(); } };
 
 resetPick();
 try{
