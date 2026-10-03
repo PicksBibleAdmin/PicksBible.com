@@ -385,6 +385,9 @@ table.pt.bw{min-width:780px;font-size:14px;color:#1b2433;background:#fff}
 table.pt.bw{min-width:980px}
 
 .pt.bw .conf{display:inline-block;min-width:54px;padding:6px 10px;border-radius:999px;background:#e8f7ee;border:1px solid #b6e3c6;color:#14532d;font:700 13px var(--body)}
+.pt.bw .conf.lo{background:#fde8e8;border-color:#f1b4b4;color:#7f1d1d}
+.pt.bw .conf.mid{background:#fff6cf;border-color:#ecd982;color:#6b4e00}
+.pt.bw .conf.hi{background:#e8f7ee;border-color:#b6e3c6;color:#14532d}
 table.pt.bw{min-width:0;width:100%}
 .pt.bw th{font-size:12px;padding:12px 6px;letter-spacing:.01em}
 .pt.bw td{padding:12px 6px}

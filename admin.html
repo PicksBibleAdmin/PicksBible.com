@@ -72,6 +72,7 @@ th{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.04
 #tab-home td input:not([type=checkbox]){background:#0b0818;border:1px solid var(--line);color:inherit;border-radius:8px;padding:7px 9px;font:inherit}
 #tab-home td select{background:#0b0818;border:1px solid var(--line);color:inherit;border-radius:8px;padding:7px 9px}
 #tab-home td input.odd,#tab-home td input.cs{width:90px}
+tr.lghead td{background:#ffffff0d;padding:10px 8px;border-bottom:1px solid var(--line)}
 .ft{border-collapse:collapse;min-width:100%}
 .ft th,.ft td{border:0;border-bottom:1px solid var(--line);padding:8px 5px;white-space:nowrap;text-align:left}
 .ft th{font-size:11px}
@@ -112,7 +113,7 @@ th{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.04
     <label for="pw" style="margin-top:10px;display:block">Password</label>
     <input id="pw" type="password" autocomplete="current-password">
     <div class="row end"><button class="btn" id="loginBtn">Sign in</button></div>
-    <p class="muted" style="font-size:11px;margin:10px 0 0">Build 2026-10-03-J (Firebase)</p>
+    <p class="muted" style="font-size:11px;margin:10px 0 0">Build 2026-10-03-K (Firebase)</p>
     <p id="loginErr" class="muted" style="color:var(--lost)" hidden></p>
   </div>
 </div>
@@ -142,6 +143,7 @@ th{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.04
   <div class="card">
     <h2>Add fixture</h2>
     <p class="note">Fixture details (teams, competition, kickoff) will be filled automatically from a sports data API in the backend step. For now, add them by hand or use the button below once the API is connected.</p>
+    <div id="fxEditing" class="note" hidden style="border-left-color:var(--pend)"></div>
     <form id="fxForm">
       <div class="grid">
         <div><label>Sport</label>
@@ -162,7 +164,8 @@ th{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.04
       </div>
             <div class="row end">
         <button type="button" class="btn ghost" disabled title="Connected in the backend step">Load fixtures from API</button>
-        <button class="btn">Add fixture</button>
+        <button type="button" class="btn ghost" id="fxCancel" hidden>Cancel edit</button>
+        <button class="btn" id="fxSubmit">Add fixture</button>
       </div>
     </form>
   </div>
@@ -464,7 +467,9 @@ function setLeague(country, league){
   fxForm.country.value = country||""; fxForm.competition.value = league||"";
   $("#lgBtn").textContent = league ? `${country} · ${league} ▾` : "🌍 Select A League ▾";
 }
+let editingId = null;
 function setSport(sp){
+  if(editingId && sp!==sport) return toast("Sport can't be changed while editing. Cancel and add a new fixture instead.");
   sport = sp; fxForm.sport.value = sp;
   document.querySelectorAll(".seg button").forEach(b=>b.setAttribute("aria-pressed", b.dataset.sport===sp));
   $("#lgBtn").classList.toggle("bb", sp==="basketball");
@@ -514,9 +519,28 @@ fxForm.onsubmit = e => {
   e.preventDefault();
   const f = Object.fromEntries(new FormData(fxForm));
   if(!f.competition) return toast("Select a league first");
+  if(editingId){
+    const x = db.fixtures.find(q=>q.id===editingId);
+    if(x){ x.country=f.country; x.competition=f.competition; x.home=f.home; x.away=f.away; x.kickoff=f.kickoff; }
+    stopEdit(); commit(); toast("Fixture updated"); return;
+  }
   db.fixtures.push({id:uid(), ...f});
   fxForm.reset(); setSport(sport); commit(); toast("Fixture added");
 };
+function stopEdit(){
+  editingId = null; fxForm.reset(); setSport(sport);
+  $("#fxSubmit").textContent = "Add fixture"; $("#fxCancel").hidden = true; $("#fxEditing").hidden = true;
+}
+$("#fxCancel").onclick = stopEdit;
+function editFixture(id){
+  const f = db.fixtures.find(x=>x.id===id); if(!f) return;
+  editingId = null; setSport(f.sport); editingId = id;
+  setLeague(f.country, f.competition);
+  fxForm.home.value = f.home; fxForm.away.value = f.away; fxForm.kickoff.value = f.kickoff;
+  $("#fxSubmit").textContent = "Save changes"; $("#fxCancel").hidden = false;
+  const n = $("#fxEditing"); n.hidden = false; n.innerHTML = "Editing: <b>"+esc(f.home)+" v "+esc(f.away)+"</b>. Change the league, teams or kick-off, then press Save changes. Your odds and tips are kept.";
+  showTab("fixtures"); window.scrollTo({top:0,behavior:"smooth"});
+}
 function delFixture(id){
   if(db.picks.some(p=>p.fixtureId===id) && !confirm("This fixture has picks. Delete it and its picks?")) return;
   db.fixtures = db.fixtures.filter(f=>f.id!==id);
@@ -764,11 +788,18 @@ function render(){
   $("#stats").textContent = statsText(); renderFb(); renderBb(); renderProps(); renderHome();
   const fxs = db.fixtures.slice().sort((a,b)=>a.kickoff.localeCompare(b.kickoff));
   $("#fxCount").textContent = fxs.length?`(${fxs.length})`:"";
-  $("#fxBody").innerHTML = fxs.length ? fxs.map(f=>`<tr>
-    <td>${esc(fmt(f.kickoff))}</td><td><b>${esc(f.home)}</b> v <b>${esc(f.away)}</b><br><span class="muted">${f.sport==="football"?"Football":"Basketball"}</span></td>
+  const gk = f => (f.sport==="football"?"0":"1")+"|"+(f.country||"")+"|"+(f.competition||"");
+  fxs.sort((a,b)=>gk(a).localeCompare(gk(b)) || a.kickoff.localeCompare(b.kickoff));
+  const cnt = {}; fxs.forEach(f=>{ cnt[gk(f)] = (cnt[gk(f)]||0)+1; });
+  let last = null, fxh = "";
+  fxs.forEach(f=>{
+    if(gk(f)!==last){ last = gk(f); fxh += `<tr class="lghead"><td colspan="4">${f.sport==="football"?"⚽":"🏀"} <b>${esc(compLabel(f))}</b> <span class="muted">(${cnt[last]})</span></td></tr>`; }
+    fxh += `<tr>
+    <td>${esc(fmt(f.kickoff))}</td><td><b>${esc(f.home)}</b> v <b>${esc(f.away)}</b></td>
     <td>${esc(compLabel(f))}</td>
-    <td class="row"><button class="btn sm" onclick="pickFor('${f.id}')">Add pick</button><button class="btn danger sm" onclick="delFixture('${f.id}')">Delete</button></td></tr>`).join("")
-    : `<tr><td colspan="4" class="empty">No fixtures yet.</td></tr>`;
+    <td class="row"><button class="btn ghost sm" onclick="editFixture('${f.id}')">Edit</button><button class="btn sm" onclick="pickFor('${f.id}')">Add pick</button><button class="btn danger sm" onclick="delFixture('${f.id}')">Delete</button></td></tr>`;
+  });
+  $("#fxBody").innerHTML = fxs.length ? fxh : `<tr><td colspan="4" class="empty">No fixtures yet.</td></tr>`;
 
   const flt = $("#fStatus").value;
   const picks = db.picks.filter(p=>!flt||p.status===flt).slice().sort((a,b)=>b.updatedAt.localeCompare(a.updatedAt));

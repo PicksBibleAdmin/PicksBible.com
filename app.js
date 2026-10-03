@@ -225,7 +225,7 @@ function scoreLine(m){return m.score?'<span class="sc">'+esc(m.score)+'</span>':
 function oddCell(m,i,k){var v=m.o&&m.o[i]?m.o[i]:"-";return '<td class="od" data-l="'+k+'"><span class="odd'+(m.pk===k?" pk":"")+'">'+esc(v)+'</span></td>'}
 function pkBadge(m){return '<span class="tip '+(m.st==="won"?"won":m.st==="lost"?"lost":"")+'" title="'+esc(m.st)+'">'+esc(m.pk||m.tip||"-")+'</span>'}
 function dcCell(m){return m.dc?'<td class="kv" data-l="Double Chance"><span class="xp"><b>'+esc(m.dc)+'</b>'+(m.dco?'<i>('+esc(m.dco)+')</i>':'')+'</span></td>':'<td class="kv na" data-l="Double Chance">-</td>'}
-function confCell(m){return m.conf?'<td class="kv" data-l="Confidence"><span class="conf">'+esc(String(m.conf).replace("%",""))+'%</span></td>':'<td class="kv na" data-l="Confidence">-</td>'}
+function confCell(m){var n=parseFloat(String(m.conf).replace("%","")),lv=isNaN(n)?"":n<45?" lo":n<=55?" mid":" hi";return m.conf?'<td class="kv" data-l="Confidence"><span class="conf'+lv+'">'+esc(String(m.conf).replace("%",""))+'%</span></td>':'<td class="kv na" data-l="Confidence">-</td>'}
 function extraPick(label,odds,name){return '<td class="kv'+(label?'':' na')+'" data-l="'+esc(name||"")+'">'+(label?'<span class="xp"><b>'+esc(label)+'</b>'+(odds?'<i>('+esc(odds)+')</i>':'')+'</span>':'-')+'</td>'}
 function footballTable(list){
   if(!list.length)return '<div class="empty">No football ⚽ predictions for this day yet.</div>';
