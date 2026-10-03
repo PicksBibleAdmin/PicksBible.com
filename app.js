@@ -501,18 +501,6 @@ $$("[data-analysis]").forEach(function(el){
    '<p class="note center" style="margin-top:14px">'+(sp==="football"?"Football":"Basketball")+' predictions are based on statistical analysis and are not guaranteed. Please bet responsibly.</p>';
 });
 
-/* ---------- value bet ---------- */
-$$("[data-valuebet]").forEach(function(el){
-  var v=D.valueBet;
-  function crest(n,c){return '<div class="crest" style="background:'+esc(c)+'">'+esc(n.split(" ").map(function(w){return w[0]}).join("").slice(0,3))+'</div>'}
-  el.innerHTML='<div class="vb-main"><div>'+crest(v.h,v.hc||hueOf(v.h))+'<div class="vb-team">'+esc(v.h)+'</div></div>'+
-    '<div class="vb-mid"><strong>'+esc(v.t)+'</strong>vs<br>'+esc(lgName(v.lg))+'</div>'+
-    '<div>'+crest(v.a,v.ac||hueOf(v.a))+'<div class="vb-team">'+esc(v.a)+'</div></div></div>'+
-    '<div class="odds"><span>1 &nbsp;'+esc(v.odds.h)+'</span><span>X &nbsp;'+esc(v.odds.x)+'</span><span>2 &nbsp;'+esc(v.odds.a)+'</span><span class="pick">'+esc(v.pick)+' @ '+esc(v.pickOdds)+'</span></div>'+
-    '<div class="vb-by"><span>EXPERT TIPS BY: <b>'+esc(v.tipster)+'</b></span><span>'+esc(v.sport==="football"?"Football ⚽":"Basketball 🏀")+' value pick</span></div>'+
-    '<div class="vb-foot"><a class="btn ghost" href="expert-tips.html">View tips</a></div>';
-});
-
 /* ---------- best player props of the day (basketball) with prop-type dropdown ---------- */
 $$("[data-props]").forEach(function(el){
   var sec=el.closest(".props-section"), sel=sec&&$("[data-propsel]",sec);

@@ -248,18 +248,8 @@ window.PB = {
 
 
 
-  /* ---------- VALUE BET OF THE DAY ---------- */
-  valueBet: {
-    sport: "football", lg: "ucl", t: "17:45",
-    h: "Galatasaray", a: "Borussia Dortmund",
-    hc: "#a90432", ac: "#f5c400",          /* team colours for the badges */
-    odds: { h: "3.40", x: "3.70", a: "2.05" },
-    pick: "Both Teams To Score (GG)", pickOdds: "1.62",
-    tipster: "PB ANALYST"
-  },
-
   /* ---------- TOP PICKS OF THE DAY (Expert Tips page) ----------
-     two more cards, same template as "Value bet of the day" above them
+     two more cards, same template as the Expert Tip cards
      (crest, "vs", crest, the same 3-box odds row + pick badge, the same
      tipster line and "View Reasoning" button) so all three boxes on the
      page look identical — only the words in these fields differ. */
@@ -362,12 +352,7 @@ window.PB = {
       excerpt:"Halftime/Fulltime pays well because you must call two results. These are the match types where it makes sense.",
       body:["An HT/FT bet such as 1/1 needs the home team to lead at halftime and win at full time. Because two outcomes must land, odds are much higher than a straight win.",
             "It suits strong home favourites who start fast. It rarely suits cagey derbies, where the first half often ends level.",
-            "X/1 and X/2 are the most common results after 1/1 and 2/2. They pay well when a stronger side tends to score late."] },
-    { id:"value", cat:"Guide", date:"24 Sep 2026", title:"What Is a Value Bet?",
-      art:["#22c55e","#0b0820"],
-      excerpt:"A value bet is one where the odds are higher than the real chance of the outcome. It is the idea behind our Value Bet of the Day.",
-      body:["Odds imply a probability. Odds of 2.00 imply a 50% chance. If our model rates the outcome at 58%, the bet has value, even though it can still lose.",
-            "Over many bets, consistently backing value is the only approach that can beat the bookmaker's margin.",
-            "Every Value Bet of the Day on PicksBible shows the odds we took, so you can compare them with your own bookmaker."] }
+            "X/1 and X/2 are the most common results after 1/1 and 2/2. They pay well when a stronger side tends to score late."] }
+
   ]
 };
