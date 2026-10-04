@@ -116,7 +116,7 @@ tr.lghead td{background:#ffffff0d;padding:10px 8px;border-bottom:1px solid var(-
     <label for="pw" style="margin-top:10px;display:block">Password</label>
     <input id="pw" type="password" autocomplete="current-password">
     <div class="row end"><button class="btn" id="loginBtn">Sign in</button></div>
-    <p class="muted" style="font-size:11px;margin:10px 0 0">Build 2026-10-04-T (Firebase)</p>
+    <p class="muted" style="font-size:11px;margin:10px 0 0">Build 2026-10-04-U (Firebase)</p>
     <p id="loginErr" class="muted" style="color:var(--lost)" hidden></p>
   </div>
 </div>
@@ -140,7 +140,7 @@ tr.lghead td{background:#ffffff0d;padding:10px 8px;border-bottom:1px solid var(-
   <button hidden role="tab" data-tab="published" aria-selected="false">Picks &amp; results</button>
   <button role="tab" data-tab="data" aria-selected="false">Data</button>
 </nav>
-<div class="viewbar"><label for="viewMode">Showing</label><select id="viewMode"><option value="current">Current matches (hidden 48 hours after kick-off)</option><option value="past">Past matches (archive, older than 48 hours)</option><option value="all">All matches</option></select><span class="muted" id="viewNote"></span></div>
+<div class="viewbar"><label for="viewMode">Showing</label><select id="viewMode"><option value="current">Current matches (hidden 24 hours after kick-off)</option><option value="past">Past matches (archive, older than 24 hours)</option><option value="all">All matches</option></select><span class="muted" id="viewNote"></span></div>
 
 <!-- FIXTURES -->
 <section id="tab-fixtures">
@@ -561,7 +561,7 @@ const hhmm = iso => { const d=new Date(iso); return isNaN(d)?"":d.toLocaleTimeSt
 const dmon = iso => { const d=new Date(iso); return isNaN(d)?"":d.toLocaleDateString([], {day:"2-digit",month:"short"}); };
 const oddIn = (key,v) => `<td><input class="odd" type="number" step="0.01" min="1" data-f="${key}" value="${esc(v[key])}" placeholder="-"></td>`;
 const watDay = o => { const t = new Date(new Intl.DateTimeFormat("en-CA",{timeZone:"Africa/Lagos"}).format(new Date())+"T12:00:00Z"); t.setUTCDate(t.getUTCDate()+o); return t.toISOString().slice(0,10); };
-const HIDE_AFTER_HOURS = 48;   /* a match leaves the working lists this many hours after kick-off (it stays in the database / Past view) */
+const HIDE_AFTER_HOURS = 24;   /* a match leaves the working lists this many hours after kick-off (it stays in the database / Past view) */
 const inView = f => { const m=$("#viewMode").value; if(m==="all") return true; const t=new Date(f.kickoff).getTime(), old=!isNaN(t) && t < Date.now()-HIDE_AFTER_HOURS*36e5; return m==="past" ? old : !old; };
 const lgSort = (a,b) => ((a.country||"")+"|"+(a.competition||"")).localeCompare((b.country||"")+"|"+(b.competition||"")) || a.kickoff.localeCompare(b.kickoff);
 const lgHead = (f,n,cols,emoji) => `<tr class="lghead"><td colspan="${cols}">${emoji} <b>${esc(compLabel(f))}</b> <span class="muted">(${n})</span></td></tr>`;
