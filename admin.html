@@ -187,7 +187,7 @@ tr.lghead td{background:#ffffff0d;padding:10px 8px;border-bottom:1px solid var(-
     <h2>Football table <span class="muted" id="fbCount"></span></h2>
     <p class="note">One row per football fixture (add fixtures in tab 1). Enter the odds for 1, X and 2, choose your <b>Tip</b> (1, X or 2), then your <b>GG/NG</b> and <b>Over/Under 2.5</b> picks with their odds, add a correct-score tip, and switch the match <b>Live</b>. Changes save automatically.</p>
     <div class="tbl"><table class="ft">
-      <thead><tr><th>Time</th><th>Competition</th><th>Home</th><th>Away</th><th>1</th><th>X</th><th>2</th><th>Tip</th><th>Confidence %</th><th>Over / Under 2.5</th><th>BTTS</th><th>Double chance</th><th>CS tip</th><th>Live</th></tr></thead>
+      <thead><tr><th>Time</th><th>Competition</th><th>Home</th><th>Away</th><th>1</th><th>X</th><th>2</th><th>Tip</th><th>Confidence %</th><th>Over / Under 2.5</th><th>BTTS</th><th>Double chance</th><th>CS tip</th><th>Result</th><th>Live</th></tr></thead>
       <tbody id="fbBody"></tbody>
     </table></div>
   </div>
@@ -199,7 +199,7 @@ tr.lghead td{background:#ffffff0d;padding:10px 8px;border-bottom:1px solid var(-
     <h2>Basketball table <span class="muted" id="bbCount"></span></h2>
     <p class="note">One row per basketball fixture (add fixtures in tab 1, choose Basketball). Enter the odds for Home and Away, choose your <b>Tip</b> (1 or 2), the <b>projected spread</b> (e.g. -6.5 or +20.5), the <b>point total tip</b> (Over/Under and the line) and the <b>projected score</b>, then switch the game <b>Live</b>. Changes save automatically.</p>
     <div class="tbl"><table class="ft">
-      <thead><tr><th>Time</th><th>Competition</th><th>Home</th><th>Away</th><th>Home win (1)</th><th>Away win (2)</th><th>Tip</th><th>Confidence %</th><th>Projected spread</th><th>Point total tip</th><th>Projected score</th><th>Live</th></tr></thead>
+      <thead><tr><th>Time</th><th>Competition</th><th>Home</th><th>Away</th><th>Home win (1)</th><th>Away win (2)</th><th>Tip</th><th>Confidence %</th><th>Projected spread</th><th>Point total tip</th><th>Projected score</th><th>Result</th><th>Live</th></tr></thead>
       <tbody id="bbBody"></tbody>
     </table></div>
   </div>
@@ -391,15 +391,29 @@ const Store = {
       };
       const sj = JSON.stringify(snap);
       if(sj !== this.lastSnap){ snap.updatedAt = new Date().toISOString(); await this.fs.collection("public").doc("live").set(snap); this.lastSnap = sj; }
+      /* ARCHIVE: one small document per past day (2 to 30 days back) so visitors can open any of the last 30 days
+         without making the live document too big. Only days whose content changed are written again. */
+      const watA = o => { const t = new Date(new Intl.DateTimeFormat("en-CA",{timeZone:"Africa/Lagos"}).format(new Date())+"T12:00:00Z"); t.setUTCDate(t.getUTCDate()+o); return t.toISOString().slice(0,10); };
+      const arch = {}; for(let i=2;i<=30;i++) arch[watA(-i)] = [];
+      db.fixtures.filter(f=>liveOf("fixtures",f)).forEach(f=>{ const k=String(f.kickoff||"").slice(0,10); if(arch[k]) arch[k].push(this.docOf("fixtures",f)); });
+      this.lastDays = this.lastDays || {};
+      const liveIds = new Set(snap.fixtures.map(f=>f.id)); let archivedOnly = 0;
+      for(const k of Object.keys(arch)){
+        const list = arch[k].sort((a,b)=>String(a.kickoff).localeCompare(String(b.kickoff)));
+        archivedOnly += list.filter(f=>!liveIds.has(f.id)).length;
+        if(!list.length){ if(this.lastDays[k]){ await this.fs.collection("public").doc("day-"+k).delete(); delete this.lastDays[k]; } continue; }
+        const j = JSON.stringify(list);
+        if(this.lastDays[k] !== j){ await this.fs.collection("public").doc("day-"+k).set({day:k, fixtures:list, updatedAt:new Date().toISOString()}); this.lastDays[k] = j; }
+      }
       /* tell the editor exactly what the public site will show (it only shows yesterday / today / tomorrow, Nigerian time) */
       const wat = o => { const t = new Date(new Intl.DateTimeFormat("en-CA",{timeZone:"Africa/Lagos"}).format(new Date())+"T12:00:00Z"); t.setUTCDate(t.getUTCDate()+o); return t.toISOString().slice(0,10); };
       const dayOf = r => String(r.kickoff||"").slice(0,10);
-      const showFx = snap.fixtures.length;   /* football: any date from 3 days ago onward (calendar picker shows future days) */
+      const showFx = snap.fixtures.length;   /* football: any date from 3 days ago onward; older days (up to 30) are published as one archive document per day */
       const showPr = snap.props.filter(r=>[wat(0),wat(1)].includes(dayOf(r))).length;
       const liveFx = db.fixtures.filter(f=>liveOf("fixtures",f)).length, livePr = db.props.filter(r=>liveOf("props",r)).length;
-      const hidden = (liveFx-showFx)+(livePr-showPr);
+      const hidden = (liveFx-showFx-archivedOnly)+(livePr-showPr);
       this.setSync("Saved ✓ · on the site now: "+showFx+" match"+(showFx===1?"":"es")+" (any date)"+", "+showPr+" prop"+(showPr===1?"":"s")
-        + (hidden>0 ? " · "+hidden+" Live item"+(hidden===1?"":"s")+" NOT shown: matches need a kickoff date (not older than 3 days); props show only for today or tomorrow" : ""), hidden>0);
+        + (hidden>0 ? " · "+hidden+" Live item"+(hidden===1?"":"s")+" NOT shown: matches need a kickoff date (not older than 30 days); props show only for today or tomorrow" : ""), hidden>0);
     }catch(e){
       console.error(e); this.setSync("NOT SAVED – "+(e.code||e.message),true); toast("Could not save: "+(e.code||e.message));
     }
@@ -560,7 +574,7 @@ function pickFor(id){ resetPick(id); showTab("picks"); }
 
 
 /* ============ FOOTBALL TABLE ============ */
-const fbDefaults = () => ({tip:"",o1:"",oX:"",o2:"",btts:"",bttsOdds:"",ou:"",ouOdds:"",conf:"",dc:"",dcOdds:"",cs:"",live:false});
+const fbDefaults = () => ({tip:"",o1:"",oX:"",o2:"",btts:"",bttsOdds:"",ou:"",ouOdds:"",conf:"",dc:"",dcOdds:"",cs:"",st:"",score:"",live:false});
 const fbOf = f => { const v = Object.assign(fbDefaults(), f.fb||{}); if(!v.tip && v.pick) v.tip = v.pick; return v; };
 const hhmm = iso => { const d=new Date(iso); return isNaN(d)?"":d.toLocaleTimeString([], {hour:"2-digit",minute:"2-digit",hour12:false}); };
 const dmon = iso => { const d=new Date(iso); return isNaN(d)?"":d.toLocaleDateString([], {day:"2-digit",month:"short"}); };
@@ -578,7 +592,7 @@ function leagueGrouped(rows, cols, emoji, rowFn){
 function renderFb(){
   const rows = db.fixtures.filter(f=>f.sport==="football"&&inView(f)).sort(lgSort);
   $("#fbCount").textContent = rows.length?`(${rows.length})`:"";
-  $("#fbBody").innerHTML = rows.length ? leagueGrouped(rows,14,"⚽",f=>{
+  $("#fbBody").innerHTML = rows.length ? leagueGrouped(rows,15,"⚽",f=>{
     const v=fbOf(f);
     return `<tr data-id="${f.id}">
       <td class="t">${esc(hhmm(f.kickoff))}<br><small>${esc(dmon(f.kickoff))}</small> <button type="button" class="btn ghost sm" data-edtime title="Edit date and time">Edit</button></td>
@@ -594,16 +608,18 @@ function renderFb(){
       <td><select data-f="dc"><option value="">-</option>${["1X","12","X2"].map(k=>`<option ${v.dc===k?"selected":""}>${k}</option>`).join("")}</select>
           <input class="odd" type="number" step="0.01" min="1" data-f="dcOdds" value="${esc(v.dcOdds)}" placeholder="odds"></td>
       <td><input class="cs" data-f="cs" value="${esc(v.cs)}" placeholder="2-1" maxlength="7"></td>
+      <td><select data-f="st"><option value="">pending</option><option value="won" ${v.st==="won"?"selected":""}>won</option><option value="lost" ${v.st==="lost"?"selected":""}>lost</option></select>
+          <input class="cs" data-f="score" value="${esc(v.score)}" placeholder="2-1" maxlength="9"></td>
       <td><label class="sw"><input type="checkbox" data-f="live" ${v.live?"checked":""}><i></i></label></td></tr>`;
-  }) : `<tr><td colspan="14" class="empty">No football fixtures yet. Add one in tab 1 (choose Football).</td></tr>`;
+  }) : `<tr><td colspan="15" class="empty">No football fixtures yet. Add one in tab 1 (choose Football).</td></tr>`;
 }
 /* ============ BASKETBALL TABLE ============ */
-const bbDefaults = () => ({o1:"",o2:"",tip:"",conf:"",spread:"",totalSide:"",totalLine:"",ps:"",live:false});
+const bbDefaults = () => ({o1:"",o2:"",tip:"",conf:"",spread:"",totalSide:"",totalLine:"",ps:"",st:"",score:"",live:false});
 const bbOf = f => Object.assign(bbDefaults(), f.bb||{});
 function renderBb(){
   const rows = db.fixtures.filter(f=>f.sport==="basketball"&&inView(f)).sort(lgSort);
   $("#bbCount").textContent = rows.length?`(${rows.length})`:"";
-  $("#bbBody").innerHTML = rows.length ? leagueGrouped(rows,12,"🏀",f=>{
+  $("#bbBody").innerHTML = rows.length ? leagueGrouped(rows,13,"🏀",f=>{
     const v=bbOf(f);
     return `<tr data-id="${f.id}">
       <td class="t">${esc(hhmm(f.kickoff))}<br><small>${esc(dmon(f.kickoff))}</small> <button type="button" class="btn ghost sm" data-edtime title="Edit date and time">Edit</button></td>
@@ -616,8 +632,10 @@ function renderBb(){
       <td><select data-f="totalSide"><option value="">-</option><option value="Over" ${v.totalSide==="Over"?"selected":""}>Over</option><option value="Under" ${v.totalSide==="Under"?"selected":""}>Under</option></select>
           <input class="odd" data-f="totalLine" value="${esc(v.totalLine)}" placeholder="165.5" maxlength="7"></td>
       <td><input class="cs" data-f="ps" value="${esc(v.ps)}" placeholder="98-91" maxlength="9"></td>
+      <td><select data-f="st"><option value="">pending</option><option value="won" ${v.st==="won"?"selected":""}>won</option><option value="lost" ${v.st==="lost"?"selected":""}>lost</option></select>
+          <input class="cs" data-f="score" value="${esc(v.score)}" placeholder="2-1" maxlength="9"></td>
       <td><label class="sw"><input type="checkbox" data-f="live" ${v.live?"checked":""}><i></i></label></td></tr>`;
-  }) : `<tr><td colspan="12" class="empty">No basketball fixtures yet. Add one in tab 1 (choose Basketball).</td></tr>`;
+  }) : `<tr><td colspan="13" class="empty">No basketball fixtures yet. Add one in tab 1 (choose Basketball).</td></tr>`;
 }
 $("#bbBody").addEventListener("change", e => {
   const el=e.target, tr=el.closest("tr"); if(!tr||!el.dataset.f) return;

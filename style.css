@@ -139,7 +139,7 @@ table.pt.compact{min-width:0}
 .ring b{position:relative;font:700 11px var(--body)}
 .tip{display:inline-grid;place-items:center;min-width:34px;height:34px;padding:0 10px;border-radius:999px;font:800 13px var(--body);background:var(--pend);color:var(--pend-ink);white-space:nowrap}
 .tip.won{background:var(--won);color:#04220f}
-.tip.lost{background:var(--lost);color:#fff}
+.tip.lost{background:#8b90a3;color:#fff}
 .center{text-align:center}
 .btn{display:inline-block;border:0;cursor:pointer;text-decoration:none;font:600 14px var(--body);padding:10px 22px;border-radius:999px;background:var(--cyan);color:var(--cyan-ink)}
 .btn.ghost{background:transparent;color:var(--cyan);border:1px solid var(--cyan)}
@@ -369,7 +369,7 @@ table.pt.bw{min-width:780px;font-size:14px;color:#1b2433;background:#fff}
 .pt.bw .odd.pk{border-color:#f5b301;background:#fff8e1}
 .pt.bw .tip{min-width:46px;height:42px;padding:0 14px;font-size:17px;border-radius:999px}
 .pt.bw .tip.won{background:#22c55e;color:#04220f}
-.pt.bw .tip.lost{background:#ef4444;color:#fff}
+.pt.bw .tip.lost{background:#8b90a3;color:#fff}
 
 /* prop-type dropdown inside the props bar */
 .props-section .bar.dark{justify-content:space-between}
@@ -613,3 +613,9 @@ table.pt.bw{min-width:0;width:100%}
   .pt.bw td.team b{font-size:10px}
   .pt.bw td.cs,.pt.bw td.res{font-size:10px}
 }
+
+/* Expert Tips table: the "View tip" link */
+.etl{display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border-radius:999px;border:1.5px dashed var(--pend);background:#f5b30118;color:#7a4b00;font:700 13px var(--body);text-decoration:none;white-space:nowrap}
+.etl:hover{background:#f5b30133}
+.pt.bw td.by{font-weight:600;color:#1b2433}
+@media (max-width:1180px){.etl{padding:6px 8px;font-size:10px;gap:3px}.pt.bw td.by{font-size:10px}}
