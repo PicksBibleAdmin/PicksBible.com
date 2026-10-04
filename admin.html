@@ -28,6 +28,7 @@ input:focus,select:focus,textarea:focus{outline:2px solid var(--cyan);outline-of
 .btn.ghost{background:transparent;color:var(--text);border:1px solid var(--line)}
 .btn.danger{background:transparent;color:var(--lost);border:1px solid var(--lost)}
 .btn.sm{padding:5px 10px;font-size:13px}
+.inv{position:absolute;left:0;right:0;top:100%;z-index:20;max-height:320px;overflow:auto;border:1px solid var(--line);border-radius:10px;background:#120f2e;box-shadow:0 12px 30px #000a;margin-top:4px}.hbseg{display:flex;border:1px solid var(--line);border-radius:999px;overflow:hidden;background:var(--bg)}.hbseg button{flex:1;border:0;background:transparent;color:var(--muted);padding:10px 16px;font:inherit;font-weight:700;cursor:pointer}.hbseg button[aria-pressed=true]{background:#e9fbff;color:var(--cyan-ink)}.hbseg button.bb[aria-pressed=true]{background:#fff1e0;color:#7c2d12}.inv .ih{position:sticky;top:0;background:#1a1740;padding:6px 12px;font-size:12px;font-weight:700;color:var(--muted,#9aa)}.inv .ir{display:flex;align-items:center;gap:10px;padding:6px 12px;border-top:1px solid var(--line);font-size:13px}.inv .ir .m{flex:1}.inv .ir .t{width:48px;font-weight:700}.inv .ir.done{opacity:.5}.inv .em{padding:14px;color:var(--muted,#9aa)}
 .btn[disabled]{opacity:.45;cursor:not-allowed}
 .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
 .row.end{justify-content:flex-end;margin-top:12px}
@@ -116,7 +117,7 @@ tr.lghead td{background:#ffffff0d;padding:10px 8px;border-bottom:1px solid var(-
     <label for="pw" style="margin-top:10px;display:block">Password</label>
     <input id="pw" type="password" autocomplete="current-password">
     <div class="row end"><button class="btn" id="loginBtn">Sign in</button></div>
-    <p class="muted" style="font-size:11px;margin:10px 0 0">Build 2026-10-04-U (Firebase)</p>
+    <p class="muted" style="font-size:11px;margin:10px 0 0">Build 2026-10-04-Y (Firebase)</p>
     <p id="loginErr" class="muted" style="color:var(--lost)" hidden></p>
   </div>
 </div>
@@ -140,7 +141,7 @@ tr.lghead td{background:#ffffff0d;padding:10px 8px;border-bottom:1px solid var(-
   <button hidden role="tab" data-tab="published" aria-selected="false">Picks &amp; results</button>
   <button role="tab" data-tab="data" aria-selected="false">Data</button>
 </nav>
-<div class="viewbar"><label for="viewMode">Showing</label><select id="viewMode"><option value="current">Current matches (hidden 24 hours after kick-off)</option><option value="past">Past matches (archive, older than 24 hours)</option><option value="all">All matches</option></select><span class="muted" id="viewNote"></span></div>
+<div class="viewbar"><label for="viewMode">Showing</label><select id="viewMode"><option value="current">Current matches (hidden 72 hours after kick-off)</option><option value="past">Past matches (archive, older than 72 hours)</option><option value="all">All matches</option></select><input id="viewSearch" type="search" placeholder="Search any match, past or current" autocomplete="off" style="min-width:240px"><span class="muted" id="viewNote"></span></div>
 
 <!-- FIXTURES -->
 <section id="tab-fixtures">
@@ -208,8 +209,12 @@ tr.lghead td{background:#ffffff0d;padding:10px 8px;border-bottom:1px solid var(-
 <section id="tab-home" hidden>
   <div class="card">
     <h2>Home page boxes</h2>
-    <p class="note">Pick a date. Tick <b>Expert tip</b> on ONE match per sport and write the reasoning (it appears on the Expert reasoning page). Tick <b>Bet of the day</b> on up to FIVE matches per sport, write the pick (e.g. <i>1X</i>, <i>Over 2.5</i>) and, after the game, set the result and score. Matches come from tab 1. Changes save automatically.</p>
-    <div class="row" style="margin-bottom:10px"><div><label>Date</label><input type="date" id="hbDate"></div></div>
+    <p class="note">Pick a date and a sport, switch Football or Basketball, open the match list (or type a team), then add it as the <b>Expert tip</b> (ONE per sport per day) or as a <b>Bet of the day</b> (up to FIVE per sport per day). Only the matches you choose appear in the table below, so busy days never clog the page. Write the reasoning or pick, and after the game set the result and score. Switch a box off to remove the match from the home page. Matches come from tab 1. Changes save automatically.</p>
+    <div class="row" style="margin-bottom:10px"><div><label>Date</label><input type="date" id="hbDate"></div>
+      <div><label>Sport</label><div class="hbseg" id="hbSeg" role="group" aria-label="Sport"><button type="button" data-hs="football" aria-pressed="true">⚽ Football</button><button type="button" class="bb" data-hs="basketball" aria-pressed="false">🏀 Basketball</button></div><input type="hidden" id="hbSport" value="football"></div>
+      <div style="flex:1;min-width:260px;position:relative"><label>Matches on this date</label><input id="hbSearch" autocomplete="off" placeholder="Click to open the list, or type a team ▾" style="width:100%"><div class="inv" id="hbInv" hidden></div></div></div>
+    <p class="note" id="hbNote" style="margin-top:0"></p>
+    <div class="inv" id="hbInv"></div>
     <div class="tbl"><table class="ft">
       <thead><tr><th>Time</th><th>Match</th><th>Expert tip</th><th>Reasoning &amp; By</th><th>Bet of the day</th><th>Pick</th><th>Result</th><th>Score</th></tr></thead>
       <tbody id="hbBody"></tbody>
@@ -561,8 +566,8 @@ const hhmm = iso => { const d=new Date(iso); return isNaN(d)?"":d.toLocaleTimeSt
 const dmon = iso => { const d=new Date(iso); return isNaN(d)?"":d.toLocaleDateString([], {day:"2-digit",month:"short"}); };
 const oddIn = (key,v) => `<td><input class="odd" type="number" step="0.01" min="1" data-f="${key}" value="${esc(v[key])}" placeholder="-"></td>`;
 const watDay = o => { const t = new Date(new Intl.DateTimeFormat("en-CA",{timeZone:"Africa/Lagos"}).format(new Date())+"T12:00:00Z"); t.setUTCDate(t.getUTCDate()+o); return t.toISOString().slice(0,10); };
-const HIDE_AFTER_HOURS = 24;   /* a match leaves the working lists this many hours after kick-off (it stays in the database / Past view) */
-const inView = f => { const m=$("#viewMode").value; if(m==="all") return true; const t=new Date(f.kickoff).getTime(), old=!isNaN(t) && t < Date.now()-HIDE_AFTER_HOURS*36e5; return m==="past" ? old : !old; };
+const HIDE_AFTER_HOURS = 72;   /* a match leaves the working lists this many hours after kick-off (it stays in the database / Past view) */
+const inView = f => { const q=($("#viewSearch").value||"").trim().toLowerCase(); if(q) return (f.home+" "+f.away+" "+(f.competition||"")+" "+(f.country||"")).toLowerCase().includes(q); const m=$("#viewMode").value; if(m==="all") return true; const t=new Date(f.kickoff).getTime(), old=!isNaN(t) && t < Date.now()-HIDE_AFTER_HOURS*36e5; return m==="past" ? old : !old; };
 const lgSort = (a,b) => ((a.country||"")+"|"+(a.competition||"")).localeCompare((b.country||"")+"|"+(b.competition||"")) || a.kickoff.localeCompare(b.kickoff);
 const lgHead = (f,n,cols,emoji) => `<tr class="lghead"><td colspan="${cols}">${emoji} <b>${esc(compLabel(f))}</b> <span class="muted">(${n})</span></td></tr>`;
 function leagueGrouped(rows, cols, emoji, rowFn){
@@ -635,7 +640,21 @@ $("#fbBody").addEventListener("change", e => {
 const todayStr = () => new Intl.DateTimeFormat("en-CA",{timeZone:"Africa/Lagos"}).format(new Date());
 $("#hbDate").value = todayStr(); $("#vpMonth").value = todayStr().slice(0,7);
 function renderHome(){
-  const day = $("#hbDate").value, rows = db.fixtures.filter(f=>String(f.kickoff||"").slice(0,10)===day).sort((a,b)=>a.kickoff.localeCompare(b.kickoff));
+  const day = $("#hbDate").value, dayAll = db.fixtures.filter(f=>String(f.kickoff||"").slice(0,10)===day).sort((a,b)=>a.kickoff.localeCompare(b.kickoff));
+  const rows = dayAll.filter(f=>(f.et&&f.et.on)||(f.bo&&f.bo.on));
+  const sp = $("#hbSport").value, lgOf=f=>(f.country||"")+" · "+(f.competition||"");
+  const sport = dayAll.filter(f=>f.sport===sp);
+  const q=($("#hbSearch").value||"").trim().toLowerCase();
+  const cand = sport.filter(f=>!(f.et&&f.et.on) && !(f.bo&&f.bo.on)).filter(f=>!q||(f.home+" "+f.away+" "+lgOf(f)).toLowerCase().includes(q)).sort(lgSort);
+  const CAP=60, shown=cand.slice(0,CAP); let ih="", last=null;
+  shown.forEach(f=>{ const k=lgOf(f); if(k!==last){ last=k; ih+=`<div class="ih">${esc(k)}</div>`; }
+    const e=f.et&&f.et.on, b=f.bo&&f.bo.on;
+    ih+=`<div class="ir ${e||b?"done":""}" data-id="${f.id}"><span class="t">${esc(hhmm(f.kickoff))}</span><span class="m"><b>${esc(f.home)}</b> v <b>${esc(f.away)}</b></span>`+
+      (e?`<span class="muted">Expert tip ✓</span>`:`<button type="button" class="btn ghost sm" data-add="et">Expert tip</button>`)+
+      (b?`<span class="muted">Bet of the day ✓</span>`:`<button type="button" class="btn ghost sm" data-add="bo">Bet of the day</button>`)+`</div>`; });
+  if(cand.length>CAP) ih+=`<div class="em">Showing ${CAP} of ${cand.length}. Type a team or choose a league to narrow the list.</div>`;
+  $("#hbInv").innerHTML = cand.length ? ih : `<div class="em">No matches available.</div>`;
+  $("#hbNote").textContent = `${dayAll.length} match${dayAll.length===1?"":"es"} on this date, ${rows.length} chosen for the home page.`;
   $("#hbBody").innerHTML = rows.length ? rows.map(f=>{
     const e=f.et||{}, b=f.bo||{};
     return `<tr data-id="${f.id}">
@@ -647,7 +666,7 @@ function renderHome(){
       <td>${b.on?`<input data-g="bo" data-f="pick" value="${esc(b.pick||"")}" placeholder="1X" style="width:110px">`:'<span class="muted">-</span>'}</td>
       <td>${b.on?`<select data-g="bo" data-f="st">${["pending","won","lost"].map(r=>`<option ${(b.st||"pending")===r?"selected":""}>${r}</option>`).join("")}</select>`:'<span class="muted">-</span>'}</td>
       <td>${b.on?`<input class="cs" data-g="bo" data-f="score" value="${esc(b.score||"")}" placeholder="2-1" maxlength="9">`:'<span class="muted">-</span>'}</td></tr>`;
-  }).join("") : `<tr><td colspan="8" class="empty">No fixtures on this date. Add them in tab 1.</td></tr>`;
+  }).join("") : `<tr><td colspan="8" class="empty">Nothing chosen for this date yet. Choose a match above.</td></tr>`;
   const ym=$("#vpMonth").value||todayStr().slice(0,7), [y,m]=ym.split("-").map(Number), n=new Date(y,m,0).getDate();
   let h="";
   for(let d=1; d<=n; d++){
@@ -658,8 +677,27 @@ function renderHome(){
   }
   $("#vpBody").innerHTML = h;
 }
-$("#viewMode").onchange = render;
-$("#hbDate").onchange = renderHome; $("#vpMonth").onchange = renderHome;
+$("#viewMode").onchange = render; $("#viewSearch").oninput = render;
+$("#hbDate").onchange = renderHome; $("#vpMonth").onchange = renderHome; 
+function hbLimitOk(f,g){
+  const day=String(f.kickoff).slice(0,10), lim = g==="et"?1:5;
+  const n = db.fixtures.filter(x=>x.id!==f.id && x.sport===f.sport && String(x.kickoff).slice(0,10)===day && x[g] && x[g].on).length;
+  if(n>=lim){ toast(g==="et" ? "Only one Expert tip per sport per day. Switch the other one off first." : "Maximum 5 Bets of the day per sport. Switch one off first."); return false; }
+  return true;
+}
+function hbAdd(id,g){
+  const f=db.fixtures.find(x=>x.id===id); if(!f) return;
+  if(!hbLimitOk(f,g)) return;
+  f[g]=f[g]||{}; f[g].on=true; if(g==="bo" && !f.bo.st) f.bo.st="pending";
+  commit(); toast(g==="et"?"Added as Expert tip":"Added as Bet of the day");
+}
+$("#hbInv").addEventListener("click", e => { const b=e.target.closest("[data-add]"); if(!b) return; hbAdd(b.closest(".ir").dataset.id,b.dataset.add); hbOpen(false); $("#hbSearch").value=""; });
+const hbOpen = o => { $("#hbInv").hidden = !o; };
+$("#hbSearch").onfocus = $("#hbSearch").onclick = () => { renderHome(); hbOpen(true); };
+$("#hbSearch").oninput = () => { renderHome(); hbOpen(true); };
+document.addEventListener("click", e => { if(!e.target.closest("#hbInv") && e.target!==$("#hbSearch")) hbOpen(false); });
+$("#hbSeg").addEventListener("click", e => { const b=e.target.closest("[data-hs]"); if(!b) return; e.stopPropagation(); $("#hbSport").value=b.dataset.hs; $("#hbSearch").value="";
+  document.querySelectorAll("#hbSeg button").forEach(x=>x.setAttribute("aria-pressed", x===b)); hbOpen(false); renderHome(); });
 $("#hbBody").addEventListener("change", e => {
   const el=e.target, tr=el.closest("tr"); if(!tr||!el.dataset.g) return;
   const f=db.fixtures.find(x=>x.id===tr.dataset.id); if(!f) return;
@@ -845,7 +883,7 @@ function render(){
   $("#stats").textContent = statsText(); renderFb(); renderBb(); renderProps(); renderHome();
   const fxs = db.fixtures.filter(inView).sort((a,b)=>a.kickoff.localeCompare(b.kickoff));
   $("#fxCount").textContent = fxs.length?`(${fxs.length})`:"";
-  { const older = db.fixtures.filter(f=>!inView(f)).length; $("#viewNote").textContent = older ? `${older} other match${older===1?"":"es"} stored, hidden from this view` : ""; }
+  { const older = db.fixtures.filter(f=>!inView(f)).length; $("#viewNote").textContent = (older && !$("#viewSearch").value.trim()) ? `${older} other match${older===1?"":"es"} stored, hidden from this view` : ""; }
   const gk = f => (f.sport==="football"?"0":"1")+"|"+(f.country||"")+"|"+(f.competition||"");
   fxs.sort((a,b)=>gk(a).localeCompare(gk(b)) || a.kickoff.localeCompare(b.kickoff));
   const cnt = {}; fxs.forEach(f=>{ cnt[gk(f)] = (cnt[gk(f)]||0)+1; });

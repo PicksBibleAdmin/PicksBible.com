@@ -48,7 +48,7 @@ function applyLive(P,live){
   fixtures.forEach(function(f){
     var hd=String(f.kickoff||"").slice(0,10), sp=f.sport==="basketball"?"basketball":"football";
     var cname=(f.country&&String(f.competition||"").toLowerCase().indexOf(String(f.country).toLowerCase())!==0?f.country+" ":"")+(f.competition||"");
-    if(f.et&&f.et.on&&hd)P.home.et[sp][hd]={h:f.home,a:f.away,lg:f.competition||"",t:String(f.kickoff).slice(11,16),by:f.et.by||"PB Analyst",reasoning:f.et.reasoning||""};
+    if(f.et&&f.et.on&&hd)P.home.et[sp][hd]={h:f.home,a:f.away,lg:f.competition||"",t:String(f.kickoff).slice(11,16),by:f.et.by||"PB Analyst",reasoning:f.et.reasoning||"",hl:f.et.hl||"",al:f.et.al||"",sp:sp};
     if(f.bo&&f.bo.on&&hd){var bl=P.home.bo[sp][hd]=P.home.bo[sp][hd]||[];bl.push({lg:cname,t:(f.bo.st==="won"||f.bo.st==="lost")?"FT":String(f.kickoff).slice(11,16),h:f.home,a:f.away,pick:f.bo.pick||"",st:f.bo.st||"pending",sc:f.bo.score||""})}
     if(!((f.fb&&f.fb.live)||(f.bb&&f.bb.live)))return;
     if(f.sport==="basketball"){
@@ -93,6 +93,19 @@ var $$ = function(s,r){return Array.prototype.slice.call((r||document).querySele
 function esc(s){return String(s==null?"":s).replace(/[&<>"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]})}
 function store(k,v){try{if(v===undefined)return localStorage.getItem(k);localStorage.setItem(k,v)}catch(e){return null}}
 var DAYS=["yesterday","today","tomorrow"];
+/* ---------- team / nation images ----------
+   Nations: flag picture picked automatically from the team name (flagcdn.com). Clubs: a logo link typed in the admin (https only).
+   No picture available: neutral ball icon. Never letters / initials. */
+var NATIONS={"afghanistan":"af","albania":"al","algeria":"dz","andorra":"ad","angola":"ao","argentina":"ar","armenia":"am","australia":"au","austria":"at","azerbaijan":"az","bahrain":"bh","bangladesh":"bd","belarus":"by","belgium":"be","belize":"bz","benin":"bj","bolivia":"bo","bosnia and herzegovina":"ba","bosnia & herzegovina":"ba","botswana":"bw","brazil":"br","bulgaria":"bg","burkina faso":"bf","burundi":"bi","cambodia":"kh","cameroon":"cm","canada":"ca","cape verde":"cv","cabo verde":"cv","central african republic":"cf","chad":"td","chile":"cl","china":"cn","china pr":"cn","colombia":"co","comoros":"km","congo":"cg","dr congo":"cd","congo dr":"cd","costa rica":"cr","croatia":"hr","cuba":"cu","cyprus":"cy","czech republic":"cz","czechia":"cz","denmark":"dk","dominican republic":"do","ecuador":"ec","egypt":"eg","el salvador":"sv","england":"gb-eng","equatorial guinea":"gq","eritrea":"er","estonia":"ee","eswatini":"sz","ethiopia":"et","faroe islands":"fo","fiji":"fj","finland":"fi","france":"fr","gabon":"ga","gambia":"gm","georgia":"ge","germany":"de","ghana":"gh","gibraltar":"gi","greece":"gr","grenada":"gd","guatemala":"gt","guinea":"gn","guinea-bissau":"gw","guyana":"gy","haiti":"ht","honduras":"hn","hong kong":"hk","hungary":"hu","iceland":"is","india":"in","indonesia":"id","iran":"ir","iraq":"iq","ireland":"ie","republic of ireland":"ie","israel":"il","italy":"it","ivory coast":"ci","cote d'ivoire":"ci","côte d'ivoire":"ci","jamaica":"jm","japan":"jp","jordan":"jo","kazakhstan":"kz","kenya":"ke","kosovo":"xk","kuwait":"kw","kyrgyzstan":"kg","laos":"la","latvia":"lv","lebanon":"lb","lesotho":"ls","liberia":"lr","libya":"ly","liechtenstein":"li","lithuania":"lt","luxembourg":"lu","madagascar":"mg","malawi":"mw","malaysia":"my","maldives":"mv","mali":"ml","malta":"mt","mauritania":"mr","mauritius":"mu","mexico":"mx","moldova":"md","mongolia":"mn","montenegro":"me","morocco":"ma","mozambique":"mz","myanmar":"mm","namibia":"na","nepal":"np","netherlands":"nl","new zealand":"nz","nicaragua":"ni","niger":"ne","nigeria":"ng","north macedonia":"mk","northern ireland":"gb-nir","norway":"no","oman":"om","pakistan":"pk","palestine":"ps","panama":"pa","papua new guinea":"pg","paraguay":"py","peru":"pe","philippines":"ph","poland":"pl","portugal":"pt","puerto rico":"pr","qatar":"qa","romania":"ro","russia":"ru","rwanda":"rw","san marino":"sm","saudi arabia":"sa","scotland":"gb-sct","senegal":"sn","serbia":"rs","sierra leone":"sl","singapore":"sg","slovakia":"sk","slovenia":"si","somalia":"so","south africa":"za","south korea":"kr","korea republic":"kr","south sudan":"ss","spain":"es","sri lanka":"lk","sudan":"sd","suriname":"sr","sweden":"se","switzerland":"ch","syria":"sy","tajikistan":"tj","tanzania":"tz","thailand":"th","togo":"tg","trinidad and tobago":"tt","tunisia":"tn","turkey":"tr","türkiye":"tr","turkmenistan":"tm","uganda":"ug","ukraine":"ua","united arab emirates":"ae","uae":"ae","uruguay":"uy","usa":"us","united states":"us","uzbekistan":"uz","venezuela":"ve","vietnam":"vn","wales":"gb-wls","yemen":"ye","zambia":"zm","zimbabwe":"zw"};
+function natCode(name){var k=String(name||"").toLowerCase().replace(/\s+(w|women|u-?\d\d)$/i,"").trim();return NATIONS[k]||""}
+function teamCrest(name,logo,sp){
+  var ball=sp==="basketball"?"&#127936;":"&#9917;", code=natCode(name), src="", cls="crest img";
+  if(logo&&/^https:\/\//i.test(logo)){src=logo;cls+=" logo"}
+  else if(code){src="https://flagcdn.com/w160/"+code+".png"}
+  if(!src)return '<div class="crest ball" aria-hidden="true">'+ball+'</div>';
+  return '<div class="'+cls+'"><img src="'+esc(src)+'" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.className=\'crest ball\';this.parentNode.innerHTML=\''+ball+'\'"></div>';
+}
+
 var DAYLABEL={yesterday:"Yesterday",today:"Today",tomorrow:"Tomorrow"};
 
 /* ---------- header menus ---------- */
@@ -374,7 +387,6 @@ $$("[data-bigtable]").forEach(function(el){
 /* ---------- HOME PAGE: hero filters, Expert Tip, Bets of the Day, VIP, Sure Predictions (10 max) ----------
    Expert Tip, Bets of the Day and VIP Results come from the admin page ("5. Home boxes" tab) through the public snapshot. */
 function ymdOf(d){return d.getFullYear()+"-"+("0"+(d.getMonth()+1)).slice(-2)+"-"+("0"+d.getDate()).slice(-2)}
-function hueOf(n){var h=0;for(var i=0;i<n.length;i++)h=(h*31+n.charCodeAt(i))%360;return "hsl("+h+",45%,38%)"}
 function getET(sport,ymd){
   var H=D.home||{}, v=H.et&&H.et[sport]&&H.et[sport][ymd]; if(!v)return null;
   return v;
@@ -399,13 +411,12 @@ $$("[data-home]").forEach(function(hero){
   function selYmd(){return customDate?ymdOf(customDate):wat({yesterday:-1,today:0,tomorrow:1}[day])}
   function setSport(sp){sport=sp;store("pb.sport",sp);if(etMode!=="both")etMode=sp;drawAll()}
 
-  function crest(n,c){return '<div class="crest" style="background:'+esc(c)+'">'+esc(n.split(" ").map(function(w){return w[0]}).join("").slice(0,3))+'</div>'}
   function etHalf(sp){
     var v=getET(sp,selYmd());
     var head='<div class="ethalf"><h3>'+(sp==="football"?"&#9917; Football":"&#127936; Basketball")+'</h3>';
     if(!v)return head+'<div class="empty">No matches available.</div></div>';
     return head+
-      '<div class="vb-main"><div>'+crest(v.h,v.hc||hueOf(v.h))+'<div class="vb-team">'+esc(v.h)+'</div></div><div class="vb-mid"><strong>'+esc(v.t)+'</strong>vs<br>'+esc(v.lg)+'</div><div>'+crest(v.a,v.ac||hueOf(v.a))+'<div class="vb-team">'+esc(v.a)+'</div></div></div>'+
+      '<div class="vb-main"><div>'+teamCrest(v.h,v.hl,v.sp)+'<div class="vb-team">'+esc(v.h)+'</div></div><div class="vb-mid"><strong>'+esc(v.t)+'</strong>vs<br>'+esc(v.lg)+'</div><div>'+teamCrest(v.a,v.al,v.sp)+'<div class="vb-team">'+esc(v.a)+'</div></div></div>'+
       '<a class="etlock" href="expert-tips.html?s='+sp+'&d='+selYmd()+'" aria-label="Open the reasoning for this expert tip"><span class="lockico" aria-hidden="true">&#128274;</span><span class="locktxt">View expert tip</span></a>'+
       '<div class="vb-by"><span>EXPERT TIP BY: <b>'+esc(v.by)+'</b></span><span>'+(sp==="football"?"&#9917; Football":"&#127936; Basketball")+'</span></div>'+
       '</div>';
@@ -489,14 +500,13 @@ $$("[data-home]").forEach(function(hero){
 $$("[data-analysis]").forEach(function(el){
   if(!new URLSearchParams(location.search).get("s"))return;
   $$("[data-tipslist]").forEach(function(x){x.hidden=true});
-  function crest(n,c){return '<div class="crest" style="background:'+esc(c)+'">'+esc(n.split(" ").map(function(w){return w[0]}).join("").slice(0,3))+'</div>'}
   var q=new URLSearchParams(location.search), sp=q.get("s")==="basketball"?"basketball":"football", ymd=q.get("d")||wat(0);
   var v=getET(sp,ymd);
   if(!v){el.innerHTML='<div class="panel"><h2>Reasoning not available</h2><p>There is no published expert tip for this date yet.</p><a class="btn" href="index.html">Back to home</a></div>';return}
   var paras=String(v.reasoning||"").split(/\n+/).map(function(t){return t.trim()}).filter(Boolean);
   el.innerHTML=
    '<div class="panel anhead"><div class="crumbs"><a href="index.html">Home</a> &rsaquo; <a href="expert-tips.html">Expert Tips</a> &rsaquo; Reasoning</div>'+
-   '<div class="vb-main anmatch"><div>'+crest(v.h,v.hc||hueOf(v.h))+'<div class="vb-team">'+esc(v.h)+'</div></div><div class="vb-mid"><strong>'+esc(v.t)+'</strong>vs<br>'+esc(v.lg)+'<br>'+esc(ymd)+'</div><div>'+crest(v.a,v.ac||hueOf(v.a))+'<div class="vb-team">'+esc(v.a)+'</div></div></div>'+
+   '<div class="vb-main anmatch"><div>'+teamCrest(v.h,v.hl,v.sp)+'<div class="vb-team">'+esc(v.h)+'</div></div><div class="vb-mid"><strong>'+esc(v.t)+'</strong>vs<br>'+esc(v.lg)+'<br>'+esc(ymd)+'</div><div>'+teamCrest(v.a,v.al,v.sp)+'<div class="vb-team">'+esc(v.a)+'</div></div></div>'+
    '<div class="etlock anlock" role="img" aria-label="Expert tip, locked"><span class="lockico" aria-hidden="true">&#128274;</span><span class="locktxt">Expert tip</span></div></div>'+
    '<div class="panel"><h2>Expert reasoning</h2>'+(paras.length?paras.map(function(t){return '<p>'+esc(t)+'</p>'}).join(""):'<p>The reasoning for this tip has not been written yet.</p>')+'<p class="note">Expert analysis by '+esc(v.by)+'.</p></div>'+
    '<p class="note center" style="margin-top:14px">'+(sp==="football"?"Football":"Basketball")+' predictions are based on statistical analysis and are not guaranteed. Please bet responsibly.</p>';
@@ -524,7 +534,7 @@ $$("[data-props]").forEach(function(el){
   var cur=store("pb.propmkt"); if(!markets.some(function(m){return m.k===cur}))cur=markets[0]&&markets[0].k;
   if(!cnt(cur)){for(var i=0;i<markets.length;i++)if(cnt(markets[i].k)){cur=markets[i].k;break}}   /* open on a prop type that actually has props */
   if(sel){
-    sel.innerHTML=markets.map(function(m){var n=cnt(m.k);return '<option value="'+esc(m.k)+'"'+(m.k===cur?" selected":"")+'>'+esc(m.name)+(n?' ('+n+')':'')+'</option>'}).join("");
+    sel.innerHTML=markets.map(function(m){return '<option value="'+esc(m.k)+'"'+(m.k===cur?" selected":"")+'>'+esc(m.name)+'</option>'}).join("");
     sel.addEventListener("change",function(){cur=sel.value;store("pb.propmkt",cur);draw(cur)});
   }
   draw(cur);
