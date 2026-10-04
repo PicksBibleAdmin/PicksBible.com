@@ -116,7 +116,7 @@ tr.lghead td{background:#ffffff0d;padding:10px 8px;border-bottom:1px solid var(-
     <label for="pw" style="margin-top:10px;display:block">Password</label>
     <input id="pw" type="password" autocomplete="current-password">
     <div class="row end"><button class="btn" id="loginBtn">Sign in</button></div>
-    <p class="muted" style="font-size:11px;margin:10px 0 0">Build 2026-10-03-Q (Firebase)</p>
+    <p class="muted" style="font-size:11px;margin:10px 0 0">Build 2026-10-04-S (Firebase)</p>
     <p id="loginErr" class="muted" style="color:var(--lost)" hidden></p>
   </div>
 </div>
@@ -576,7 +576,7 @@ function renderFb(){
   $("#fbBody").innerHTML = rows.length ? leagueGrouped(rows,14,"⚽",f=>{
     const v=fbOf(f);
     return `<tr data-id="${f.id}">
-      <td class="t">${esc(hhmm(f.kickoff))}<br><small>${esc(dmon(f.kickoff))}</small></td>
+      <td class="t">${esc(hhmm(f.kickoff))}<br><small>${esc(dmon(f.kickoff))}</small> <button type="button" class="btn ghost sm" data-edtime title="Edit date and time">Edit</button></td>
       <td class="lg">${esc(f.competition)}<br><small>${esc(f.country||"")}</small></td>
       <td class="tm"><b>${esc(f.home)}</b></td><td class="tm"><b>${esc(f.away)}</b></td>
       ${oddIn("o1",v)}${oddIn("oX",v)}${oddIn("o2",v)}
@@ -601,7 +601,7 @@ function renderBb(){
   $("#bbBody").innerHTML = rows.length ? leagueGrouped(rows,11,"🏀",f=>{
     const v=bbOf(f);
     return `<tr data-id="${f.id}">
-      <td class="t">${esc(hhmm(f.kickoff))}<br><small>${esc(dmon(f.kickoff))}</small></td>
+      <td class="t">${esc(hhmm(f.kickoff))}<br><small>${esc(dmon(f.kickoff))}</small> <button type="button" class="btn ghost sm" data-edtime title="Edit date and time">Edit</button></td>
       <td class="lg">${esc(f.competition)}<br><small>${esc(f.country||"")}</small></td>
       <td class="tm"><b>${esc(f.home)}</b></td><td class="tm"><b>${esc(f.away)}</b></td>
       ${oddIn("o1",v)}${oddIn("o2",v)}
@@ -616,6 +616,7 @@ function renderBb(){
 $("#bbBody").addEventListener("change", e => {
   const el=e.target, tr=el.closest("tr"); if(!tr||!el.dataset.f) return;
   const f=db.fixtures.find(x=>x.id===tr.dataset.id); if(!f) return;
+  if(el.dataset.f==="kickoff"){ if(!el.value) return; f.kickoff = el.value; commit(); toast("Date and time updated"); return; }
   f.bb = bbOf(f);
   f.bb[el.dataset.f] = el.type==="checkbox" ? el.checked : el.value.trim();
   Store.save(db); $("#stats").textContent = statsText();
@@ -623,6 +624,7 @@ $("#bbBody").addEventListener("change", e => {
 $("#fbBody").addEventListener("change", e => {
   const el=e.target, tr=el.closest("tr"); if(!tr||!el.dataset.f) return;
   const f=db.fixtures.find(x=>x.id===tr.dataset.id); if(!f) return;
+  if(el.dataset.f==="kickoff"){ if(!el.value) return; f.kickoff = el.value; commit(); toast("Date and time updated"); return; }
   f.fb = fbOf(f);
   f.fb[el.dataset.f] = el.type==="checkbox" ? el.checked : el.value.trim();
   Store.save(db); $("#stats").textContent = statsText();
@@ -640,7 +642,7 @@ function renderHome(){
       <td class="t">${esc(hhmm(f.kickoff))}</td>
       <td class="tm"><b>${esc(f.home)}</b> v <b>${esc(f.away)}</b><br><small>${f.sport==="football"?"Football":"Basketball"} · ${esc(f.competition)}</small></td>
       <td><label class="sw"><input type="checkbox" data-g="et" data-f="on" ${e.on?"checked":""}><i></i></label></td>
-      <td>${e.on?`<textarea data-g="et" data-f="reasoning" rows="3" style="min-width:240px" placeholder="Why this tip? (new line = new paragraph)">${esc(e.reasoning||"")}</textarea><br><input data-g="et" data-f="by" value="${esc(e.by||"PB Analyst")}" placeholder="By" style="width:140px">`:'<span class="muted">-</span>'}</td>
+      <td>${e.on?`<textarea data-g="et" data-f="reasoning" rows="3" style="min-width:240px;max-width:320px" placeholder="Why this tip? (new line = new paragraph)">${esc(e.reasoning||"")}</textarea><br><input data-g="et" data-f="by" value="${esc(e.by||"PB Analyst")}" placeholder="By" style="width:140px"><br><input data-g="et" data-f="hl" value="${esc(e.hl||"")}" placeholder="Home logo link" style="width:150px"> <input data-g="et" data-f="al" value="${esc(e.al||"")}" placeholder="Away logo link" style="width:150px"><br><small class="muted">National teams get their flag automatically. For clubs, paste an https image link, or leave blank for a neutral ball icon.</small>`:'<span class="muted">-</span>'}</td>
       <td><label class="sw"><input type="checkbox" data-g="bo" data-f="on" ${b.on?"checked":""}><i></i></label></td>
       <td>${b.on?`<input data-g="bo" data-f="pick" value="${esc(b.pick||"")}" placeholder="1X" style="width:110px">`:'<span class="muted">-</span>'}</td>
       <td>${b.on?`<select data-g="bo" data-f="st">${["pending","won","lost"].map(r=>`<option ${(b.st||"pending")===r?"selected":""}>${r}</option>`).join("")}</select>`:'<span class="muted">-</span>'}</td>
@@ -679,6 +681,14 @@ $("#vpBody").addEventListener("change", e => {
   if(!v.odds && !v.st) db.vip = db.vip.filter(x=>x!==v);
   Store.save(db); $("#stats").textContent = statsText();
 });
+
+function openTimeEdit(e){
+  const b=e.target.closest("[data-edtime]"); if(!b) return;
+  const tr=b.closest("tr"), f=db.fixtures.find(x=>x.id===tr.dataset.id); if(!f) return;
+  b.closest("td").innerHTML = `<input type="datetime-local" data-f="kickoff" value="${esc(f.kickoff)}" style="min-width:190px">`;
+  tr.querySelector('[data-f=kickoff]').focus();
+}
+$("#fbBody").addEventListener("click", openTimeEdit); $("#bbBody").addEventListener("click", openTimeEdit);
 
 /* ============ BASKETBALL PROPS ============ */
 const PROP_MARKETS = [
