@@ -584,3 +584,30 @@ table.pt.bw{min-width:0;width:100%}
 .crest.img.logo img{object-fit:contain;padding:9px;box-sizing:border-box}
 .crest.ball{background:#26234a;font-size:30px}
 .etbody.full .crest.ball{font-size:36px}
+
+/* ---- sport pages: date badge, top nav, compact plain odds (no circles) ---- */
+.cal-btn{display:inline-flex;flex-direction:column;align-items:stretch;justify-content:flex-start;width:34px;height:38px;padding:0;border-radius:7px;background:#fff;color:#1b2433;overflow:hidden;text-align:center;box-shadow:0 1px 3px #0005}
+.cal-btn:hover{background:#fff;filter:brightness(.94)}
+.cal-btn .cal-mo{display:block;background:#ef4444;color:#fff;font:700 9px/12px var(--body);letter-spacing:.07em;text-transform:uppercase}
+.cal-btn .cal-d{display:block;font:800 17px/24px var(--body);color:#1b2433}
+.hero-in .sitecrumbs.top{margin:0 0 16px;padding:0 0 12px;border-top:0;border-bottom:1px solid var(--line)}
+.pt.bw .odd,.pt.bw .odd.pk{display:inline;min-width:0;height:auto;border:0;border-radius:0;background:none;padding:0;font:700 14px var(--body);color:#1b2433}
+.pt.bw th{padding:9px 6px}
+.pt.bw td{padding:7px 6px}
+.pt.bw .tip{min-width:38px;height:32px;padding:0 10px;font-size:15px}
+.pt.bw .xp b{padding:4px 9px;min-width:0;font-size:12.5px}
+.pt.bw .conf{padding:4px 8px;min-width:0;font-size:12.5px}
+@media (max-width:1180px){
+  .pt.bw th{padding:5px 1px;font-size:8px;line-height:1.1;letter-spacing:0}
+  .pt.bw td{padding:4px 1px}
+  .pt.bw .odd,.pt.bw .odd.pk{font-size:10px}
+  .pt.bw .tip{min-width:24px;height:22px;padding:0 5px;font-size:11.5px}
+  .pt.bw .conf{padding:2px 3px;font-size:9.5px;min-width:0}
+  .pt.bw .xp b{padding:2px 4px;font-size:9px}
+  .pt.bw .xp i{font-size:8.5px}
+  .pt.bw td.tm{font-size:10px}
+  .pt.bw td.lgn{width:46px;max-width:46px;font-size:9px}
+  .pt.bw td.team{width:52px;max-width:52px}
+  .pt.bw td.team b{font-size:10px}
+  .pt.bw td.cs,.pt.bw td.res{font-size:10px}
+}

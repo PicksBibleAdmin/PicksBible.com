@@ -199,7 +199,7 @@ tr.lghead td{background:#ffffff0d;padding:10px 8px;border-bottom:1px solid var(-
     <h2>Basketball table <span class="muted" id="bbCount"></span></h2>
     <p class="note">One row per basketball fixture (add fixtures in tab 1, choose Basketball). Enter the odds for Home and Away, choose your <b>Tip</b> (1 or 2), the <b>projected spread</b> (e.g. -6.5 or +20.5), the <b>point total tip</b> (Over/Under and the line) and the <b>projected score</b>, then switch the game <b>Live</b>. Changes save automatically.</p>
     <div class="tbl"><table class="ft">
-      <thead><tr><th>Time</th><th>Competition</th><th>Home</th><th>Away</th><th>Home win (1)</th><th>Away win (2)</th><th>Tip</th><th>Projected spread</th><th>Point total tip</th><th>Projected score</th><th>Live</th></tr></thead>
+      <thead><tr><th>Time</th><th>Competition</th><th>Home</th><th>Away</th><th>Home win (1)</th><th>Away win (2)</th><th>Tip</th><th>Confidence %</th><th>Projected spread</th><th>Point total tip</th><th>Projected score</th><th>Live</th></tr></thead>
       <tbody id="bbBody"></tbody>
     </table></div>
   </div>
@@ -598,12 +598,12 @@ function renderFb(){
   }) : `<tr><td colspan="14" class="empty">No football fixtures yet. Add one in tab 1 (choose Football).</td></tr>`;
 }
 /* ============ BASKETBALL TABLE ============ */
-const bbDefaults = () => ({o1:"",o2:"",tip:"",spread:"",totalSide:"",totalLine:"",ps:"",live:false});
+const bbDefaults = () => ({o1:"",o2:"",tip:"",conf:"",spread:"",totalSide:"",totalLine:"",ps:"",live:false});
 const bbOf = f => Object.assign(bbDefaults(), f.bb||{});
 function renderBb(){
   const rows = db.fixtures.filter(f=>f.sport==="basketball"&&inView(f)).sort(lgSort);
   $("#bbCount").textContent = rows.length?`(${rows.length})`:"";
-  $("#bbBody").innerHTML = rows.length ? leagueGrouped(rows,11,"🏀",f=>{
+  $("#bbBody").innerHTML = rows.length ? leagueGrouped(rows,12,"🏀",f=>{
     const v=bbOf(f);
     return `<tr data-id="${f.id}">
       <td class="t">${esc(hhmm(f.kickoff))}<br><small>${esc(dmon(f.kickoff))}</small> <button type="button" class="btn ghost sm" data-edtime title="Edit date and time">Edit</button></td>
@@ -611,12 +611,13 @@ function renderBb(){
       <td class="tm"><b>${esc(f.home)}</b></td><td class="tm"><b>${esc(f.away)}</b></td>
       ${oddIn("o1",v)}${oddIn("o2",v)}
       <td><select data-f="tip" class="tipsel"><option value="">-</option>${["1","2"].map(k=>`<option ${v.tip===k?"selected":""}>${k}</option>`).join("")}</select></td>
+      <td><input class="odd" type="number" step="1" min="0" max="100" data-f="conf" value="${esc(String(v.conf||"").replace("%",""))}" placeholder="%"></td>
       <td><input class="odd" data-f="spread" value="${esc(v.spread)}" placeholder="-6.5" maxlength="7"></td>
       <td><select data-f="totalSide"><option value="">-</option><option value="Over" ${v.totalSide==="Over"?"selected":""}>Over</option><option value="Under" ${v.totalSide==="Under"?"selected":""}>Under</option></select>
           <input class="odd" data-f="totalLine" value="${esc(v.totalLine)}" placeholder="165.5" maxlength="7"></td>
       <td><input class="cs" data-f="ps" value="${esc(v.ps)}" placeholder="98-91" maxlength="9"></td>
       <td><label class="sw"><input type="checkbox" data-f="live" ${v.live?"checked":""}><i></i></label></td></tr>`;
-  }) : `<tr><td colspan="11" class="empty">No basketball fixtures yet. Add one in tab 1 (choose Basketball).</td></tr>`;
+  }) : `<tr><td colspan="12" class="empty">No basketball fixtures yet. Add one in tab 1 (choose Basketball).</td></tr>`;
 }
 $("#bbBody").addEventListener("change", e => {
   const el=e.target, tr=el.closest("tr"); if(!tr||!el.dataset.f) return;

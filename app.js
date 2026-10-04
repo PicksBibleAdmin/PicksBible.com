@@ -55,7 +55,7 @@ function applyLive(P,live){
       var bd=String(f.kickoff||"").slice(0,10), bday=days[bd]; if(!bd)return;
       var b=f.bb||{};
       var bm={lg:lgKey(P,"basketball",f.competition,f.country),t:String(f.kickoff).slice(11,16),h:f.home,a:f.away,
-        o:[b.o1||"",b.o2||""],pk:b.tip||"",tip:b.tip||"-",spread:b.spread||"",ts:b.totalSide||"",tl:b.totalLine||"",ps:b.ps||"",st:"pending",score:""};
+        o:[b.o1||"",b.o2||""],pk:b.tip||"",tip:b.tip||"-",conf:b.conf||"",spread:b.spread||"",ts:b.totalSide||"",tl:b.totalLine||"",ps:b.ps||"",st:"pending",score:""};
       (P.byDate.basketball[bd]=P.byDate.basketball[bd]||[]).push(bm);
       if(bday){var bl=P.basketball[bday];bm.featured=bl.length<6;bl.push(bm)}
       return;
@@ -256,11 +256,11 @@ function bbOdd(m,i,k){var v=m.o&&m.o[i]?m.o[i]:"-";return '<td class="od"><span 
 function basketballTable(list){
   if(!list.length)return '<div class="empty">No basketball 🏀 predictions for this day yet.</div>';
   var played=list.some(function(m){return m.score});
-  return '<div class="tscroll bwwrap"><table class="pt bw bk"><thead><tr><th>Time</th><th class="l">Competition</th><th class="l">Home</th><th class="l">Away</th><th>Home Win (1)</th><th>Away Win (2)</th><th>Tip</th><th>Projected Spread</th><th>Point Total Tip</th><th>Projected Score</th>'+(played?'<th>Result</th>':'')+'</tr></thead><tbody>'+
+  return '<div class="tscroll bwwrap"><table class="pt bw bk"><thead><tr><th>Time</th><th class="l">Competition</th><th class="l">Home</th><th class="l">Away</th><th>Home Win (1)</th><th>Away Win (2)</th><th>Tip</th><th>Confidence</th><th>Projected Spread</th><th>Point Total Tip</th><th>Projected Score</th>'+(played?'<th>Result</th>':'')+'</tr></thead><tbody>'+
     sortByLeague(list).map(function(m){
       var tot=m.ts?'<span class="xp"><b>'+esc(m.ts)+(m.tl?' '+esc(m.tl):'')+'</b></span>':'-';
       return '<tr><td class="tm">'+esc(m.t)+'</td><td class="l lgn">'+esc(lgName(m.lg))+'</td><td class="l team"><b>'+esc(m.h)+'</b></td><td class="l team"><b>'+esc(m.a)+'</b></td>'+
-        bbOdd(m,0,"1")+bbOdd(m,1,"2")+'<td>'+pkBadge(m)+'</td><td class="cs">'+esc(m.spread||"-")+'</td><td>'+tot+'</td><td class="cs">'+esc(m.ps||"-")+'</td>'+(played?'<td class="res">'+(m.score?esc(m.score):'-:-')+'</td>':'')+'</tr>';
+        bbOdd(m,0,"1")+bbOdd(m,1,"2")+'<td>'+pkBadge(m)+'</td>'+confCell(m)+'<td class="cs">'+esc(m.spread||"-")+'</td><td>'+tot+'</td><td class="cs">'+esc(m.ps||"-")+'</td>'+(played?'<td class="res">'+(m.score?esc(m.score):'-:-')+'</td>':'')+'</tr>';
     }).join("")+
     '</tbody></table></div>';
 }
@@ -302,8 +302,17 @@ $$("[data-bigtable]").forEach(function(el){
     var lgBtn=$("[data-lgopen]",el);
     if(lgBtn)lgBtn.innerHTML="🌍 "+(league?esc(D.leagues[league].name):"All Leagues")+" ▾";
     if(propsWrap)propsWrap.hidden=(sport!=="basketball");
+    if(title)title.textContent=(sport==="football"?"⚽ All Football":"🏀 All Basketball")+" Predictions & Tips";
+    /* calendar button shows the day that is actually selected (not a fixed emoji date) */
+    var cb=$("[data-calopen]",el);
+    if(cb){
+      var sd=customDate?customDate:(function(){var p=wat({yesterday:-1,today:0,tomorrow:1}[day]).split("-");return new Date(+p[0],+p[1]-1,+p[2])})();
+      var mo=$(".cal-mo",cb), dd=$(".cal-d",cb);
+      if(mo)mo.textContent=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"][sd.getMonth()];
+      if(dd)dd.textContent=sd.getDate();
+      cb.setAttribute("aria-label","Pick a date (showing "+sd.toLocaleDateString(undefined,{weekday:"long",day:"numeric",month:"long"})+")");
+    }
     if(customDate){
-      if(title)title.textContent=(sport==="football"?"Football ⚽":"Basketball 🏀")+" prediction & tips for "+customDate.toLocaleDateString(undefined,{weekday:"long",month:"short",day:"numeric"});
       var ymd=customDate.getFullYear()+"-"+("0"+(customDate.getMonth()+1)).slice(-2)+"-"+("0"+customDate.getDate()).slice(-2);
       var cl=((D.byDate&&D.byDate[sport]&&D.byDate[sport][ymd])||[]).filter(function(m){return !league||m.lg===league});
       if(cl.length){$("[data-slot=table]",el).innerHTML=sport==="football"?footballTable(cl):basketballTable(cl);return}
@@ -311,7 +320,6 @@ $$("[data-bigtable]").forEach(function(el){
       return;
     }
     var list=D[sport][day].filter(function(m){return !league||m.lg===league});
-    if(title)title.textContent=(sport==="football"?"Football ⚽":"Basketball 🏀")+" prediction & tips for "+DAYLABEL[day].toLowerCase();
     $("[data-slot=table]",el).innerHTML=sport==="football"?footballTable(list):basketballTable(list);
   }
 
@@ -478,6 +486,16 @@ $$("[data-home]").forEach(function(hero){
     var short=list.slice(0,10);
     $("[data-slot=table]",sure).innerHTML=short.length?(sport==="football"?footballTable(short):basketballTable(short)):'<p class="note center" style="padding:28px 10px">No matches available.</p>';
     if(propsWrap)propsWrap.hidden=(sport!=="basketball");
+    if(title)title.textContent=(sport==="football"?"⚽ All Football":"🏀 All Basketball")+" Predictions & Tips";
+    /* calendar button shows the day that is actually selected (not a fixed emoji date) */
+    var cb=$("[data-calopen]",el);
+    if(cb){
+      var sd=customDate?customDate:(function(){var p=wat({yesterday:-1,today:0,tomorrow:1}[day]).split("-");return new Date(+p[0],+p[1]-1,+p[2])})();
+      var mo=$(".cal-mo",cb), dd=$(".cal-d",cb);
+      if(mo)mo.textContent=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"][sd.getMonth()];
+      if(dd)dd.textContent=sd.getDate();
+      cb.setAttribute("aria-label","Pick a date (showing "+sd.toLocaleDateString(undefined,{weekday:"long",day:"numeric",month:"long"})+")");
+    }
   }
   function syncHero(){
     $$("[data-ssport]",sure).forEach(function(b){b.setAttribute("aria-pressed",String(b.dataset.ssport===sport))});
