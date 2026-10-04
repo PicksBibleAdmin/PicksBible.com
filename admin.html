@@ -116,7 +116,7 @@ tr.lghead td{background:#ffffff0d;padding:10px 8px;border-bottom:1px solid var(-
     <label for="pw" style="margin-top:10px;display:block">Password</label>
     <input id="pw" type="password" autocomplete="current-password">
     <div class="row end"><button class="btn" id="loginBtn">Sign in</button></div>
-    <p class="muted" style="font-size:11px;margin:10px 0 0">Build 2026-10-04-S (Firebase)</p>
+    <p class="muted" style="font-size:11px;margin:10px 0 0">Build 2026-10-04-T (Firebase)</p>
     <p id="loginErr" class="muted" style="color:var(--lost)" hidden></p>
   </div>
 </div>
@@ -136,8 +136,8 @@ tr.lghead td{background:#ffffff0d;padding:10px 8px;border-bottom:1px solid var(-
   <button role="tab" data-tab="bbtable" aria-selected="false">3. Basketball table</button>
   <button role="tab" data-tab="bbprops" aria-selected="false">4. Basketball props</button>
   <button role="tab" data-tab="home" aria-selected="false">5. Home boxes</button>
-  <button role="tab" data-tab="picks" aria-selected="false">New pick</button>
-  <button role="tab" data-tab="published" aria-selected="false">Picks &amp; results</button>
+  <button hidden role="tab" data-tab="picks" aria-selected="false">New pick</button>
+  <button hidden role="tab" data-tab="published" aria-selected="false">Picks &amp; results</button>
   <button role="tab" data-tab="data" aria-selected="false">Data</button>
 </nav>
 <div class="viewbar"><label for="viewMode">Showing</label><select id="viewMode"><option value="current">Current matches (hidden 48 hours after kick-off)</option><option value="past">Past matches (archive, older than 48 hours)</option><option value="all">All matches</option></select><span class="muted" id="viewNote"></span></div>
@@ -855,7 +855,7 @@ function render(){
     fxh += `<tr>
     <td>${esc(fmt(f.kickoff))}</td><td><b>${esc(f.home)}</b> v <b>${esc(f.away)}</b></td>
     <td>${esc(compLabel(f))}</td>
-    <td class="row"><button class="btn ghost sm" onclick="editFixture('${f.id}')">Edit</button><button class="btn sm" onclick="pickFor('${f.id}')">Add pick</button><button class="btn danger sm" onclick="delFixture('${f.id}')">Delete</button></td></tr>`;
+    <td class="row"><button class="btn ghost sm" onclick="editFixture('${f.id}')">Edit</button><button class="btn danger sm" onclick="delFixture('${f.id}')">Delete</button></td></tr>`;
   });
   $("#fxBody").innerHTML = fxs.length ? fxh : `<tr><td colspan="4" class="empty">No fixtures yet.</td></tr>`;
 
