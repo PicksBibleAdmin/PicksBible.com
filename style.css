@@ -576,3 +576,11 @@ table.pt.bw{min-width:0;width:100%}
 .propcard .proppick .pick{color:var(--pend);background:#f5b30124}
 .propcard.won .proppick .pick{color:var(--won);background:#16a34a22}
 .propcard.lost .proppick .pick{color:#9ca3af;background:#6b728033}
+
+/* team / nation pictures (flags and club logos); fallback is a plain ball icon, never letters */
+.crest.img{background:#fff;overflow:hidden;padding:0}
+.crest.img img{width:100%;height:100%;object-fit:cover;display:block}
+.crest.img.logo{background:#ffffff}
+.crest.img.logo img{object-fit:contain;padding:9px;box-sizing:border-box}
+.crest.ball{background:#26234a;font-size:30px}
+.etbody.full .crest.ball{font-size:36px}

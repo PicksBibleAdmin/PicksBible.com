@@ -103,7 +103,7 @@ function teamCrest(name,logo,sp){
   if(logo&&/^https:\/\//i.test(logo)){src=logo;cls+=" logo"}
   else if(code){src="https://flagcdn.com/w160/"+code+".png"}
   if(!src)return '<div class="crest ball" aria-hidden="true">'+ball+'</div>';
-  return '<div class="'+cls+'"><img src="'+esc(src)+'" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.className=\'crest ball\';this.parentNode.innerHTML=\''+ball+'\'"></div>';
+  return '<div class="'+cls+'" style="overflow:hidden"><img style="width:100%;height:100%;object-fit:'+(logo&&/^https:\/\//i.test(logo)?'contain':'cover')+';display:block" src="'+esc(src)+'" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.className=\'crest ball\';this.parentNode.innerHTML=\''+ball+'\'"></div>';
 }
 
 var DAYLABEL={yesterday:"Yesterday",today:"Today",tomorrow:"Tomorrow"};
