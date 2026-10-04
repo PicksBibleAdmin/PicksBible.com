@@ -230,7 +230,16 @@ function groupRows(list,cols,rowFn){
   });
   return out;
 }
-function sortByLeague(list){return list.slice().sort(function(a,b){return a.lg===b.lg?a.t.localeCompare(b.t):list.indexOf(a)-list.indexOf(b)}).sort(function(a,b){var ia=firstIdx(list,a.lg),ib=firstIdx(list,b.lg);return ia-ib})}
+/* A-Z by league name as shown in the table (Bundesliga before La Liga), then kick-off time within a league.
+   No cap on rows: every match in the list is rendered. */
+function sortByLeague(list){
+  return list.slice().sort(function(a,b){
+    var c=lgName(a.lg).localeCompare(lgName(b.lg),undefined,{sensitivity:"base"});
+    if(c)return c;
+    if(a.lg!==b.lg)return a.lg<b.lg?-1:1;
+    return String(a.t).localeCompare(String(b.t));
+  });
+}
 function firstIdx(list,lg){for(var i=0;i<list.length;i++)if(list[i].lg===lg)return i;return 0}
 function scoreLine(m){return m.score?'<span class="sc">'+esc(m.score)+'</span>':'<span class="sc" style="color:var(--muted)">-:-</span>'}
 
@@ -485,23 +494,14 @@ $$("[data-home]").forEach(function(hero){
     var all=$("[data-sureall]",sure.parentNode)||$("[data-sureall]");if(all)all.href=sport==="football"?"football-predictions.html":"basketball-predictions.html";
     var short=list.slice(0,10);
     $("[data-slot=table]",sure).innerHTML=short.length?(sport==="football"?footballTable(short):basketballTable(short)):'<p class="note center" style="padding:28px 10px">No matches available.</p>';
+    /* Best Player Props are basketball-only: show them on the home page only while Basketball is selected */
     if(propsWrap)propsWrap.hidden=(sport!=="basketball");
-    if(title)title.textContent=(sport==="football"?"⚽ All Football":"🏀 All Basketball")+" Predictions & Tips";
-    /* calendar button shows the day that is actually selected (not a fixed emoji date) */
-    var cb=$("[data-calopen]",el);
-    if(cb){
-      var sd=customDate?customDate:(function(){var p=wat({yesterday:-1,today:0,tomorrow:1}[day]).split("-");return new Date(+p[0],+p[1]-1,+p[2])})();
-      var mo=$(".cal-mo",cb), dd=$(".cal-d",cb);
-      if(mo)mo.textContent=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"][sd.getMonth()];
-      if(dd)dd.textContent=sd.getDate();
-      cb.setAttribute("aria-label","Pick a date (showing "+sd.toLocaleDateString(undefined,{weekday:"long",day:"numeric",month:"long"})+")");
-    }
   }
   function syncHero(){
     $$("[data-ssport]",sure).forEach(function(b){b.setAttribute("aria-pressed",String(b.dataset.ssport===sport))});
     $$("[data-hday]",hero).forEach(function(b){b.setAttribute("aria-pressed",String(!customDate&&b.dataset.hday===day))});
   }
-  function drawAll(){syncHero();drawET();drawBO();drawVIP();drawSure()}
+  function drawAll(){syncHero();drawET();drawBO();drawVIP();drawSure();window.__pbSport=sport;document.dispatchEvent(new CustomEvent("pb:sport",{detail:sport}))}
   $$("[data-ssport]",sure).forEach(function(b){b.addEventListener("click",function(){setSport(b.dataset.ssport)})});
   $$("[data-hday]",hero).forEach(function(b){b.addEventListener("click",function(){
     day=b.dataset.hday;customDate=null;var c=$("[data-hcal]",hero);if(c)c.value="";if(vcal)vcal.value="";
@@ -570,12 +570,14 @@ $$("[data-stats]").forEach(function(el){
 
 /* ---------- tips meaning toggle ---------- */
 $$("[data-meaning]").forEach(function(el){
-  var sport=store("pb.meaning")||"basketball";
+  /* follows the sport the visitor picked on the page (football / basketball); the pills inside the box still work by hand */
+  var sport=window.__pbSport||"football";
   function draw(){
     $$(".toggle button",el).forEach(function(b){b.setAttribute("aria-pressed",String(b.dataset.sport===sport))});
     $$("[data-pane]",el).forEach(function(p){p.hidden=p.dataset.pane!==sport});
   }
-  $$(".toggle button",el).forEach(function(b){b.addEventListener("click",function(){sport=b.dataset.sport;store("pb.meaning",sport);draw()})});
+  $$(".toggle button",el).forEach(function(b){b.addEventListener("click",function(){sport=b.dataset.sport;draw()})});
+  document.addEventListener("pb:sport",function(e){sport=e.detail==="basketball"?"basketball":"football";draw()});
   draw();
 });
 
