@@ -305,14 +305,6 @@ function basketballTable(list){
     }).join("")+
     '</tbody></table></div>';
 }
-function expertTable(list,sport,ymd){
-  if(!list.length)return '<div class="empty">No '+(sport==="football"?"football ⚽":"basketball 🏀")+' expert tip for this day yet.</div>';
-  return '<div class="tscroll bwwrap"><table class="pt bw ex"><thead><tr><th>Time</th><th class="l">Competition</th><th class="l">Home</th><th class="l">Away</th><th class="l">Expert</th><th>Expert Tip</th></tr></thead><tbody>'+
-    list.map(function(r){
-      return '<tr><td class="tm">'+esc(r.t)+'</td><td class="l lgn">'+esc(r.lg)+'</td><td class="l team"><b>'+esc(r.h)+'</b></td><td class="l team"><b>'+esc(r.a)+'</b></td><td class="l by">'+esc(r.by)+'</td>'+
-        '<td class="kv" data-l="Expert Tip"><a class="etl" href="expert-tips.html?s='+sport+'&d='+esc(ymd)+'" aria-label="Open the reasoning for this expert tip"><span aria-hidden="true">&#128274;</span> View tip</a></td></tr>';
-    }).join("")+'</tbody></table></div>';
-}
 function compactTable(list,sport){
   if(!list.length)return '<div class="empty">Picks for this day are coming soon.</div>';
   return '<div class="tscroll"><table class="pt compact"><thead><tr><th>Time</th><th>Match</th><th>Tips</th></tr></thead><tbody>'+
@@ -359,11 +351,6 @@ $$("[data-bigtable]").forEach(function(el){
     if(bc)bc.value=customDate?(customDate.getFullYear()+"-"+("0"+(customDate.getMonth()+1)).slice(-2)+"-"+("0"+customDate.getDate()).slice(-2)):"";
     if(customDate&&dayGate(ymdOf(customDate),draw)!=="ready"){
       $("[data-slot=table]",el).innerHTML='<p class="note center" style="padding:28px 10px">Loading that day…</p>';
-      return;
-    }
-    if(expert){
-      var ey=customDate?ymdOf(customDate):wat({yesterday:-1,today:0,tomorrow:1}[day]);
-      $("[data-slot=table]",el).innerHTML=expertTable(((D.home&&D.home.etl&&D.home.etl[sport]&&D.home.etl[sport][ey])||[]),sport,ey);
       return;
     }
     if(customDate){
