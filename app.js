@@ -252,10 +252,10 @@ function extraPick(label,odds,name){return '<td class="kv'+(label?'':' na')+'" d
 function footballTable(list){
   if(!list.length)return '<div class="empty">No football ⚽ predictions for this day yet.</div>';
   var played=list.some(function(m){return m.score});
-  return '<div class="tscroll bwwrap"><table class="pt bw"><thead><tr><th>Time</th><th class="l">Competition</th><th class="l">Home</th><th class="l">Away</th><th>Home Win (1)</th><th>Draw (X)</th><th>Away Win (2)</th><th>1X2 Tip</th><th>Confidence</th><th>Over/Under 2.5</th><th>BTTS</th><th>Double Chance</th><th>CS Tip</th>'+(played?'<th>Result</th>':'')+'</tr></thead><tbody>'+
+  return '<div class="tscroll bwwrap"><table class="pt bw"><thead><tr><th>Time</th><th class="l">Competition</th><th class="l">Home</th><th class="l">Away</th><th>Home Win (1)</th><th>Draw (X)</th><th>Away Win (2)</th><th>Tip</th><th>Confidence</th><th>Over/Under 2.5</th><th>BTTS</th><th>Double Chance</th><th>CS Tip</th>'+(played?'<th>Result</th>':'')+'</tr></thead><tbody>'+
     sortByLeague(list).map(function(m){
       return '<tr><td class="tm">'+esc(m.t)+'</td><td class="l lgn">'+esc(lgName(m.lg))+'</td><td class="l team"><b>'+esc(m.h)+'</b></td><td class="l team"><b>'+esc(m.a)+'</b></td>'+
-        oddCell(m,0,"1")+oddCell(m,1,"X")+oddCell(m,2,"2")+'<td class="kv" data-l="1X2 Tip">'+pkBadge(m)+'</td>'+confCell(m)+
+        oddCell(m,0,"1")+oddCell(m,1,"X")+oddCell(m,2,"2")+'<td class="kv" data-l="Tip">'+pkBadge(m)+'</td>'+confCell(m)+
         extraPick(m.ou?(m.ou==="Over"?"Over 2.5":"Under 2.5"):"",m.ouo,"Over/Under 2.5")+extraPick(m.gg,m.ggo,"BTTS")+dcCell(m)+
         '<td class="cs kv'+(m.cs?'':' na')+'" data-l="CS Tip">'+esc(m.cs||"-")+'</td>'+(played?'<td class="res kv" data-l="Result">'+(m.score?esc(m.score):'-:-')+'</td>':'')+'</tr>';
     }).join("")+
@@ -312,15 +312,9 @@ $$("[data-bigtable]").forEach(function(el){
     if(lgBtn)lgBtn.innerHTML="🌍 "+(league?esc(D.leagues[league].name):"All Leagues")+" ▾";
     if(propsWrap)propsWrap.hidden=(sport!=="basketball");
     if(title)title.textContent=(sport==="football"?"⚽ All Football":"🏀 All Basketball")+" Predictions & Tips";
-    /* calendar button shows the day that is actually selected (not a fixed emoji date) */
-    var cb=$("[data-calopen]",el);
-    if(cb){
-      var sd=customDate?customDate:(function(){var p=wat({yesterday:-1,today:0,tomorrow:1}[day]).split("-");return new Date(+p[0],+p[1]-1,+p[2])})();
-      var mo=$(".cal-mo",cb), dd=$(".cal-d",cb);
-      if(mo)mo.textContent=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"][sd.getMonth()];
-      if(dd)dd.textContent=sd.getDate();
-      cb.setAttribute("aria-label","Pick a date (showing "+sd.toLocaleDateString(undefined,{weekday:"long",day:"numeric",month:"long"})+")");
-    }
+    /* the shared date picker (same control as VIP Results): only holds a value while a custom date is chosen */
+    var bc=$("[data-bcal]",el);
+    if(bc)bc.value=customDate?(customDate.getFullYear()+"-"+("0"+(customDate.getMonth()+1)).slice(-2)+"-"+("0"+customDate.getDate()).slice(-2)):"";
     if(customDate){
       var ymd=customDate.getFullYear()+"-"+("0"+(customDate.getMonth()+1)).slice(-2)+"-"+("0"+customDate.getDate()).slice(-2);
       var cl=((D.byDate&&D.byDate[sport]&&D.byDate[sport][ymd])||[]).filter(function(m){return !league||m.lg===league});
@@ -358,44 +352,17 @@ $$("[data-bigtable]").forEach(function(el){
     document.addEventListener("keydown",function(e){if(e.key==="Escape"&&!lgPanel.hidden)lgClose()});
   }
 
-  /* tiny calendar button in the bar: pick any date, not just yesterday/today/tomorrow */
-  var calBtn=$("[data-calopen]",el), calPanel=$("[data-calpanel]",el);
-  if(calBtn&&calPanel){
-    var calGrid=$("[data-calgrid]",el), calMonth=$("[data-calmonth]",el);
-    var today0=new Date();today0.setHours(0,0,0,0);
-    var offsets={yesterday:-1,today:0,tomorrow:1};
-    var viewMonth=new Date(today0.getFullYear(),today0.getMonth(),1);
-    function sameDay(a,b){return a.getFullYear()===b.getFullYear()&&a.getMonth()===b.getMonth()&&a.getDate()===b.getDate()}
-    function calOpen(){calPanel.hidden=false;renderCal()}
-    function calClose(){calPanel.hidden=true}
-    calBtn.addEventListener("click",function(e){e.stopPropagation();calPanel.hidden?calOpen():calClose()});
-    document.addEventListener("click",function(e){if(!calPanel.hidden&&!calPanel.contains(e.target)&&e.target!==calBtn)calClose()});
-    document.addEventListener("keydown",function(e){if(e.key==="Escape"&&!calPanel.hidden)calClose()});
-    $("[data-calprev]",el).addEventListener("click",function(){viewMonth.setMonth(viewMonth.getMonth()-1);renderCal()});
-    $("[data-calnext]",el).addEventListener("click",function(){viewMonth.setMonth(viewMonth.getMonth()+1);renderCal()});
-    function renderCal(){
-      calMonth.textContent=viewMonth.toLocaleDateString(undefined,{month:"long",year:"numeric"});
-      var startDow=viewMonth.getDay(), daysInMonth=new Date(viewMonth.getFullYear(),viewMonth.getMonth()+1,0).getDate();
-      var dow=["S","M","T","W","T","F","S"], html=dow.map(function(x){return '<span class="dow">'+x+'</span>'}).join("");
-      for(var i=0;i<startDow;i++)html+="<span></span>";
-      for(var d=1;d<=daysInMonth;d++){
-        var dt=new Date(viewMonth.getFullYear(),viewMonth.getMonth(),d);
-        var diff=Math.round((dt-today0)/86400000);
-        var active=customDate?sameDay(dt,customDate):(diff===offsets[day]);
-        html+='<button type="button" data-date="'+dt.getTime()+'" aria-pressed="'+active+'">'+d+'</button>';
-      }
-      calGrid.innerHTML=html;
-      $$("button[data-date]",calGrid).forEach(function(b){b.addEventListener("click",function(){
-        var dt=new Date(+b.dataset.date), diff=Math.round((dt-today0)/86400000);
-        calClose();
-        if(diff===-1){day="yesterday";customDate=null}
-        else if(diff===0){day="today";customDate=null}
-        else if(diff===1){day="tomorrow";customDate=null}
-        else{customDate=dt}
-        draw();
-      })});
-    }
-  }
+  /* date picker: the same control as VIP Results on the home page. Pick any date, not just yesterday/today/tomorrow */
+  var bcal=$("[data-bcal]",el);
+  if(bcal)bcal.addEventListener("change",function(){
+    if(!bcal.value){customDate=null;draw();return}
+    var v=bcal.value, p=v.split("-");
+    if(v===wat(-1)){day="yesterday";customDate=null}
+    else if(v===wat(0)){day="today";customDate=null}
+    else if(v===wat(1)){day="tomorrow";customDate=null}
+    else customDate=new Date(+p[0],+p[1]-1,+p[2]);
+    draw();
+  });
 
   draw();
 });
