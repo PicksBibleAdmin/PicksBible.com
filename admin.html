@@ -137,11 +137,12 @@ tr.lghead td{background:#ffffff0d;padding:10px 8px;border-bottom:1px solid var(-
   <button role="tab" data-tab="bbtable" aria-selected="false">3. Basketball table</button>
   <button role="tab" data-tab="bbprops" aria-selected="false">4. Basketball props</button>
   <button role="tab" data-tab="home" aria-selected="false">5. Home boxes</button>
+  <button role="tab" data-tab="results" aria-selected="false" id="tabResultsBtn">6. Results</button>
   <button hidden role="tab" data-tab="picks" aria-selected="false">New pick</button>
   <button hidden role="tab" data-tab="published" aria-selected="false">Picks &amp; results</button>
   <button role="tab" data-tab="data" aria-selected="false">Data</button>
 </nav>
-<div class="viewbar"><label for="viewMode">Showing</label><select id="viewMode"><option value="current">Current matches (hidden 72 hours after kick-off)</option><option value="past">Past matches (archive, older than 72 hours)</option><option value="all">All matches</option></select><input id="viewSearch" type="search" placeholder="Search any match, past or current" autocomplete="off" style="min-width:240px"><span class="muted" id="viewNote"></span></div>
+<div class="viewbar"><label for="viewMode">Showing</label><select id="viewMode"><option value="current">Current matches (hidden 24 hours after kick-off)</option><option value="past">Past matches (archive, older than 24 hours)</option><option value="all">All matches</option></select><input id="viewSearch" type="search" placeholder="Search any match, past or current" autocomplete="off" style="min-width:240px"><span class="muted" id="viewNote"></span></div>
 
 <!-- FIXTURES -->
 <section id="tab-fixtures">
@@ -185,9 +186,9 @@ tr.lghead td{background:#ffffff0d;padding:10px 8px;border-bottom:1px solid var(-
 <section id="tab-fbtable" hidden>
   <div class="card">
     <h2>Football table <span class="muted" id="fbCount"></span></h2>
-    <p class="note">One row per football fixture (add fixtures in tab 1). Enter the odds for 1, X and 2, choose your <b>Tip</b> (1, X or 2), then your <b>GG/NG</b> and <b>Over/Under 2.5</b> picks with their odds, add a correct-score tip, and switch the match <b>Live</b>. Changes save automatically.</p>
+    <p class="note">One row per football fixture (add fixtures in tab 1). Switch <b>Sure</b> on for the matches your analysts hand-pick for the home page "Sure predictions" box (max 10 per day). Enter the odds for 1, X and 2, choose your <b>Tip</b> (1, X or 2), then your <b>GG/NG</b> and <b>Over/Under 2.5</b> picks with their odds, add a correct-score tip, and switch the match <b>Live</b>. Changes save automatically.</p>
     <div class="tbl"><table class="ft">
-      <thead><tr><th>Time</th><th>Competition</th><th>Home</th><th>Away</th><th>1</th><th>X</th><th>2</th><th>Tip</th><th>Confidence %</th><th>Over / Under 2.5</th><th>BTTS</th><th>Double chance</th><th>CS tip</th><th>Result</th><th>Live</th></tr></thead>
+      <thead><tr><th>Time</th><th>Competition</th><th>Home</th><th>Away</th><th>1</th><th>X</th><th>2</th><th>Tip</th><th>Confidence %</th><th>Over / Under 2.5</th><th>BTTS</th><th>Double chance</th><th>CS tip</th><th>Result</th><th>Sure</th><th>Live</th></tr></thead>
       <tbody id="fbBody"></tbody>
     </table></div>
   </div>
@@ -197,9 +198,9 @@ tr.lghead td{background:#ffffff0d;padding:10px 8px;border-bottom:1px solid var(-
 <section id="tab-bbtable" hidden>
   <div class="card">
     <h2>Basketball table <span class="muted" id="bbCount"></span></h2>
-    <p class="note">One row per basketball fixture (add fixtures in tab 1, choose Basketball). Enter the odds for Home and Away, choose your <b>Tip</b> (1 or 2), the <b>projected spread</b> (e.g. -6.5 or +20.5), the <b>point total tip</b> (Over/Under and the line) and the <b>projected score</b>, then switch the game <b>Live</b>. Changes save automatically.</p>
+    <p class="note">One row per basketball fixture (add fixtures in tab 1, choose Basketball). Switch <b>Sure</b> on for the games your analysts hand-pick for the home page "Sure predictions" box (max 10 per day). Enter the odds for Home and Away, choose your <b>Tip</b> (1 or 2), the <b>projected spread</b> (e.g. -6.5 or +20.5), the <b>point total tip</b> (Over/Under and the line) and the <b>projected score</b>, then switch the game <b>Live</b>. Changes save automatically.</p>
     <div class="tbl"><table class="ft">
-      <thead><tr><th>Time</th><th>Competition</th><th>Home</th><th>Away</th><th>Home win (1)</th><th>Away win (2)</th><th>Tip</th><th>Confidence %</th><th>Projected spread</th><th>Point total tip</th><th>Projected score</th><th>Result</th><th>Live</th></tr></thead>
+      <thead><tr><th>Time</th><th>Competition</th><th>Home</th><th>Away</th><th>Home win (1)</th><th>Away win (2)</th><th>Tip</th><th>Confidence %</th><th>Projected spread</th><th>Point total tip</th><th>Projected score</th><th>Result</th><th>Sure</th><th>Live</th></tr></thead>
       <tbody id="bbBody"></tbody>
     </table></div>
   </div>
@@ -229,6 +230,34 @@ tr.lghead td{background:#ffffff0d;padding:10px 8px;border-bottom:1px solid var(-
 </section>
 
 <!-- BASKETBALL PROPS -->
+<!-- RESULTS: settle yesterday's (or any day's) tips -->
+<section id="tab-results" hidden>
+  <div class="card">
+    <h2>Results <span class="muted" id="rsCount"></span></h2>
+    <p class="note">Pick a day, then mark each tip <b>won</b> or <b>lost</b> and add the final score if you like. The site updates by itself: won shows green, lost shows gray, and the score appears in the table. Matches leave the other tabs 24 hours after kick-off but stay here, so you can settle or correct any day (use the date box to go back as far as you need).</p>
+    <div class="viewbar"><label for="rsDate">Day</label><input id="rsDate" type="date" style="width:auto">
+      <button type="button" class="btn ghost sm" data-rsday="0">Today</button><button type="button" class="btn ghost sm" data-rsday="-1">Yesterday</button><button type="button" class="btn ghost sm" data-rsday="-2">2 days ago</button>
+      <label style="display:flex;align-items:center;gap:6px"><input type="checkbox" id="rsOpen" style="width:auto"> Only not settled</label><span class="muted" id="rsNote"></span></div>
+    <div class="tbl"><table class="ft">
+      <thead><tr><th>Time</th><th>Competition</th><th>Match</th><th>Our tip</th><th>Result</th><th>Final score</th></tr></thead>
+      <tbody id="rsBody"></tbody>
+    </table></div>
+    <p class="note" style="margin-top:12px">The <b>Sure predictions</b> box on the home page is taken from this table (the picks your analysts switch on as <b>Sure</b> in the Football and Basketball table tabs, up to 10 per sport per day), so settling a tip here updates it too.</p>
+  </div>
+  <div class="card">
+    <h2>Expert tip <span class="muted" id="rsEtCount"></span></h2>
+    <div class="tbl"><table class="ft"><thead><tr><th>Time</th><th>Match</th><th>Expert</th><th>Result</th></tr></thead><tbody id="rsEtBody"></tbody></table></div>
+  </div>
+  <div class="card">
+    <h2>Bets of the day <span class="muted" id="rsBoCount"></span></h2>
+    <div class="tbl"><table class="ft"><thead><tr><th>Time</th><th>Match</th><th>Pick</th><th>Result</th><th>Final score</th></tr></thead><tbody id="rsBoBody"></tbody></table></div>
+  </div>
+  <div class="card">
+    <h2>Basketball props <span class="muted" id="rsPrCount"></span></h2>
+    <div class="tbl"><table class="ft"><thead><tr><th>Game</th><th>Prop</th><th>Pick</th><th>Odds</th><th>Result</th></tr></thead><tbody id="rsPrBody"></tbody></table></div>
+  </div>
+</section>
+
 <section id="tab-bbprops" hidden>
   <div class="card">
     <h2>Add player / team prop</h2>
@@ -394,26 +423,28 @@ const Store = {
       /* ARCHIVE: one small document per past day (2 to 30 days back) so visitors can open any of the last 30 days
          without making the live document too big. Only days whose content changed are written again. */
       const watA = o => { const t = new Date(new Intl.DateTimeFormat("en-CA",{timeZone:"Africa/Lagos"}).format(new Date())+"T12:00:00Z"); t.setUTCDate(t.getUTCDate()+o); return t.toISOString().slice(0,10); };
-      const arch = {}; for(let i=2;i<=30;i++) arch[watA(-i)] = [];
+      const arch = {}, archP = {}; for(let i=2;i<=30;i++){ arch[watA(-i)] = []; archP[watA(-i)] = []; }
       db.fixtures.filter(f=>liveOf("fixtures",f)).forEach(f=>{ const k=String(f.kickoff||"").slice(0,10); if(arch[k]) arch[k].push(this.docOf("fixtures",f)); });
+      db.props.filter(r=>liveOf("props",r)).forEach(r=>{ const d=this.docOf("props",r), k=String(d.kickoff||"").slice(0,10); if(archP[k]) archP[k].push(d); });
       this.lastDays = this.lastDays || {};
       const liveIds = new Set(snap.fixtures.map(f=>f.id)); let archivedOnly = 0;
       for(const k of Object.keys(arch)){
         const list = arch[k].sort((a,b)=>String(a.kickoff).localeCompare(String(b.kickoff)));
         archivedOnly += list.filter(f=>!liveIds.has(f.id)).length;
-        if(!list.length){ if(this.lastDays[k]){ await this.fs.collection("public").doc("day-"+k).delete(); delete this.lastDays[k]; } continue; }
-        const j = JSON.stringify(list);
-        if(this.lastDays[k] !== j){ await this.fs.collection("public").doc("day-"+k).set({day:k, fixtures:list, updatedAt:new Date().toISOString()}); this.lastDays[k] = j; }
+        const plist = archP[k];
+        if(!list.length && !plist.length){ if(this.lastDays[k]){ await this.fs.collection("public").doc("day-"+k).delete(); delete this.lastDays[k]; } continue; }
+        const j = JSON.stringify([list,plist]);
+        if(this.lastDays[k] !== j){ await this.fs.collection("public").doc("day-"+k).set({day:k, fixtures:list, props:plist, updatedAt:new Date().toISOString()}); this.lastDays[k] = j; }
       }
       /* tell the editor exactly what the public site will show (it only shows yesterday / today / tomorrow, Nigerian time) */
       const wat = o => { const t = new Date(new Intl.DateTimeFormat("en-CA",{timeZone:"Africa/Lagos"}).format(new Date())+"T12:00:00Z"); t.setUTCDate(t.getUTCDate()+o); return t.toISOString().slice(0,10); };
       const dayOf = r => String(r.kickoff||"").slice(0,10);
       const showFx = snap.fixtures.length;   /* football: any date from 3 days ago onward; older days (up to 30) are published as one archive document per day */
-      const showPr = snap.props.filter(r=>[wat(0),wat(1)].includes(dayOf(r))).length;
+      const showPr = snap.props.length;
       const liveFx = db.fixtures.filter(f=>liveOf("fixtures",f)).length, livePr = db.props.filter(r=>liveOf("props",r)).length;
       const hidden = (liveFx-showFx-archivedOnly)+(livePr-showPr);
       this.setSync("Saved ✓ · on the site now: "+showFx+" match"+(showFx===1?"":"es")+" (any date)"+", "+showPr+" prop"+(showPr===1?"":"s")
-        + (hidden>0 ? " · "+hidden+" Live item"+(hidden===1?"":"s")+" NOT shown: matches need a kickoff date (not older than 30 days); props show only for today or tomorrow" : ""), hidden>0);
+        + (hidden>0 ? " · "+hidden+" Live item"+(hidden===1?"":"s")+" NOT shown: matches need a kickoff date (not older than 30 days); props follow the match date" : ""), hidden>0);
     }catch(e){
       console.error(e); this.setSync("NOT SAVED – "+(e.code||e.message),true); toast("Could not save: "+(e.code||e.message));
     }
@@ -478,7 +509,8 @@ async function onSignedIn(user){
 /* ============ TABS ============ */
 function showTab(name){
   document.querySelectorAll("nav.tabs button").forEach(b=>b.setAttribute("aria-selected", b.dataset.tab===name));
-  ["fixtures","fbtable","bbtable","bbprops","home","picks","published","data"].forEach(t=>$("#tab-"+t).hidden = t!==name);
+  ["fixtures","fbtable","bbtable","bbprops","home","results","picks","published","data"].forEach(t=>$("#tab-"+t).hidden = t!==name);
+  { const vb=document.querySelector(".viewbar"); if(vb) vb.style.display = name==="results" ? "none" : ""; }   /* the Showing / search bar does not apply to the Results tab */
 }
 document.querySelectorAll("nav.tabs button").forEach(b=>b.onclick=()=>{ if(b.dataset.tab==="picks") resetPick(); showTab(b.dataset.tab); });
 
@@ -574,13 +606,13 @@ function pickFor(id){ resetPick(id); showTab("picks"); }
 
 
 /* ============ FOOTBALL TABLE ============ */
-const fbDefaults = () => ({tip:"",o1:"",oX:"",o2:"",btts:"",bttsOdds:"",ou:"",ouOdds:"",conf:"",dc:"",dcOdds:"",cs:"",st:"",score:"",live:false});
+const fbDefaults = () => ({tip:"",o1:"",oX:"",o2:"",btts:"",bttsOdds:"",ou:"",ouOdds:"",conf:"",dc:"",dcOdds:"",cs:"",st:"",score:"",sure:false,live:false});
 const fbOf = f => { const v = Object.assign(fbDefaults(), f.fb||{}); if(!v.tip && v.pick) v.tip = v.pick; return v; };
 const hhmm = iso => { const d=new Date(iso); return isNaN(d)?"":d.toLocaleTimeString([], {hour:"2-digit",minute:"2-digit",hour12:false}); };
 const dmon = iso => { const d=new Date(iso); return isNaN(d)?"":d.toLocaleDateString([], {day:"2-digit",month:"short"}); };
 const oddIn = (key,v) => `<td><input class="odd" type="number" step="0.01" min="1" data-f="${key}" value="${esc(v[key])}" placeholder="-"></td>`;
 const watDay = o => { const t = new Date(new Intl.DateTimeFormat("en-CA",{timeZone:"Africa/Lagos"}).format(new Date())+"T12:00:00Z"); t.setUTCDate(t.getUTCDate()+o); return t.toISOString().slice(0,10); };
-const HIDE_AFTER_HOURS = 72;   /* a match leaves the working lists this many hours after kick-off (it stays in the database / Past view) */
+const HIDE_AFTER_HOURS = 24;   /* a match leaves the working lists this many hours after kick-off (it stays in the database / Past view) */
 const inView = f => { const q=($("#viewSearch").value||"").trim().toLowerCase(); if(q) return (f.home+" "+f.away+" "+(f.competition||"")+" "+(f.country||"")).toLowerCase().includes(q); const m=$("#viewMode").value; if(m==="all") return true; const t=new Date(f.kickoff).getTime(), old=!isNaN(t) && t < Date.now()-HIDE_AFTER_HOURS*36e5; return m==="past" ? old : !old; };
 const lgSort = (a,b) => ((a.country||"")+"|"+(a.competition||"")).localeCompare((b.country||"")+"|"+(b.competition||"")) || a.kickoff.localeCompare(b.kickoff);
 const lgHead = (f,n,cols,emoji) => `<tr class="lghead"><td colspan="${cols}">${emoji} <b>${esc(compLabel(f))}</b> <span class="muted">(${n})</span></td></tr>`;
@@ -592,7 +624,7 @@ function leagueGrouped(rows, cols, emoji, rowFn){
 function renderFb(){
   const rows = db.fixtures.filter(f=>f.sport==="football"&&inView(f)).sort(lgSort);
   $("#fbCount").textContent = rows.length?`(${rows.length})`:"";
-  $("#fbBody").innerHTML = rows.length ? leagueGrouped(rows,15,"⚽",f=>{
+  $("#fbBody").innerHTML = rows.length ? leagueGrouped(rows,16,"⚽",f=>{
     const v=fbOf(f);
     return `<tr data-id="${f.id}">
       <td class="t">${esc(hhmm(f.kickoff))}<br><small>${esc(dmon(f.kickoff))}</small> <button type="button" class="btn ghost sm" data-edtime title="Edit date and time">Edit</button></td>
@@ -610,16 +642,17 @@ function renderFb(){
       <td><input class="cs" data-f="cs" value="${esc(v.cs)}" placeholder="2-1" maxlength="7"></td>
       <td><select data-f="st"><option value="">pending</option><option value="won" ${v.st==="won"?"selected":""}>won</option><option value="lost" ${v.st==="lost"?"selected":""}>lost</option></select>
           <input class="cs" data-f="score" value="${esc(v.score)}" placeholder="2-1" maxlength="9"></td>
+      <td><label class="sw"><input type="checkbox" data-f="sure" ${v.sure?"checked":""}><i></i></label></td>
       <td><label class="sw"><input type="checkbox" data-f="live" ${v.live?"checked":""}><i></i></label></td></tr>`;
-  }) : `<tr><td colspan="15" class="empty">No football fixtures yet. Add one in tab 1 (choose Football).</td></tr>`;
+  }) : `<tr><td colspan="16" class="empty">No football fixtures yet. Add one in tab 1 (choose Football).</td></tr>`;
 }
 /* ============ BASKETBALL TABLE ============ */
-const bbDefaults = () => ({o1:"",o2:"",tip:"",conf:"",spread:"",totalSide:"",totalLine:"",ps:"",st:"",score:"",live:false});
+const bbDefaults = () => ({o1:"",o2:"",tip:"",conf:"",spread:"",totalSide:"",totalLine:"",ps:"",st:"",score:"",sure:false,live:false});
 const bbOf = f => Object.assign(bbDefaults(), f.bb||{});
 function renderBb(){
   const rows = db.fixtures.filter(f=>f.sport==="basketball"&&inView(f)).sort(lgSort);
   $("#bbCount").textContent = rows.length?`(${rows.length})`:"";
-  $("#bbBody").innerHTML = rows.length ? leagueGrouped(rows,13,"🏀",f=>{
+  $("#bbBody").innerHTML = rows.length ? leagueGrouped(rows,14,"🏀",f=>{
     const v=bbOf(f);
     return `<tr data-id="${f.id}">
       <td class="t">${esc(hhmm(f.kickoff))}<br><small>${esc(dmon(f.kickoff))}</small> <button type="button" class="btn ghost sm" data-edtime title="Edit date and time">Edit</button></td>
@@ -634,13 +667,18 @@ function renderBb(){
       <td><input class="cs" data-f="ps" value="${esc(v.ps)}" placeholder="98-91" maxlength="9"></td>
       <td><select data-f="st"><option value="">pending</option><option value="won" ${v.st==="won"?"selected":""}>won</option><option value="lost" ${v.st==="lost"?"selected":""}>lost</option></select>
           <input class="cs" data-f="score" value="${esc(v.score)}" placeholder="2-1" maxlength="9"></td>
+      <td><label class="sw"><input type="checkbox" data-f="sure" ${v.sure?"checked":""}><i></i></label></td>
       <td><label class="sw"><input type="checkbox" data-f="live" ${v.live?"checked":""}><i></i></label></td></tr>`;
-  }) : `<tr><td colspan="13" class="empty">No basketball fixtures yet. Add one in tab 1 (choose Basketball).</td></tr>`;
+  }) : `<tr><td colspan="14" class="empty">No basketball fixtures yet. Add one in tab 1 (choose Basketball).</td></tr>`;
 }
 $("#bbBody").addEventListener("change", e => {
   const el=e.target, tr=el.closest("tr"); if(!tr||!el.dataset.f) return;
   const f=db.fixtures.find(x=>x.id===tr.dataset.id); if(!f) return;
   if(el.dataset.f==="kickoff"){ if(!el.value) return; f.kickoff = el.value; commit(); toast("Date and time updated"); return; }
+  if(el.dataset.f==="sure" && el.checked){
+    const day=String(f.kickoff).slice(0,10), box=x=>x.sport==="basketball"?(x.bb||{}):(x.fb||{});
+    if(db.fixtures.filter(x=>x.id!==f.id && x.sport===f.sport && String(x.kickoff).slice(0,10)===day && box(x).sure).length>=10){ toast("Maximum 10 Sure predictions per sport per day. Untick one first."); el.checked=false; return; }
+  }
   f.bb = bbOf(f);
   f.bb[el.dataset.f] = el.type==="checkbox" ? el.checked : el.value.trim();
   Store.save(db); $("#stats").textContent = statsText();
@@ -649,6 +687,10 @@ $("#fbBody").addEventListener("change", e => {
   const el=e.target, tr=el.closest("tr"); if(!tr||!el.dataset.f) return;
   const f=db.fixtures.find(x=>x.id===tr.dataset.id); if(!f) return;
   if(el.dataset.f==="kickoff"){ if(!el.value) return; f.kickoff = el.value; commit(); toast("Date and time updated"); return; }
+  if(el.dataset.f==="sure" && el.checked){
+    const day=String(f.kickoff).slice(0,10), box=x=>x.sport==="basketball"?(x.bb||{}):(x.fb||{});
+    if(db.fixtures.filter(x=>x.id!==f.id && x.sport===f.sport && String(x.kickoff).slice(0,10)===day && box(x).sure).length>=10){ toast("Maximum 10 Sure predictions per sport per day. Untick one first."); el.checked=false; return; }
+  }
   f.fb = fbOf(f);
   f.fb[el.dataset.f] = el.type==="checkbox" ? el.checked : el.value.trim();
   Store.save(db); $("#stats").textContent = statsText();
@@ -680,7 +722,7 @@ function renderHome(){
       <td class="t">${esc(hhmm(f.kickoff))}</td>
       <td class="tm"><b>${esc(f.home)}</b> v <b>${esc(f.away)}</b><br><small>${f.sport==="football"?"Football":"Basketball"} · ${esc(f.competition)}</small></td>
       <td><label class="sw"><input type="checkbox" data-g="et" data-f="on" ${e.on?"checked":""}><i></i></label></td>
-      <td>${e.on?`<textarea data-g="et" data-f="reasoning" rows="3" style="min-width:240px;max-width:320px" placeholder="Why this tip? (new line = new paragraph)">${esc(e.reasoning||"")}</textarea><br><input data-g="et" data-f="by" value="${esc(e.by||"PB Analyst")}" placeholder="By" style="width:140px"><br><input data-g="et" data-f="hl" value="${esc(e.hl||"")}" placeholder="Home logo link" style="width:150px"> <input data-g="et" data-f="al" value="${esc(e.al||"")}" placeholder="Away logo link" style="width:150px"><br><small class="muted">National teams get their flag automatically. For clubs, paste an https image link, or leave blank for a neutral ball icon.</small>`:'<span class="muted">-</span>'}</td>
+      <td>${e.on?`<textarea data-g="et" data-f="reasoning" rows="3" style="min-width:240px;max-width:320px" placeholder="Why this tip? (new line = new paragraph)">${esc(e.reasoning||"")}</textarea><br><input data-g="et" data-f="by" value="${esc(e.by||"PB Analyst")}" placeholder="By" style="width:140px"><br><input data-g="et" data-f="hl" value="${esc(e.hl||"")}" placeholder="Home logo link" style="width:150px"> <input data-g="et" data-f="al" value="${esc(e.al||"")}" placeholder="Away logo link" style="width:150px"><br><small class="muted">National teams get their flag automatically. For clubs, paste an https image link, or leave blank for a neutral ball icon.</small><br>Result: <select data-g="et" data-f="st"><option value="">pending</option><option value="won" ${e.st==="won"?"selected":""}>won</option><option value="lost" ${e.st==="lost"?"selected":""}>lost</option></select>`:'<span class="muted">-</span>'}</td>
       <td><label class="sw"><input type="checkbox" data-g="bo" data-f="on" ${b.on?"checked":""}><i></i></label></td>
       <td>${b.on?`<input data-g="bo" data-f="pick" value="${esc(b.pick||"")}" placeholder="1X" style="width:110px">`:'<span class="muted">-</span>'}</td>
       <td>${b.on?`<select data-g="bo" data-f="st">${["pending","won","lost"].map(r=>`<option ${(b.st||"pending")===r?"selected":""}>${r}</option>`).join("")}</select>`:'<span class="muted">-</span>'}</td>
@@ -897,9 +939,97 @@ function toggleStatus(id){ const p=db.picks.find(x=>x.id===id); p.status = p.sta
 function delPick(id){ if(confirm("Delete this pick?")){ db.picks=db.picks.filter(p=>p.id!==id); commit(); } }
 $("#fStatus").onchange = render;
 
+/* ============ RESULTS (settle tips by day; matches stay here after they leave the other tabs) ============ */
+const hasTip = f => !!((f.fb&&f.fb.live)||(f.bb&&f.bb.live));
+const tipBox = f => f.sport==="basketball" ? bbOf(f) : fbOf(f);
+const dayOfF = f => String((f&&f.kickoff)||"").slice(0,10);
+const isDone = st => st==="won"||st==="lost";
+const resSel = (val,attrs) => `<select ${attrs}><option value="">pending</option><option value="won" ${val==="won"?"selected":""}>won</option><option value="lost" ${val==="lost"?"selected":""}>lost</option></select>`;
+const fxById = id => db.fixtures.find(x=>x.id===id);
+/* everything that can still be settled: played in the last 30 days and not yet won / lost */
+function unsettledCount(){
+  const now=Date.now(), from=now-30*864e5, played=f=>{ const t=new Date(f.kickoff).getTime(); return !isNaN(t)&&t<=now&&t>=from; };
+  let n=0;
+  db.fixtures.forEach(f=>{ if(!played(f)) return;
+    if(hasTip(f) && !isDone(tipBox(f).st)) n++;
+    if(f.et&&f.et.on && !isDone(f.et.st)) n++;
+    if(f.bo&&f.bo.on && !isDone(f.bo.st)) n++; });
+  (db.props||[]).forEach(p=>{ const f=fxById(p.fixtureId); if(p.live && f && played(f) && !isDone(p.st)) n++; });
+  return n;
+}
+function setResultsBtn(){ const n=unsettledCount(); $("#tabResultsBtn").textContent = "6. Results"+(n?` (${n} to settle)`:""); }
+function renderResults(){
+  const dEl=$("#rsDate"); if(!dEl.value) dEl.value = watDay(-1);
+  const day=dEl.value, onlyOpen=$("#rsOpen").checked;
+  const byKick=(a,b)=>String(a.kickoff).localeCompare(String(b.kickoff));
+  /* predictions */
+  const all=db.fixtures.filter(f=>hasTip(f)&&dayOfF(f)===day).sort(byKick);
+  const rows=all.filter(f=>!onlyOpen||!isDone(tipBox(f).st));
+  const done=all.filter(f=>isDone(tipBox(f).st)).length;
+  $("#rsCount").textContent = all.length ? `(${done} of ${all.length} settled)` : "";
+  $("#rsNote").textContent = "";
+  $("#rsBody").innerHTML = rows.length ? rows.map(f=>{
+    const v=tipBox(f), bb=f.sport==="basketball";
+    return `<tr data-id="${f.id}">
+      <td class="t">${esc(hhmm(f.kickoff))}</td>
+      <td>${bb?"🏀":"⚽"} ${esc(compLabel(f))}</td>
+      <td><b>${esc(f.home)}</b> v <b>${esc(f.away)}</b></td>
+      <td><b>${esc(v.tip||"-")}</b></td>
+      <td>${resSel(v.st,'data-f="st"')}</td>
+      <td><input class="cs" data-f="score" value="${esc(v.score)}" placeholder="${bb?"98-91":"2-1"}" maxlength="9"></td></tr>`;
+  }).join("") : `<tr><td colspan="6" class="empty">${all.length?"Everything on this day is settled.":"No published tips on this day."}</td></tr>`;
+  /* expert tip */
+  const et=db.fixtures.filter(f=>f.et&&f.et.on&&dayOfF(f)===day).sort(byKick), etShow=et.filter(f=>!onlyOpen||!isDone(f.et.st));
+  $("#rsEtCount").textContent = et.length ? `(${et.filter(f=>isDone(f.et.st)).length} of ${et.length} settled)` : "";
+  $("#rsEtBody").innerHTML = etShow.length ? etShow.map(f=>`<tr data-id="${f.id}"><td class="t">${esc(hhmm(f.kickoff))}</td>
+      <td>${f.sport==="basketball"?"🏀":"⚽"} <b>${esc(f.home)}</b> v <b>${esc(f.away)}</b></td><td>${esc(f.et.by||"PB Analyst")}</td>
+      <td>${resSel(f.et.st,'data-f="st"')}</td></tr>`).join("") : `<tr><td colspan="4" class="empty">${et.length?"Settled.":"No expert tip on this day."}</td></tr>`;
+  /* bets of the day */
+  const bo=db.fixtures.filter(f=>f.bo&&f.bo.on&&dayOfF(f)===day).sort(byKick), boShow=bo.filter(f=>!onlyOpen||!isDone(f.bo.st));
+  $("#rsBoCount").textContent = bo.length ? `(${bo.filter(f=>isDone(f.bo.st)).length} of ${bo.length} settled)` : "";
+  $("#rsBoBody").innerHTML = boShow.length ? boShow.map(f=>`<tr data-id="${f.id}"><td class="t">${esc(hhmm(f.kickoff))}</td>
+      <td>${f.sport==="basketball"?"🏀":"⚽"} <b>${esc(f.home)}</b> v <b>${esc(f.away)}</b></td><td><b>${esc(f.bo.pick||"-")}</b></td>
+      <td>${resSel(f.bo.st==="pending"?"":f.bo.st,'data-f="st"')}</td>
+      <td><input class="cs" data-f="score" value="${esc(f.bo.score||"")}" placeholder="2-1" maxlength="9"></td></tr>`).join("") : `<tr><td colspan="5" class="empty">${bo.length?"Settled.":"No bets of the day on this day."}</td></tr>`;
+  /* basketball props */
+  const pr=(db.props||[]).filter(p=>p.live&&dayOfF(fxById(p.fixtureId))===day), prShow=pr.filter(p=>!onlyOpen||!isDone(p.st));
+  $("#rsPrCount").textContent = pr.length ? `(${pr.filter(p=>isDone(p.st)).length} of ${pr.length} settled)` : "";
+  $("#rsPrBody").innerHTML = prShow.length ? prShow.map(p=>{ const f=fxById(p.fixtureId)||{home:"?",away:"?"}, m=PROP_MARKETS.find(x=>x.k===p.market);
+    return `<tr data-id="${p.id}"><td><b>${esc(f.home)}</b> v <b>${esc(f.away)}</b></td><td>${esc(m?m.name:p.market)}</td><td>${esc(propPick(p))}</td><td>${esc(p.odds||"-")}</td>
+      <td>${resSel(p.st==="pending"?"":p.st,'data-f="st"')}</td></tr>`; }).join("") : `<tr><td colspan="5" class="empty">${pr.length?"Settled.":"No live props on this day."}</td></tr>`;
+  setResultsBtn();
+}
+$("#rsBody").addEventListener("change", e => {
+  const el=e.target, tr=el.closest("tr"); if(!tr||!el.dataset.f) return;
+  const f=fxById(tr.dataset.id); if(!f) return;
+  const key=f.sport==="basketball"?"bb":"fb";
+  f[key] = key==="bb" ? bbOf(f) : fbOf(f);
+  f[key][el.dataset.f] = el.value.trim();
+  Store.save(db); $("#stats").textContent = statsText();
+  if(el.dataset.f==="st") renderResults(); else setResultsBtn();
+});
+$("#rsEtBody").addEventListener("change", e => {
+  const el=e.target, tr=el.closest("tr"); if(!tr||!el.dataset.f) return;
+  const f=fxById(tr.dataset.id); if(!f) return;
+  f.et = f.et||{}; f.et[el.dataset.f] = el.value.trim(); Store.save(db); renderResults();
+});
+$("#rsBoBody").addEventListener("change", e => {
+  const el=e.target, tr=el.closest("tr"); if(!tr||!el.dataset.f) return;
+  const f=fxById(tr.dataset.id); if(!f) return;
+  f.bo = f.bo||{}; f.bo[el.dataset.f] = el.value.trim(); if(el.dataset.f==="st" && !f.bo.st) f.bo.st="pending";
+  Store.save(db); if(el.dataset.f==="st") renderResults(); else setResultsBtn();
+});
+$("#rsPrBody").addEventListener("change", e => {
+  const el=e.target, tr=el.closest("tr"); if(!tr||!el.dataset.f) return;
+  const p=db.props.find(x=>x.id===tr.dataset.id); if(!p) return;
+  p.st = el.value.trim()||"pending"; Store.save(db); renderResults();
+});
+$("#rsDate").onchange = renderResults; $("#rsOpen").onchange = renderResults;
+document.querySelectorAll("[data-rsday]").forEach(b=>b.onclick=()=>{ $("#rsDate").value = watDay(+b.dataset.rsday); renderResults(); });
+
 /* ============ RENDER ============ */
 function render(){
-  $("#stats").textContent = statsText(); renderFb(); renderBb(); renderProps(); renderHome();
+  $("#stats").textContent = statsText(); renderFb(); renderBb(); renderProps(); renderHome(); renderResults();
   const fxs = db.fixtures.filter(inView).sort((a,b)=>a.kickoff.localeCompare(b.kickoff));
   $("#fxCount").textContent = fxs.length?`(${fxs.length})`:"";
   { const older = db.fixtures.filter(f=>!inView(f)).length; $("#viewNote").textContent = (older && !$("#viewSearch").value.trim()) ? `${older} other match${older===1?"":"es"} stored, hidden from this view` : ""; }

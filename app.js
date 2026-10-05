@@ -37,7 +37,7 @@ function applyLive(P,live){
   var days={}; days[wat(-1)]="yesterday"; days[wat(0)]="today"; days[wat(1)]="tomorrow";
   P.football={yesterday:[],today:[],tomorrow:[]};
   P.basketball={yesterday:[],today:[],tomorrow:[]};
-  P.playerProps=[];
+  P.propsByDate={};
   var d=new Date(wat(0)+"T12:00:00Z");
   P.site.today=d.getUTCDate()+" "+["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"][d.getUTCMonth()]+" "+d.getUTCFullYear();
   var fixtures=(live&&live.fixtures)||[], props=(live&&live.props)||[];
@@ -47,26 +47,27 @@ function applyLive(P,live){
   (live&&live.vip||[]).forEach(function(x){if(x&&x.ymd)P.home.vip[x.ymd]={odds:x.odds||"",st:x.st||""}});
   fixtures.forEach(function(f){addFx(P,f,days)});
   props.sort(function(a,b){return String(a.kickoff).localeCompare(String(b.kickoff))});
-  props.forEach(function(p){
-    var k=String(p.kickoff||"").slice(0,10); if(k!==wat(0)&&k!==wat(1))return;
-    var team=p.team||"", other=team===p.home?p.away:p.home;
-    P.playerProps.push({k:p.market,player:p.player||"",team:team,opp:team?("vs "+other):(p.home+" v "+p.away),line:p.line||"",pick:p.side||"",odds:p.odds||"",st:p.st||"pending"});
-  });
+  props.forEach(function(p){addProp(P,p)});
+}
+function addProp(P,p){
+  var k=String(p.kickoff||"").slice(0,10); if(!k)return;
+  var team=p.team||"", other=team===p.home?p.away:p.home;
+  (P.propsByDate[k]=P.propsByDate[k]||[]).push({k:p.market,player:p.player||"",team:team,opp:team?("vs "+other):(p.home+" v "+p.away),line:p.line||"",pick:p.side||"",odds:p.odds||"",st:p.st||"pending"});
 }
 /* one fixture -> every list it belongs to (tables, expert tips, bets of the day). Used for the live document and for archived days. */
 function addFx(P,f,days){
   {
     var hd=String(f.kickoff||"").slice(0,10), sp=f.sport==="basketball"?"basketball":"football";
     var cname=(f.country&&String(f.competition||"").toLowerCase().indexOf(String(f.country).toLowerCase())!==0?f.country+" ":"")+(f.competition||"");
-    if(f.et&&f.et.on&&hd)(P.home.etl[sp][hd]=P.home.etl[sp][hd]||[]).push({h:f.home,a:f.away,lg:f.competition||"",t:String(f.kickoff).slice(11,16),by:f.et.by||"PB Analyst",sp:sp});
-    if(f.et&&f.et.on&&hd)P.home.et[sp][hd]={h:f.home,a:f.away,lg:f.competition||"",t:String(f.kickoff).slice(11,16),by:f.et.by||"PB Analyst",reasoning:f.et.reasoning||"",hl:f.et.hl||"",al:f.et.al||"",sp:sp};
+    if(f.et&&f.et.on&&hd)(P.home.etl[sp][hd]=P.home.etl[sp][hd]||[]).push({h:f.home,a:f.away,lg:f.competition||"",t:String(f.kickoff).slice(11,16),by:f.et.by||"PB Analyst",st:f.et.st||"",sp:sp});
+    if(f.et&&f.et.on&&hd)P.home.et[sp][hd]={h:f.home,a:f.away,lg:f.competition||"",t:String(f.kickoff).slice(11,16),by:f.et.by||"PB Analyst",st:f.et.st||"",reasoning:f.et.reasoning||"",hl:f.et.hl||"",al:f.et.al||"",sp:sp};
     if(f.bo&&f.bo.on&&hd){var bl=P.home.bo[sp][hd]=P.home.bo[sp][hd]||[];bl.push({lg:cname,t:(f.bo.st==="won"||f.bo.st==="lost")?"FT":String(f.kickoff).slice(11,16),h:f.home,a:f.away,pick:f.bo.pick||"",st:f.bo.st||"pending",sc:f.bo.score||""})}
     if(!((f.fb&&f.fb.live)||(f.bb&&f.bb.live)))return;
     if(f.sport==="basketball"){
       var bd=String(f.kickoff||"").slice(0,10), bday=days[bd]; if(!bd)return;
       var b=f.bb||{};
       var bm={lg:lgKey(P,"basketball",f.competition,f.country),t:String(f.kickoff).slice(11,16),h:f.home,a:f.away,
-        o:[b.o1||"",b.o2||""],pk:b.tip||"",tip:b.tip||"-",conf:b.conf||"",spread:b.spread||"",ts:b.totalSide||"",tl:b.totalLine||"",ps:b.ps||"",st:b.st||"pending",score:b.score||""};
+        o:[b.o1||"",b.o2||""],pk:b.tip||"",tip:b.tip||"-",conf:b.conf||"",spread:b.spread||"",ts:b.totalSide||"",tl:b.totalLine||"",ps:b.ps||"",sure:!!b.sure,st:b.st||"pending",score:b.score||""};
       (P.byDate.basketball[bd]=P.byDate.basketball[bd]||[]).push(bm);
       if(bday){var bl=P.basketball[bday];bm.featured=bl.length<6;bl.push(bm)}
       return;
@@ -75,7 +76,7 @@ function addFx(P,f,days){
     var date=String(f.kickoff||"").slice(0,10), day=days[date]; if(!date)return;
     var v=f.fb||{};
     var m={lg:lgKey(P,"football",f.competition,f.country),t:String(f.kickoff).slice(11,16),h:f.home,a:f.away,
-      o:[v.o1||"",v.oX||"",v.o2||""],pk:v.tip||"",tip:v.tip||"-",gg:v.btts||"",ggo:v.bttsOdds||"",ou:v.ou||"",ouo:v.ouOdds||"",conf:v.conf||"",dc:v.dc||"",dco:v.dcOdds||"",cs:v.cs||"",
+      o:[v.o1||"",v.oX||"",v.o2||""],pk:v.tip||"",tip:v.tip||"-",gg:v.btts||"",ggo:v.bttsOdds||"",ou:v.ou||"",ouo:v.ouOdds||"",conf:v.conf||"",dc:v.dc||"",dco:v.dcOdds||"",cs:v.cs||"",sure:!!v.sure,
       st:v.st||"pending",score:v.score||""};
     (P.byDate.football[date]=P.byDate.football[date]||[]).push(m);   /* any date: used by the calendar picker */
     if(day){var list=P.football[day];m.featured=list.length<6;list.push(m)}
@@ -104,7 +105,7 @@ function loadDay(ymd,cb){
   try{
     fetch(DAY_BASE+ymd+"?key="+LIVE_URL.split("key=")[1]).then(function(r){return r.ok?r.json():{}}).then(function(j){
       clearTimeout(timer);
-      try{var d=j&&j.fields?fsMap(j.fields):null;((d&&d.fixtures)||[]).forEach(function(f){addFx(window.PB,f,{})})}catch(e){try{console.error(e)}catch(_){}}
+      try{var d=j&&j.fields?fsMap(j.fields):null;((d&&d.fixtures)||[]).forEach(function(f){addFx(window.PB,f,{})});((d&&d.props)||[]).forEach(function(p){addProp(window.PB,p)})}catch(e){try{console.error(e)}catch(_){}}
       fin();
     }).catch(function(){clearTimeout(timer);fin()});
   }catch(e){clearTimeout(timer);fin()}
@@ -340,6 +341,7 @@ $$("[data-bigtable]").forEach(function(el){
   var expert=el.hasAttribute("data-expert");   /* Expert Tips page: same switcher / day tabs / date picker, expert-tip rows */
   function draw(){
     window.__pbSport=sport;document.dispatchEvent(new CustomEvent("pb:sport",{detail:sport}));
+    window.__pbDay=customDate?ymdOf(customDate):wat({yesterday:-1,today:0,tomorrow:1}[day]);document.dispatchEvent(new CustomEvent("pb:day",{detail:window.__pbDay}));
     $$(".toggle button[data-sport]",el).forEach(function(b){b.setAttribute("aria-pressed",String(b.dataset.sport===sport))});
     $$(".tabs button",el).forEach(function(b){b.setAttribute("aria-pressed",String(!customDate&&b.dataset.day===day))});
     var lgBtn=$("[data-lgopen]",el);
@@ -464,7 +466,7 @@ $$("[data-home]").forEach(function(hero){
     return head+
       '<div class="vb-main"><div>'+teamCrest(v.h,v.hl,v.sp)+'<div class="vb-team">'+esc(v.h)+'</div></div><div class="vb-mid"><strong>'+esc(v.t)+'</strong>vs<br>'+esc(v.lg)+'</div><div>'+teamCrest(v.a,v.al,v.sp)+'<div class="vb-team">'+esc(v.a)+'</div></div></div>'+
       '<a class="etlock" href="expert-tips.html?s='+sp+'&d='+selYmd()+'" aria-label="Open the reasoning for this expert tip"><span class="lockico" aria-hidden="true">&#128274;</span><span class="locktxt">View expert tip</span></a>'+
-      '<div class="vb-by"><span>EXPERT TIP BY: <b>'+esc(v.by)+'</b></span><span>'+(sp==="football"?"&#9917; Football":"&#127936; Basketball")+'</span></div>'+
+      '<div class="vb-by"><span>EXPERT TIP BY: <b>'+esc(v.by)+'</b></span>'+(v.st==="won"||v.st==="lost"?'<span class="etres '+v.st+'">'+(v.st==="won"?"&#10003; Won":"Lost")+'</span>':'')+'<span>'+(sp==="football"?"&#9917; Football":"&#127936; Basketball")+'</span></div>'+
       '</div>';
   }
   var etMode="both";
@@ -507,8 +509,8 @@ $$("[data-home]").forEach(function(hero){
     var t=$("[data-slot=title]",sure);
     t.textContent="Sure "+(sport==="football"?"⚽ Football":"🏀 Basketball")+" Predictions for "+title;
     var all=$("[data-sureall]",sure.parentNode)||$("[data-sureall]");if(all)all.href=sport==="football"?"football-predictions.html":"basketball-predictions.html";
-    var short=list.slice(0,10);
-    $("[data-slot=table]",sure).innerHTML=short.length?(sport==="football"?footballTable(short):basketballTable(short)):'<p class="note center" style="padding:28px 10px">No matches available.</p>';
+    var short=list.filter(function(m){return m.sure}).slice(0,10);
+    $("[data-slot=table]",sure).innerHTML=short.length?(sport==="football"?footballTable(short):basketballTable(short)):'<p class="note center" style="padding:28px 10px">No sure predictions posted for this day yet.</p>';
     /* Best Player Props are basketball-only: show them on the home page only while Basketball is selected */
     if(propsWrap)propsWrap.hidden=(sport!=="basketball");
   }
@@ -516,7 +518,7 @@ $$("[data-home]").forEach(function(hero){
     $$("[data-ssport]",sure).forEach(function(b){b.setAttribute("aria-pressed",String(b.dataset.ssport===sport))});
     $$("[data-hday]",hero).forEach(function(b){b.setAttribute("aria-pressed",String(!customDate&&b.dataset.hday===day))});
   }
-  function drawAll(){syncHero();drawET();drawBO();drawVIP();drawSure();window.__pbSport=sport;document.dispatchEvent(new CustomEvent("pb:sport",{detail:sport}))}
+  function drawAll(){syncHero();drawET();drawBO();drawVIP();drawSure();window.__pbSport=sport;document.dispatchEvent(new CustomEvent("pb:sport",{detail:sport}));window.__pbDay=selYmd();document.dispatchEvent(new CustomEvent("pb:day",{detail:window.__pbDay}))}
   $$("[data-ssport]",sure).forEach(function(b){b.addEventListener("click",function(){setSport(b.dataset.ssport)})});
   $$("[data-hday]",hero).forEach(function(b){b.addEventListener("click",function(){
     day=b.dataset.hday;customDate=null;var c=$("[data-hcal]",hero);if(c)c.value="";if(vcal)vcal.value="";
@@ -552,10 +554,10 @@ $$("[data-analysis]").forEach(function(el){
    '<p class="note center" style="margin-top:14px">'+(sp==="football"?"Football":"Basketball")+' predictions are based on statistical analysis and are not guaranteed. Please bet responsibly.</p>';
 });
 
-/* ---------- best player props of the day (basketball) with prop-type dropdown ---------- */
+/* ---------- best player props of the day (basketball) with prop-type dropdown; follows the day shown in the table above ---------- */
 $$("[data-props]").forEach(function(el){
   var sec=el.closest(".props-section"), sel=sec&&$("[data-propsel]",sec);
-  var markets=D.propMarkets||[];
+  var markets=D.propMarkets||[], day=window.__pbDay||wat(0);
   function mk(k){for(var i=0;i<markets.length;i++)if(markets[i].k===k)return markets[i];return {k:k,name:k,kind:"player"}}
   function card(p){
     var m=mk(p.k), team=m.kind==="team";
@@ -566,18 +568,24 @@ $$("[data-props]").forEach(function(el){
       '<div class="proppick"><span class="pick">'+esc(team?(m.short||"Pick"):p.pick+" "+p.line)+'</span><span class="o">@ '+esc(p.odds)+'</span></div>'+(p.st==="won"?'<span class="bigmark won" aria-label="Won">&#10003;</span>':p.st==="lost"?'<span class="bigmark lost" aria-label="Did not land"></span>':'')+
     '</div>';
   }
+  function listFor(k){return ((D.propsByDate||{})[day]||[]).filter(function(p){return p.k===k})}
   function draw(k){
-    var list=D.playerProps.filter(function(p){return p.k===k});
+    var list=listFor(k);
     el.innerHTML=list.length?list.map(card).join(""):'<div class="empty">No '+esc(mk(k).name)+' props posted yet.</div>';
   }
-  function cnt(k){return D.playerProps.filter(function(p){return p.k===k}).length}
-  var cur=store("pb.propmkt"); if(!markets.some(function(m){return m.k===cur}))cur=markets[0]&&markets[0].k;
-  if(!cnt(cur)){for(var i=0;i<markets.length;i++)if(cnt(markets[i].k)){cur=markets[i].k;break}}   /* open on a prop type that actually has props */
+  var cur=store("pb.propmkt");
+  function pick(){
+    if(!markets.some(function(m){return m.k===cur}))cur=markets[0]&&markets[0].k;
+    if(!listFor(cur).length){for(var i=0;i<markets.length;i++)if(listFor(markets[i].k).length){cur=markets[i].k;break}}   /* open on a prop type that actually has props */
+    if(sel)sel.value=cur;
+    draw(cur);
+  }
   if(sel){
-    sel.innerHTML=markets.map(function(m){return '<option value="'+esc(m.k)+'"'+(m.k===cur?" selected":"")+'>'+esc(m.name)+'</option>'}).join("");
+    sel.innerHTML=markets.map(function(m){return '<option value="'+esc(m.k)+'">'+esc(m.name)+'</option>'}).join("");
     sel.addEventListener("change",function(){cur=sel.value;store("pb.propmkt",cur);draw(cur)});
   }
-  draw(cur);
+  document.addEventListener("pb:day",function(e){day=e.detail;pick()});
+  pick();
 });
 
 /* ---------- VIP results strip ---------- */

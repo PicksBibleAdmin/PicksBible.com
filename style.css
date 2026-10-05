@@ -473,7 +473,7 @@ table.pt.bw{min-width:0;width:100%}
 .bdm{display:grid;grid-template-columns:1fr auto 1fr;gap:10px;align-items:center;font-size:14px}
 .bdm b{font-weight:600}.bdm b:last-child{text-align:left}.bdm i{font:700 12px var(--body);font-style:normal;color:var(--muted);text-align:center;min-width:30px}
 .bdpick{min-width:46px;text-align:center;padding:7px 12px;border-radius:8px;font:800 13px var(--body);background:var(--pend);color:var(--pend-ink);white-space:nowrap}
-.bdpick.won{background:var(--won);color:#04220f}.bdpick.lost{background:var(--lost);color:#fff}
+.bdpick.won{background:var(--won);color:#04220f}.bdpick.lost{background:#8b90a3;color:#fff}
 @media(max-width:700px){.bdmain{grid-template-columns:44px 1fr auto}.bdm{grid-template-columns:1fr;gap:2px}.bdm i{text-align:left}.bdm b{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}}
 
 .vipcard{padding:14px 12px}.vipcard .vip{margin-top:0}
@@ -619,3 +619,7 @@ table.pt.bw{min-width:0;width:100%}
 .etl:hover{background:#f5b30133}
 .pt.bw td.by{font-weight:600;color:#1b2433}
 @media (max-width:1180px){.etl{padding:6px 8px;font-size:10px;gap:3px}.pt.bw td.by{font-size:10px}}
+
+/* expert tip result badge (home Expert Tip card) */
+.etres{font:800 11px var(--body);padding:3px 10px;border-radius:999px;letter-spacing:.03em}
+.etres.won{background:var(--won);color:#04220f}.etres.lost{background:#8b90a3;color:#fff}
