@@ -27,7 +27,7 @@ window.PB = {
     timezone: "WAT",
     today: "30 Sep 2026",
     /* Set to false once you have replaced ALL sample data below */
-    previewNotice: true
+    previewNotice: false
   },
 
   /* ---------- LEAGUES (used for filters + SEO links + country selector) ----------

@@ -27,8 +27,9 @@ function flagOf(country){
   return c.toUpperCase().split("").map(function(x){return String.fromCodePoint(127397+x.charCodeAt(0))}).join("");
 }
 function lgKey(P,sport,comp,country){
-  var n=String(comp||"").toLowerCase();
-  for(var k in P.leagues){var l=P.leagues[k];if(l.sport===sport&&String(l.name).toLowerCase()===n)return k}
+  var n=String(comp||"").toLowerCase().replace(/[^a-z0-9]/g,""), cn=String(country||"").toLowerCase();
+  for(var k in P.leagues){var l=P.leagues[k];if(l.sport===sport&&String(l.name).toLowerCase().replace(/[^a-z0-9]/g,"")===n&&(!cn||String(l.country||"").toLowerCase()===cn))return k}
+  if(cn){var any=null,cnt=0;for(var k2 in P.leagues){var l2=P.leagues[k2];if(l2.sport===sport&&String(l2.name).toLowerCase().replace(/[^a-z0-9]/g,"")===n){any=k2;cnt++}} if(cnt===1&&!/^pl_/.test(any))return any}
   var key="db_"+sport+"_"+n.replace(/[^a-z0-9]+/g,"-");
   P.leagues[key]={name:comp||"Other",sport:sport,flag:flagOf(country),country:country||"Other"};
   return key;
@@ -169,6 +170,19 @@ function isoFlag(code){
 }
 function slug(s){return s.toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/(^-|-$)/g,"")}
 
+/* the full master league list (leagues.js, the same one the admin uses) joins the picker, so every league is searchable by name */
+(function(){
+  var M=window.PB_LEAGUES; if(!M)return;
+  var have={};Object.keys(D.leagues).forEach(function(k){var l=D.leagues[k];have[l.sport+"|"+String(l.country||"").toLowerCase()+"|"+String(l.name).toLowerCase().replace(/[^a-z0-9]/g,"")]=1});
+  ["football","basketball"].forEach(function(sp){
+    (M[sp]||[]).forEach(function(g){
+      (g.l||[]).forEach(function(name){
+        var key=sp+"|"+String(g.c).toLowerCase()+"|"+String(name).toLowerCase().replace(/[^a-z0-9]/g,""); if(have[key])return; have[key]=1;
+        D.leagues["pl_"+sp+"_"+slug(g.c)+"_"+slug(name)]={name:name,sport:sp,flag:isoFlag(g.code),country:g.c};
+      });
+    });
+  });
+})();
 var LG_COUNTRIES=(function(){
   var countries={};
   Object.keys(D.leagues).forEach(function(code){
@@ -217,7 +231,36 @@ function renderLeagueAccordion(body,opts){
     if(!list.length)return;
     html+=lgGroupHtml(c,c,lgCountryFlag(c),list,false);
   });
-  body.innerHTML=html;
+  body.innerHTML='<div class="lgsearch"><input type="search" class="lgq" placeholder="Search country or league (e.g. Switzerland)" aria-label="Search leagues" autocomplete="off"></div><div class="lgresults" hidden></div><div class="lglist">'+html+'</div>';
+  var qIn=$(".lgq",body), resBox=$(".lgresults",body), listBox=$(".lglist",body);
+  function pickLeague(b){
+    if(opts.onPick){opts.onPick(b.dataset.code,b.dataset.sport);return}
+    location.href=(b.dataset.sport==="football"?"football-predictions.html#":"basketball-predictions.html#")+b.dataset.code;
+  }
+  qIn.addEventListener("click",function(e){e.stopPropagation()});
+  qIn.addEventListener("input",function(){
+    var q=qIn.value.trim().toLowerCase();
+    if(!q){resBox.hidden=true;listBox.hidden=false;return}
+    var hits=[];
+    var seen={};
+    LG_COUNTRY_NAMES.forEach(function(c){
+      LG_COUNTRIES[c].forEach(function(l){
+        seen[l.code]=1;
+        if(sportFilter&&l.sport!==sportFilter)return;
+        if(c.toLowerCase().indexOf(q)>-1||l.name.toLowerCase().indexOf(q)>-1)hits.push({c:c,l:l});
+      });
+    });
+    Object.keys(D.leagues).forEach(function(k){   /* leagues added by live matches after the page loaded */
+      if(seen[k])return;var l=D.leagues[k],c=l.country||"Other";
+      if(sportFilter&&l.sport!==sportFilter)return;
+      if(c.toLowerCase().indexOf(q)>-1||String(l.name).toLowerCase().indexOf(q)>-1)hits.push({c:c,l:{code:k,name:l.name,sport:l.sport,flag:l.flag||""}});
+    });
+    listBox.hidden=true;resBox.hidden=false;
+    resBox.innerHTML=hits.length?hits.slice(0,60).map(function(h){
+      return '<button type="button" class="lgleague lgres" data-code="'+h.l.code+'" data-sport="'+h.l.sport+'"><span class="flag">'+h.l.flag+'</span><span class="lgrt"><b>'+esc(h.l.name)+'</b><small>'+esc(h.c)+'</small></span><span class="ct">'+(h.l.sport==="football"?"⚽":"🏀")+'</span></button>';
+    }).join(""):'<p class="lgnone">No league found for "'+esc(qIn.value.trim())+'".</p>';
+    $$(".lgleague",resBox).forEach(function(b){b.addEventListener("click",function(){pickLeague(b)})});
+  });
   $$(".lgcountry",body).forEach(function(b){
     b.addEventListener("click",function(){
       var sub=b.nextElementSibling, open=b.getAttribute("aria-expanded")==="true";
@@ -226,10 +269,7 @@ function renderLeagueAccordion(body,opts){
       sub.hidden=open;
     });
   });
-  $$(".lgleague",body).forEach(function(b){b.addEventListener("click",function(){
-    if(opts.onPick){opts.onPick(b.dataset.code,b.dataset.sport);return}
-    location.href=(b.dataset.sport==="football"?"football-predictions.html#":"basketball-predictions.html#")+b.dataset.code;
-  })});
+  $$(".lgleague",listBox).forEach(function(b){b.addEventListener("click",function(){pickLeague(b)})});
   if(opts.onPickAll){var allBtn=$("[data-all]",body);if(allBtn)allBtn.addEventListener("click",function(){opts.onPickAll()})}
 }
 
@@ -291,8 +331,28 @@ function pkBadge(m){var c=m.st==="won"?"won":m.st==="lost"?"lost":"",o=tipOdd(m)
 function dcCell(m){return m.dc?'<td class="kv" data-l="Double Chance"><span class="xp"><b>'+esc(m.dc)+'</b>'+(m.dco?'<i>('+esc(m.dco)+')</i>':'')+'</span></td>':'<td class="kv na" data-l="Double Chance">-</td>'}
 function confCell(m){var n=parseFloat(String(m.conf).replace("%","")),lv=isNaN(n)?"":n<45?" lo":n<=55?" mid":" hi";return m.conf?'<td class="kv" data-l="Confidence"><span class="conf'+lv+'">'+esc(String(m.conf).replace("%",""))+'%</span></td>':'<td class="kv na" data-l="Confidence">-</td>'}
 function extraPick(label,odds,name){return '<td class="kv'+(label?'':' na')+'" data-l="'+esc(name||"")+'">'+(label?'<span class="xp"><b>'+esc(label)+'</b>'+(odds?'<i>('+esc(odds)+')</i>':'')+'</span>':'-')+'</td>'}
+var PHONE=window.matchMedia("(max-width:700px)"), REDRAW=[];
+if(PHONE.addEventListener)PHONE.addEventListener("change",function(){REDRAW.forEach(function(f){f()})});
+/* phone layout: same data, same A-Z league order, but league = header bar, one pinned Match column (time + two team lines + score boxes), extras swipe sideways */
+function scoreBox(v){return '<span class="s"><i class="bx'+(v?' f':'')+'">'+(v?esc(v):'')+'</i></span>'}
+function mMatch(m){var p=String(m.score||"").split(/[-:]/), h=p[0]&&p[0].trim(), a=p[1]&&p[1].trim();
+  return '<td class="m"><div><span class="t">'+esc(m.t)+'</span><b>'+esc(m.h)+'</b>'+scoreBox(h)+'<b>'+esc(m.a)+'</b>'+scoreBox(a)+'</div></td>'}
+function mConf(m){var n=parseFloat(String(m.conf).replace("%","")),lv=isNaN(n)?"":n<45?" lo":n<=55?" mid":" hi";return m.conf?'<td><span class="conf'+lv+'">'+esc(String(m.conf).replace("%",""))+'%</span></td>':'<td class="x na">-</td>'}
+function mOdd(m,i){return '<td class="o">'+esc(m.o&&m.o[i]?m.o[i]:"-")+'</td>'}
+function mX(label,odds){return label?'<td class="x">'+esc(label)+(odds?'<small>('+esc(odds)+')</small>':'')+'</td>':'<td class="x na">-</td>'}
+function mobileTable(list,sport){
+  var fb=sport==="football", labels=fb?["1","X","2","Tip","Conf","O/U 2.5","BTTS","CS"]:["1","2","Tip","Conf","Spread","Total","Proj."], last=null, out="";
+  sortByLeague(list).forEach(function(m){
+    var key=lgName(m.lg);
+    if(key!==last){last=key;out+='<tr class="lgr"><td class="n">'+esc(key)+'</td>'+labels.map(function(l){return '<td>'+l+'</td>'}).join("")+'</tr>'}
+    if(fb)out+='<tr>'+mMatch(m)+mOdd(m,0)+mOdd(m,1)+mOdd(m,2)+'<td>'+pkBadge(m)+'</td>'+mConf(m)+mX(m.ou?(m.ou==="Over"?"Over 2.5":"Under 2.5"):"",m.ouo)+mX(m.gg,m.ggo)+mX(m.cs,"")+'</tr>';
+    else out+='<tr>'+mMatch(m)+mOdd(m,0)+mOdd(m,1)+'<td>'+pkBadge(m)+'</td>'+mConf(m)+mX(m.spread,"")+mX(m.ts?m.ts+(m.tl?" "+m.tl:""):"","")+mX(m.ps,"")+'</tr>';
+  });
+  return '<div class="tscroll mtwrap"><table class="pt mt"><tbody>'+out+'</tbody></table></div><p class="mhint">&#8646; swipe the table for '+(fb?'Over/Under, BTTS and correct score':'spread, totals and projected score')+' &#8646;</p>';
+}
 function footballTable(list){
   if(!list.length)return '<div class="empty">No football ⚽ predictions for this day yet.</div>';
+  if(PHONE.matches)return mobileTable(list,"football");
   var played=list.some(function(m){return m.score||m.st==="won"||m.st==="lost"});
   return '<div class="tscroll bwwrap"><table class="pt bw"><thead><tr><th>Time</th><th class="l">Competition</th><th class="l">Home</th><th class="l">Away</th><th>Home Win (1)</th><th>Draw (X)</th><th>Away Win (2)</th><th>Tip</th><th>Confidence</th><th>Over/Under 2.5</th><th>BTTS</th><th>CS Tip</th>'+(played?'<th>Result</th>':'')+'</tr></thead><tbody>'+
     sortByLeague(list).map(function(m){
@@ -306,6 +366,7 @@ function footballTable(list){
 function bbOdd(m,i,k){var v=m.o&&m.o[i]?m.o[i]:"-";return '<td class="od"><span class="odd'+(m.pk===k?" pk":"")+'">'+esc(v)+'</span></td>'}
 function basketballTable(list){
   if(!list.length)return '<div class="empty">No basketball 🏀 predictions for this day yet.</div>';
+  if(PHONE.matches)return mobileTable(list,"basketball");
   var played=list.some(function(m){return m.score||m.st==="won"||m.st==="lost"});
   return '<div class="tscroll bwwrap"><table class="pt bw bk"><thead><tr><th>Time</th><th class="l">Competition</th><th class="l">Home</th><th class="l">Away</th><th>Home Win (1)</th><th>Away Win (2)</th><th>Tip</th><th>Confidence</th><th>Projected Spread</th><th>Point Total Tip</th><th>Projected Score</th>'+(played?'<th>Result</th>':'')+'</tr></thead><tbody>'+
     sortByLeague(list).map(function(m){
@@ -342,6 +403,9 @@ $$("[data-bigtable]").forEach(function(el){
   var hash=(location.hash||"").slice(1);
   var league=D.leagues[hash]?hash:"";
   if(league&&!fixed)sport=D.leagues[league].sport;
+  /* a league can be a real league code, or a country placeholder from the picker (no fixtures yet under that exact code) -> then match by country */
+  function lgInfo(code){if(D.leagues[code])return D.leagues[code];for(var c in LG_COUNTRIES)for(var i=0;i<LG_COUNTRIES[c].length;i++)if(LG_COUNTRIES[c][i].code===code)return {name:LG_COUNTRIES[c][i].name,country:c,sport:LG_COUNTRIES[c][i].sport,ph:true};return null}
+  function lgMatch(m){if(!league)return true;if(D.leagues[league])return m.lg===league;var i=lgInfo(league);return !!i&&(D.leagues[m.lg]||{}).country===i.country}
   var title=$("[data-slot=title]",el);
   var customDate=null; /* a Date the calendar picked that isn't yesterday/today/tomorrow */
   var propsWrap=el.nextElementSibling;
@@ -354,7 +418,7 @@ $$("[data-bigtable]").forEach(function(el){
     $$(".toggle button[data-sport]",el).forEach(function(b){b.setAttribute("aria-pressed",String(b.dataset.sport===sport))});
     $$(".tabs button",el).forEach(function(b){b.setAttribute("aria-pressed",String(!customDate&&b.dataset.day===day))});
     var lgBtn=$("[data-lgopen]",el);
-    if(lgBtn)lgBtn.innerHTML="🌍 "+(league?esc(D.leagues[league].name):"All Leagues")+" ▾";
+    if(lgBtn)lgBtn.innerHTML="🌍 "+(league?esc((lgInfo(league)||{name:"League"}).name):"All Leagues")+" ▾";
     if(propsWrap)propsWrap.hidden=(sport!=="basketball");
     if(title)title.textContent=expert?(sport==="football"?"⚽ Football":"🏀 Basketball")+" Expert Tips":(sport==="football"?"⚽ All Football":"🏀 All Basketball")+" Predictions & Tips";
     /* the shared date picker (same control as VIP Results): only holds a value while a custom date is chosen */
@@ -366,14 +430,15 @@ $$("[data-bigtable]").forEach(function(el){
     }
     if(customDate){
       var ymd=customDate.getFullYear()+"-"+("0"+(customDate.getMonth()+1)).slice(-2)+"-"+("0"+customDate.getDate()).slice(-2);
-      var cl=((D.byDate&&D.byDate[sport]&&D.byDate[sport][ymd])||[]).filter(function(m){return !league||m.lg===league});
+      var cl=((D.byDate&&D.byDate[sport]&&D.byDate[sport][ymd])||[]).filter(lgMatch);
       if(cl.length){$("[data-slot=table]",el).innerHTML=sport==="football"?footballTable(cl):basketballTable(cl);return}
       $("[data-slot=table]",el).innerHTML='<p class="note center" style="padding:28px 10px">No published predictions for this date yet. Try Yesterday, Today or Tomorrow above, or pick another date.</p>';
       return;
     }
-    var list=D[sport][day].filter(function(m){return !league||m.lg===league});
+    var list=D[sport][day].filter(lgMatch);
     $("[data-slot=table]",el).innerHTML=sport==="football"?footballTable(list):basketballTable(list);
   }
+  REDRAW.push(draw);
 
   $$("[data-goto]",el).forEach(function(b){b.addEventListener("click",function(){store("pb.sport",b.dataset.goto.indexOf("basketball")===0?"basketball":"football");location.href=b.dataset.goto})});
   $$(".toggle button[data-sport]",el).forEach(function(b){b.addEventListener("click",function(){sport=b.dataset.sport;league="";lgBuilt=false;store("pb.sport",sport);draw()})});
@@ -537,7 +602,7 @@ $$("[data-home]").forEach(function(hero){
   if(cal)cal.addEventListener("change",function(){
     if(!cal.value){customDate=null}else{var p=cal.value.split("-");customDate=new Date(+p[0],+p[1]-1,+p[2]);vip.to(customDate);if(vcal)vcal.value=cal.value}
     drawAll()});
-  drawAll();
+  drawAll();REDRAW.push(drawAll);
 });
 
 
@@ -608,12 +673,21 @@ $$("[data-props]").forEach(function(el){
 
 /* ---------- VIP results strip ---------- */
 $$("[data-vip]").forEach(function(el){
-  el.innerHTML=D.vip.map(function(r){return '<div><b>'+esc(r.d)+'</b>'+esc(r.m)+'<span class="o">'+esc(r.odds)+'</span>odds<span class="dot'+(r.won?"":" l")+'" aria-label="'+(r.won?"Won":"Lost")+'">'+(r.won?"✓":"✕")+'</span></div>'}).join("");
+  var V=(D.home&&D.home.vip)||{}, MN=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+  var rows=Object.keys(V).filter(function(k){return V[k]&&(V[k].st==="won"||V[k].st==="lost")}).sort().reverse().slice(0,15);
+  var sec=el.closest("section.sec");
+  if(!rows.length){if(sec)sec.hidden=true;return}
+  el.innerHTML=rows.map(function(k){var x=V[k],won=x.st==="won";return '<div><b>'+esc(String(+k.slice(8,10)))+'</b>'+esc(MN[+k.slice(5,7)-1])+'<span class="o">'+esc(x.odds||"-")+'</span>odds<span class="dot'+(won?"":" l")+'" aria-label="'+(won?"Won":"Lost")+'">'+(won?"✓":"✕")+'</span></div>'}).join("");
 });
 
 /* ---------- stats ---------- */
 $$("[data-stats]").forEach(function(el){
-  el.innerHTML=D.stats.map(function(s){return '<div><b>'+esc(s.v)+'</b><span style="color:'+esc(s.c)+'">'+esc(s.l)+'</span></div>'}).join("");
+  /* real numbers only: counted from today's published matches */
+  function cnt(){var n=0,lg={};["football","basketball"].forEach(function(sp){((D[sp]&&D[sp].today)||[]).forEach(function(m){n++;if(m.lg)lg[m.lg]=1})});return {n:n,l:Object.keys(lg).length}}
+  var c=cnt();
+  var S=[{v:String(c.n),l:"Games today",c:"#22d3ee"},{v:String(c.l),l:"Leagues today",c:"#ef4444"},{v:"2",l:"Sports covered",c:"#f5b301"},{v:"100%",l:"Results published",c:"#22c55e"}];
+  el.innerHTML=S.map(function(s){return '<div><b>'+esc(s.v)+'</b><span style="color:'+esc(s.c)+'">'+esc(s.l)+'</span></div>'}).join("");
+  document.addEventListener("pb:sport",function(){var c=cnt();var b=el.querySelectorAll("b");if(b.length>1){b[0].textContent=c.n;b[1].textContent=c.l}});
 });
 
 /* ---------- tips meaning toggle ---------- */
@@ -676,7 +750,8 @@ $$("[data-results]").forEach(function(el){
   var list=D[sport].yesterday;
   var won=list.filter(function(m){return m.st==="won"}).length;
   $("[data-slot=sum]",el).textContent=won+" of "+list.length+" "+sport+" tips won yesterday";
-  $("[data-slot=table]",el).innerHTML=sport==="football"?footballTable(list):basketballTable(list);
+  function dr(){$("[data-slot=table]",el).innerHTML=sport==="football"?footballTable(list):basketballTable(list)}
+  dr();REDRAW.push(dr);
 });
 
 /* ---------- plans ---------- */
