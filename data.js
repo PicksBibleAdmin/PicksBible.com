@@ -316,12 +316,10 @@ window.PB = {
   /* ---------- PREMIUM PLANS ----------
      payLink = your Paystack / Flutterwave payment page link (Phase 3) */
   plans: [
-    { tier:"silver",   name:"Silver Package",   price:"$36",  per:"15-Days", perks:["Access to Sure 2-3 Odds For 15-Days"], payLink:"" },
-    { tier:"silver",   name:"Silver Package",   price:"$55",  per:"1 Month", perks:["Access to Sure 2-3 Odds For 1 Month"], payLink:"", best:true },
-    { tier:"gold",     name:"Gold Package",     price:"$65",  per:"1 Month", perks:["Access to Sure 5-15 Odds For 1 Month","Everything in Silver"], payLink:"" },
-    { tier:"platinum", name:"Platinum Package", price:"$120", per:"1 Month", perks:["Access to Sure 5-15 Odds For 1 Month","Weekend jackpot & accumulator slips","Everything in Gold"], payLink:"" }
+    { tier:"free", name:"Free", price:"$0", ngn:"₦0", per:"Forever", perks:["Daily free predictions","Match previews and analysis","!Premium 2-3 odds tips","!4-10 odds selections","!Priority support"], payLink:"" },
+    { tier:"gold", name:"Gold", price:"$40", ngn:"₦40,000", per:"1 Month", perks:["Everything in Free","2-3 odds premium tips","Detailed match analysis","VIP room access","24/7 support"], payLink:"" },
+    { tier:"titanium", name:"Titanium", price:"$90", ngn:"₦90,000", per:"1 Month", perks:["Everything in Gold","2-3 odds premium tips","4-10 odds selections","Advanced stats and insights","Express support"], payLink:"" }
   ],
-
 
   /* ---------- BLOG POSTS ---------- */
   posts: [

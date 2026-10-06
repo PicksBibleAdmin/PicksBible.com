@@ -761,13 +761,16 @@ $$("[data-results]").forEach(function(el){
 });
 
 /* ---------- plans ---------- */
-var TIER_ICON={silver:"🥈",gold:"🥇",platinum:"💎"};
+var TIER_ICON={free:"🎯",gold:"🥇",titanium:"🔩"};
+function isNG(){return store("premCountry")==="Nigeria"}
 $$("[data-plans]").forEach(function(el){
-  el.innerHTML=D.plans.map(function(p,i){return '<div class="panel plan tier-'+esc(p.tier||"silver")+(p.best?" best":"")+'">'+(p.best?'<span class="flag-best">Most popular</span>':'')+
-    '<div class="tier-badge">'+(TIER_ICON[p.tier]||"🥈")+'</div><h3>'+esc(p.name).toUpperCase()+'</h3>'+
-    '<div class="price">FEE - <b>'+esc(p.price)+'</b></div><div class="per">'+esc(p.per)+'</div><ul>'+p.perks.map(function(k){return '<li>✅ '+esc(k)+'</li>'}).join("")+'</ul>'+
-    (p.payLink?'<a class="btn" href="'+esc(p.payLink)+'" rel="noopener">Join Now</a>':'<button class="btn" type="button" data-pay="'+i+'">Join Now</button>')+'<p class="note" data-paynote="'+i+'" hidden>Online checkout opens once the payment link is added. For now, message us on WhatsApp '+esc(S.whatsapp)+' to subscribe.</p></div>'}).join("");
-  $$("[data-pay]",el).forEach(function(b){b.addEventListener("click",function(){$('[data-paynote="'+b.dataset.pay+'"]',el).hidden=false})});
+  function drawPlans(){el.innerHTML=D.plans.map(function(p,i){var price=isNG()&&p.ngn?p.ngn:p.price;
+    return '<div class="pcard tier-'+esc(p.tier)+'"><div class="pc-head"><span class="pc-chip">'+(TIER_ICON[p.tier]||"")+' '+esc(p.name)+'</span><span class="pc-sub">'+(p.tier==="free"?"For everyone":"VIP membership")+'</span></div>'+
+      '<div class="pc-price"><b>'+esc(price)+'</b><span>'+(p.tier==="free"?"free forever":"/ month")+'</span></div>'+
+      '<ul class="pc-list">'+p.perks.map(function(k){var no=k.charAt(0)==="!";return '<li class="'+(no?'no':'')+'"><b>'+(no?'&#10005;':'&#10003;')+'</b><span>'+esc(no?k.slice(1):k)+'</span></li>'}).join("")+'</ul>'+
+      (p.tier==="free"?'<a class="btn ghost wide" href="predictions.html">Start free</a>':'<a class="btn wide" href="checkout.html?plan='+esc(p.tier)+'">Join '+esc(p.name)+'</a>')+'</div>'}).join("");
+  $$("[data-pay]",el).forEach(function(b){b.addEventListener("click",function(){$('[data-paynote="'+b.dataset.pay+'"]',el).hidden=false})})}
+  drawPlans(); window.PB_DRAWPLANS=drawPlans;
 });
 
 /* ---------- premium: choose your country -> continue reveals plans ---------- */
@@ -784,6 +787,7 @@ $$("[data-plans]").forEach(function(el){
   btn.addEventListener("click",function(){
     if(!sel.value){sel.focus();return}
     store("premCountry",sel.value);
+    if(window.PB_DRAWPLANS)window.PB_DRAWPLANS();
     grid.hidden=false;
     grid.scrollIntoView({behavior:"smooth",block:"start"});
   });
@@ -818,6 +822,52 @@ $$("form[data-local]").forEach(function(f){
   });
   $$("input,textarea",f).forEach(function(i){i.addEventListener("input",function(){var er=i.parentNode.querySelector(".err");if(er)er.remove()})});
 });
+/* ---------- checkout page ---------- */
+$$("[data-checkout]").forEach(function(root){
+  var q=new URLSearchParams(location.search), plan=null;
+  D.plans.forEach(function(p){if(p.tier===q.get("plan")&&p.tier!=="free")plan=p});
+  if(!plan){location.replace("premium.html");return}
+  var $q=function(s){return root.querySelector(s)}, cs=$q("[data-ck=country]");
+  var AFR={"Ghana":1,"Kenya":1,"Uganda":1,"Tanzania":1,"Zambia":1,"Cameroon":1,"Rwanda":1,"Senegal":1,"Ivory Coast":1,"Cote d'Ivoire":1,"Malawi":1,"Zimbabwe":1,"South Africa":1,"Sierra Leone":1,"Liberia":1,"Ethiopia":1,"Botswana":1,"Namibia":1};
+  var names={Nigeria:1};
+  Object.keys(D.leagues).forEach(function(c){var l=D.leagues[c];if(l.country)names[l.country]=1});
+  Object.keys(D.countryFlags||{}).forEach(function(n){names[n]=1});
+  cs.innerHTML=Object.keys(names).sort(function(x,y){return x.localeCompare(y)}).map(function(n){return '<option>'+esc(n)+'</option>'}).join("");
+  var start=store("premCountry");cs.value=(start&&names[start])?start:"Nigeria";
+  var METHODS={bank:{i:"&#127974;",n:"Bank Transfer",s:"Pay from your bank app"},card:{i:"&#128179;",n:"Card",s:"Visa, Mastercard, Verve"},usdt:{i:"&#8366;",n:"USDT",s:"Crypto, TRC20 / BEP20"},binance:{i:"&#9670;",n:"Binance",s:"Pay with Binance"},momo:{i:"&#128241;",n:"Mobile Money",s:"Pay from your mobile wallet"}};
+  var method=null;
+  function ng(){return cs.value==="Nigeria"}
+  function methodsFor(){return ng()?["bank","card","usdt","binance"]:AFR[cs.value]?["momo","bank","card","usdt","binance"]:["card","usdt","binance"]}
+  function draw(){
+    var price=ng()?plan.ngn:plan.price, cur=ng()?"NGN":"USD", ms=methodsFor();
+    if(ms.indexOf(method)<0)method=null;
+    $q("[data-ck-chip]").textContent=(TIER_ICON[plan.tier]||"")+" "+plan.name;
+    $q("[data-ck-plan]").textContent=plan.name; $q("[data-ck-c]").textContent=cs.value; $q("[data-ck-cur]").textContent=cur; $q("[data-ck-total]").textContent=price;
+    $q("[data-ck-pay]").textContent=method?METHODS[method].n:"Not selected";
+    $q("[data-ck-info]").innerHTML="<b>"+esc(cs.value)+"</b>Preferred currency: "+cur;
+    $q("[data-ck-psub]").textContent="Payment options available for "+cs.value+".";
+    $q("[data-ck-methods]").innerHTML=ms.map(function(k){var m=METHODS[k];return '<button type="button" class="ck-m" data-m="'+k+'" aria-pressed="'+(method===k)+'"><i aria-hidden="true">'+m.i+'</i><span>'+m.n+'<small>'+m.s+'</small></span></button>'}).join("");
+    $$("[data-m]",root).forEach(function(b){b.addEventListener("click",function(){method=b.dataset.m;draw()})});
+    var sum=$q(".ck-sum"); sum.className="ckcard ck-sum tier-"+plan.tier;
+  }
+  cs.addEventListener("change",function(){store("premCountry",cs.value);draw()});
+  $q("[data-ck-go]").addEventListener("click",function(){
+    var err=$q("[data-ck-err]"), name=$q("[data-ck=name]").value.trim(), email=$q("[data-ck=email]").value.trim(), wa=$q("[data-ck=wa]").value.trim();
+    function bad(t){err.textContent=t;err.hidden=false}
+    if(!name)return bad("Please enter your full name.");
+    if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email))return bad("Please enter a valid email address.");
+    if(!method)return bad("Please choose a payment method.");
+    err.hidden=true;
+    if(plan.payLink){location.href=plan.payLink;return}
+    /* no automatic checkout link yet: send the order to support on WhatsApp so it can be completed by hand */
+    var price=ng()?plan.ngn:plan.price, num=String(S.whatsapp).replace(/[^0-9]/g,"");
+    var msg="Hi PicksBible, I want to join "+plan.name+" (1 month, "+price+").\nName: "+name+"\nEmail: "+email+(wa?"\nWhatsApp: "+wa:"")+"\nCountry: "+cs.value+"\nPayment method: "+METHODS[method].n;
+    location.href="https://wa.me/"+num+"?text="+encodeURIComponent(msg);
+  });
+  draw();
+});
 }
 loadLive(main);
+
 })();
+
