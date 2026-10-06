@@ -12,8 +12,8 @@ window.PB = {
   site: {
     name: "PicksBible",
     domain: "picksbible.com",
-    email: "support@picksbible.com",
-    whatsapp: "+234 000 000 0000",
+    email: "picksbiblesupport@gmail.com",
+    whatsapp: "+234 919 823 3308",
     telegram: "https://t.me/picksbibleforum",
     socials: {
       telegram: "https://t.me/picksbibleforum",

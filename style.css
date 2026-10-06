@@ -650,3 +650,14 @@ table.pt.bw{min-width:0;width:100%}
 .pt .tip.tp2 b{font:800 1em var(--body);padding:5px 12px 3px}
 .pt .tip.tp2 i{font:800 .72em var(--body);font-style:normal;padding:3px 8px 4px;background:#ffffff59;letter-spacing:.01em}
 .pt .tip.tp2.lost i{background:#00000026}
+
+/* footer: about + social on top, five link columns underneath */
+.ftop{display:grid;gap:24px;grid-template-columns:1fr;padding-top:28px}
+@media(min-width:860px){.ftop{grid-template-columns:1.6fr 1fr}}
+.ftop img{height:64px;border-radius:8px}.ftop p{font-size:13px;color:var(--muted);max-width:520px}
+.ftop h4,.flinks h4{font:700 15px var(--body);margin:0 0 10px}
+.ftop ul,.flinks ul{list-style:none;margin:0;padding:0;display:grid;gap:8px;font-size:14px}
+.ftop ul{grid-template-columns:repeat(2,max-content);column-gap:26px}
+.ftop a,.flinks a{color:var(--text);text-decoration:none}.ftop a:hover,.flinks a:hover{color:var(--cyan)}
+.flinks{display:grid;gap:22px;grid-template-columns:repeat(2,1fr);padding:26px 0 28px;margin-top:22px;border-top:1px solid var(--line)}
+@media(min-width:860px){.flinks{grid-template-columns:repeat(5,1fr)}}
