@@ -633,13 +633,13 @@ table.pt.bw{min-width:0;width:100%}
 .etbet.na{background:#ffffff14;color:inherit}
 .etconf{font:800 28px var(--head,var(--body))}
 .etconf.hi{color:#22c55e}.etconf.mid{color:#f5b301}.etconf.lo{color:#8b90a3}
-.etbar{display:block;width:80%;height:7px;border-radius:99px;background:#ffffff1c;overflow:hidden}
-.etbar u{display:block;height:100%;border-radius:99px;text-decoration:none}
-.etbar u.hi{background:#22c55e}.etbar u.mid{background:#f5b301}.etbar u.lo{background:#8b90a3}
+.etmeter{display:block;width:80%;height:7px;border-radius:99px;background:#ffffff1c;overflow:hidden}
+.etmeter u{display:block;height:100%;border-radius:99px;text-decoration:none}
+.etmeter u.hi{background:#22c55e}.etmeter u.mid{background:#f5b301}.etmeter u.lo{background:#8b90a3}
 .etresbig{font:800 22px var(--head,var(--body));padding:6px 16px;border-radius:999px}
 .etresbig.won{background:#22c55e;color:#04220f}.etresbig.lost{background:#8b90a3;color:#fff}.etresbig.pend{background:#f5b30126;color:#f5b301}
 .ftscore{font-size:30px!important}
-@media(max-width:600px){.etstats{grid-template-columns:1fr}.etstat{flex-direction:row;justify-content:space-between;padding:12px 14px}.etbar{display:none}}
+@media(max-width:600px){.etstats{grid-template-columns:1fr}.etstat{flex-direction:row;justify-content:space-between;padding:12px 14px}.etmeter{display:none}}
 
 /* big tables (hundreds of matches): the list scrolls inside its own box, header stays pinned, the rest of the page stays reachable */
 [data-bigtable] .tscroll{max-height:min(78vh,760px);overflow-y:auto;overflow-x:auto;overscroll-behavior:auto;scrollbar-width:thin}

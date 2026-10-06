@@ -294,11 +294,11 @@ function extraPick(label,odds,name){return '<td class="kv'+(label?'':' na')+'" d
 function footballTable(list){
   if(!list.length)return '<div class="empty">No football ⚽ predictions for this day yet.</div>';
   var played=list.some(function(m){return m.score});
-  return '<div class="tscroll bwwrap"><table class="pt bw"><thead><tr><th>Time</th><th class="l">Competition</th><th class="l">Home</th><th class="l">Away</th><th>Home Win (1)</th><th>Draw (X)</th><th>Away Win (2)</th><th>Tip</th><th>Confidence</th><th>Over/Under 2.5</th><th>BTTS</th><th>Double Chance</th><th>CS Tip</th>'+(played?'<th>Result</th>':'')+'</tr></thead><tbody>'+
+  return '<div class="tscroll bwwrap"><table class="pt bw"><thead><tr><th>Time</th><th class="l">Competition</th><th class="l">Home</th><th class="l">Away</th><th>Home Win (1)</th><th>Draw (X)</th><th>Away Win (2)</th><th>Tip</th><th>Confidence</th><th>Over/Under 2.5</th><th>BTTS</th><th>CS Tip</th>'+(played?'<th>Result</th>':'')+'</tr></thead><tbody>'+
     sortByLeague(list).map(function(m){
       return '<tr><td class="tm">'+esc(m.t)+'</td><td class="l lgn">'+esc(lgName(m.lg))+'</td><td class="l team"><b>'+esc(m.h)+'</b></td><td class="l team"><b>'+esc(m.a)+'</b></td>'+
         oddCell(m,0,"1")+oddCell(m,1,"X")+oddCell(m,2,"2")+'<td class="kv" data-l="Tip">'+pkBadge(m)+'</td>'+confCell(m)+
-        extraPick(m.ou?(m.ou==="Over"?"Over 2.5":"Under 2.5"):"",m.ouo,"Over/Under 2.5")+extraPick(m.gg,m.ggo,"BTTS")+dcCell(m)+
+        extraPick(m.ou?(m.ou==="Over"?"Over 2.5":"Under 2.5"):"",m.ouo,"Over/Under 2.5")+extraPick(m.gg,m.ggo,"BTTS")+
         '<td class="cs kv'+(m.cs?'':' na')+'" data-l="CS Tip">'+esc(m.cs||"-")+'</td>'+(played?'<td class="res kv" data-l="Result">'+(m.score?esc(m.score):'-:-')+'</td>':'')+'</tr>';
     }).join("")+
     '</tbody></table></div>';
@@ -564,7 +564,7 @@ $$("[data-analysis]").forEach(function(el){
    '<div class="vb-main anmatch"><div>'+teamCrest(v.h,v.hl,v.sp)+'<div class="vb-team">'+esc(v.h)+'</div></div><div class="vb-mid">'+(ft?'<strong class="ftscore">'+ft+'</strong>FT':'<strong>'+esc(v.t)+'</strong>vs')+'<br>'+esc(v.lg)+'<br>'+esc(ymd)+'</div><div>'+teamCrest(v.a,v.al,v.sp)+'<div class="vb-team">'+esc(v.a)+'</div></div></div>'+
    '<div class="etstats">'+
     '<div class="etstat"><span class="etk">Best bet</span>'+(tipTxt?'<b class="etbet">'+tipTxt+'</b><small>'+esc(MEAN[v.tip]||"")+(v.odd?' &middot; @ '+esc(v.odd):'')+'</small>':'<b class="etbet na">&ndash;</b><small>Not posted yet</small>')+'</div>'+
-    '<div class="etstat"><span class="etk">Confidence</span>'+(clv?'<b class="etconf '+ccl+'">'+esc(String(Math.round(cn)))+'%</b><i class="etbar"><u class="'+ccl+'" style="width:'+Math.max(4,Math.min(100,cn))+'%"></u></i><small>'+clv+'</small>':'<b class="etbet na">&ndash;</b><small>Not posted yet</small>')+'</div>'+
+    '<div class="etstat"><span class="etk">Confidence</span>'+(clv?'<b class="etconf '+ccl+'">'+esc(String(Math.round(cn)))+'%</b><i class="etmeter"><u class="'+ccl+'" style="width:'+Math.max(4,Math.min(100,cn))+'%"></u></i><small>'+clv+'</small>':'<b class="etbet na">&ndash;</b><small>Not posted yet</small>')+'</div>'+
     '<div class="etstat"><span class="etk">Result</span><b class="etresbig '+(done?v.st:"pend")+'">'+(v.st==="won"?"&#10003; Won":v.st==="lost"?"Lost":"Pending")+'</b><small>'+(done?(v.score?"Full time "+esc(v.score):"Settled"):"Settled after the match")+'</small></div>'+
    '</div>'+
    '<p class="note" style="margin-top:10px">Expert tip by <b>'+esc(v.by)+'</b> &middot; '+(sp==="football"?"&#9917; Football":"&#127936; Basketball")+'</p></div>'+
