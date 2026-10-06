@@ -293,7 +293,7 @@ function confCell(m){var n=parseFloat(String(m.conf).replace("%","")),lv=isNaN(n
 function extraPick(label,odds,name){return '<td class="kv'+(label?'':' na')+'" data-l="'+esc(name||"")+'">'+(label?'<span class="xp"><b>'+esc(label)+'</b>'+(odds?'<i>('+esc(odds)+')</i>':'')+'</span>':'-')+'</td>'}
 function footballTable(list){
   if(!list.length)return '<div class="empty">No football ⚽ predictions for this day yet.</div>';
-  var played=list.some(function(m){return m.score});
+  var played=list.some(function(m){return m.score||m.st==="won"||m.st==="lost"});
   return '<div class="tscroll bwwrap"><table class="pt bw"><thead><tr><th>Time</th><th class="l">Competition</th><th class="l">Home</th><th class="l">Away</th><th>Home Win (1)</th><th>Draw (X)</th><th>Away Win (2)</th><th>Tip</th><th>Confidence</th><th>Over/Under 2.5</th><th>BTTS</th><th>CS Tip</th>'+(played?'<th>Result</th>':'')+'</tr></thead><tbody>'+
     sortByLeague(list).map(function(m){
       return '<tr><td class="tm">'+esc(m.t)+'</td><td class="l lgn">'+esc(lgName(m.lg))+'</td><td class="l team"><b>'+esc(m.h)+'</b></td><td class="l team"><b>'+esc(m.a)+'</b></td>'+
@@ -306,7 +306,7 @@ function footballTable(list){
 function bbOdd(m,i,k){var v=m.o&&m.o[i]?m.o[i]:"-";return '<td class="od"><span class="odd'+(m.pk===k?" pk":"")+'">'+esc(v)+'</span></td>'}
 function basketballTable(list){
   if(!list.length)return '<div class="empty">No basketball 🏀 predictions for this day yet.</div>';
-  var played=list.some(function(m){return m.score});
+  var played=list.some(function(m){return m.score||m.st==="won"||m.st==="lost"});
   return '<div class="tscroll bwwrap"><table class="pt bw bk"><thead><tr><th>Time</th><th class="l">Competition</th><th class="l">Home</th><th class="l">Away</th><th>Home Win (1)</th><th>Away Win (2)</th><th>Tip</th><th>Confidence</th><th>Projected Spread</th><th>Point Total Tip</th><th>Projected Score</th>'+(played?'<th>Result</th>':'')+'</tr></thead><tbody>'+
     sortByLeague(list).map(function(m){
       var tot=m.ts?'<span class="xp"><b>'+esc(m.ts)+(m.tl?' '+esc(m.tl):'')+'</b></span>':'-';
