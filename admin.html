@@ -222,10 +222,10 @@ tr.lghead td{background:#ffffff0d;padding:10px 8px;border-bottom:1px solid var(-
     </table></div>
   </div>
   <div class="card">
-    <h2>VIP results <span class="muted">(one box per day)</span></h2>
-    <p class="note">Enter the day's VIP odds and mark it Won or Lost. Days left empty show a dash on the site.</p>
+    <h2>VIP results <span class="muted">(Bronze and Gold, one box per day each)</span></h2>
+    <p class="note">Enter each tier's odds for the day and mark it Won or Lost. Days left empty show a dash on the site. Results entered before the tiers existed count as Gold.</p>
     <div class="row" style="margin-bottom:10px"><div><label>Month</label><input type="month" id="vpMonth"></div></div>
-    <div class="tbl"><table class="ft"><thead><tr><th>Day</th><th>Odds</th><th>Result</th></tr></thead><tbody id="vpBody"></tbody></table></div>
+    <div class="tbl"><table class="ft"><thead><tr><th>Day</th><th>Bronze odds</th><th>Bronze result</th><th>Gold odds</th><th>Gold result</th></tr></thead><tbody id="vpBody"></tbody></table></div>
   </div>
 </section>
 
@@ -415,7 +415,7 @@ const Store = {
       const recent = r => { const k=String(r.kickoff||"").slice(0,10); return k >= cutoff && k <= farOut; };
       const snap = {
         fixtures: db.fixtures.filter(f=>liveOf("fixtures",f) && (recent(f) || homeBox(f))).map(f=>this.docOf("fixtures",f)),
-        vip:      (db.vip||[]).filter(v=>v.ymd>=cut120).map(v=>({ymd:v.ymd,odds:v.odds||"",st:v.st||""})),
+        vip:      (db.vip||[]).filter(v=>v.ymd>=cut120).map(v=>({ymd:v.ymd,tier:v.tier==="bronze"?"bronze":"gold",odds:v.odds||"",st:v.st||""})),
         props:    db.props.filter(r=>liveOf("props",r)).map(r=>this.docOf("props",r)).filter(recent)
       };
       const sj = JSON.stringify(snap);
@@ -732,10 +732,10 @@ function renderHome(){
   const ym=$("#vpMonth").value||todayStr().slice(0,7), [y,m]=ym.split("-").map(Number), n=new Date(y,m,0).getDate();
   let h="";
   for(let d=1; d<=n; d++){
-    const ymd=`${ym}-${String(d).padStart(2,"0")}`, v=(db.vip||[]).find(x=>x.ymd===ymd)||{};
-    h+=`<tr data-ymd="${ymd}"><td>${d} ${new Date(y,m-1,d).toLocaleDateString("en-GB",{weekday:"short"})}</td>
-      <td><input class="odd" data-v="odds" value="${esc(v.odds||"")}" placeholder="2.43" maxlength="7"></td>
-      <td><select data-v="st"><option value="">-</option>${["won","lost"].map(r=>`<option ${v.st===r?"selected":""}>${r}</option>`).join("")}</select></td></tr>`;
+    const ymd=`${ym}-${String(d).padStart(2,"0")}`, vb=(db.vip||[]).find(x=>x.ymd===ymd&&x.tier==="bronze")||{}, vg=(db.vip||[]).find(x=>x.ymd===ymd&&x.tier!=="bronze")||{};
+    const cells=(t,v)=>`<td><input class="odd" data-t="${t}" data-v="odds" value="${esc(v.odds||"")}" placeholder="2.43" maxlength="7"></td>
+      <td><select data-t="${t}" data-v="st"><option value="">-</option>${["won","lost"].map(r=>`<option ${v.st===r?"selected":""}>${r}</option>`).join("")}</select></td>`;
+    h+=`<tr data-ymd="${ymd}"><td>${d} ${new Date(y,m-1,d).toLocaleDateString("en-GB",{weekday:"short"})}</td>${cells("bronze",vb)}${cells("gold",vg)}</tr>`;
   }
   $("#vpBody").innerHTML = h;
 }
@@ -775,8 +775,9 @@ $("#hbBody").addEventListener("change", e => {
 });
 $("#vpBody").addEventListener("change", e => {
   const el=e.target, tr=el.closest("tr"); if(!tr||!el.dataset.v) return;
-  db.vip = db.vip||[]; let v=db.vip.find(x=>x.ymd===tr.dataset.ymd);
-  if(!v){ v={id:"vip-"+tr.dataset.ymd, kind:"vip", status:"vip", ymd:tr.dataset.ymd, odds:"", st:""}; db.vip.push(v); }
+  const t=el.dataset.t==="bronze"?"bronze":"gold";
+  db.vip = db.vip||[]; let v=db.vip.find(x=>x.ymd===tr.dataset.ymd&&(t==="bronze"?x.tier==="bronze":x.tier!=="bronze"));
+  if(!v){ v={id:(t==="bronze"?"vip-bronze-":"vip-")+tr.dataset.ymd, kind:"vip", status:"vip", tier:t, ymd:tr.dataset.ymd, odds:"", st:""}; db.vip.push(v); }
   v[el.dataset.v]=el.value.trim();
   if(!v.odds && !v.st) db.vip = db.vip.filter(x=>x!==v);
   Store.save(db); $("#stats").textContent = statsText();

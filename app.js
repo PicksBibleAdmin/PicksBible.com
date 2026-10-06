@@ -44,8 +44,8 @@ function applyLive(P,live){
   var fixtures=(live&&live.fixtures)||[], props=(live&&live.props)||[];
   fixtures.sort(function(a,b){return String(a.kickoff).localeCompare(String(b.kickoff))});
   P.byDate={football:{},basketball:{}};
-  P.home={etl:{football:{},basketball:{}},et:{football:{},basketball:{}},bo:{football:{},basketball:{}},vip:{}};
-  (live&&live.vip||[]).forEach(function(x){if(x&&x.ymd)P.home.vip[x.ymd]={odds:x.odds||"",st:x.st||""}});
+  P.home={etl:{football:{},basketball:{}},et:{football:{},basketball:{}},bo:{football:{},basketball:{}},vip:{bronze:{},gold:{}}};
+  (live&&live.vip||[]).forEach(function(x){if(x&&x.ymd)P.home.vip[x.tier==="bronze"?"bronze":"gold"][x.ymd]={odds:x.odds||"",st:x.st||""}});
   fixtures.forEach(function(f){addFx(P,f,days)});
   props.sort(function(a,b){return String(a.kickoff).localeCompare(String(b.kickoff))});
   props.forEach(function(p){addProp(P,p)});
@@ -497,8 +497,8 @@ function getET(sport,ymd){
 function getBO(sport,ymd){
   var H=D.home||{}, l=H.bo&&H.bo[sport]&&H.bo[sport][ymd]; return l||[];
 }
-function getVIP(year,month){ /* month is 0-11; one entry per calendar day */
-  var n=new Date(year,month+1,0).getDate(), today=wat(0), out=[], V=(D.home&&D.home.vip)||{};
+function getVIP(year,month,tier){ /* month is 0-11; one entry per calendar day */
+  var n=new Date(year,month+1,0).getDate(), today=wat(0), out=[], V=((D.home&&D.home.vip)||{})[tier||"gold"]||{};
   for(var d=1;d<=n;d++){
     var ymd=year+"-"+("0"+(month+1)).slice(-2)+"-"+("0"+d).slice(-2), x=V[ymd];
     if(x&&(x.st==="won"||x.st==="lost")){out.push({ymd:ymd,d:d,odds:x.odds||"",st:x.st});continue}
@@ -511,8 +511,9 @@ function getVIP(year,month){ /* month is 0-11; one entry per calendar day */
 function makeVIP(vipbox,getSel){
   var MON=["January","February","March","April","May","June","July","August","September","October","November","December"], Y, M;
   (function(){var t=wat(0).split("-");Y=+t[0];M=+t[1]-1})();
+  var tier=vipbox.dataset.tier==="bronze"?"bronze":"gold";
   function draw(){
-    var sel=getSel(), today=wat(0), data=getVIP(Y,M), won=0,lost=0;
+    var sel=getSel(), today=wat(0), data=getVIP(Y,M,tier), won=0,lost=0;
     var wrap=$("[data-vipdays]",vipbox);
     wrap.innerHTML=data.map(function(x){
       if(x.st==="won")won++; if(x.st==="lost")lost++;
@@ -521,7 +522,7 @@ function makeVIP(vipbox,getSel){
       return '<div class="vcol'+(x.ymd===sel?" sel":"")+(x.ymd===today?" today":"")+'" data-ymd="'+x.ymd+'"><span class="vdow">'+dow+'</span><b class="vday">'+x.d+'</b><span class="vodds">'+(x.odds?esc(x.odds):'&ndash;')+'</span><span class="voddsl">odds</span>'+mark+'</div>';
     }).join("");
     $("[data-vipmonth]",vipbox).textContent=MON[M]+" "+Y;
-    $("[data-vipstat]",vipbox).innerHTML=(won+lost)?'<b>'+won+'</b> won &middot; <b>'+lost+'</b> lost':'No results yet';
+    $("[data-vipstat]",vipbox).innerHTML=(won+lost)?'<span class="vw"><b>'+won+'</b> won</span><span class="vl"><b>'+lost+'</b> lost</span>':'No results yet';
     var target=$(".vcol.sel",wrap)||$(".vcol.today",wrap);
     if(target)wrap.scrollLeft=Math.max(0,target.offsetLeft-wrap.clientWidth/2+target.offsetWidth/2);
   }
@@ -532,7 +533,7 @@ function makeVIP(vipbox,getSel){
 
 $$("[data-home]").forEach(function(hero){
   var sport="football", day="today", customDate=null;
-  var sure=$("[data-sure]"), botd=$("[data-botd]"), propsWrap=$("[data-props-wrap]"), et=$("[data-experttip]"), vipbox=$("[data-vipbox]");
+  var sure=$("[data-sure]"), botd=$("[data-botd]"), propsWrap=$("[data-props-wrap]"), et=$("[data-experttip]"), vipbox=$("[data-vipbox]"), vipboxes=$$("[data-vipbox]");
   var MON=["January","February","March","April","May","June","July","August","September","October","November","December"];
   function selYmd(){return customDate?ymdOf(customDate):wat({yesterday:-1,today:0,tomorrow:1}[day])}
   function setSport(sp){sport=sp;store("pb.sport",sp);if(etMode!=="both")etMode=sp;drawAll()}
@@ -569,10 +570,11 @@ $$("[data-home]").forEach(function(hero){
   $$("[data-bsport]",botd).forEach(function(b){b.addEventListener("click",function(){setSport(b.dataset.bsport)})});
 
   /* ---- VIP results: one column per day of the month, scrollable ---- */
-  var vip=makeVIP(vipbox,selYmd);
+  var vips=vipboxes.map(function(b){return makeVIP(b,selYmd)});
+  var vip={draw:function(){vips.forEach(function(v){v.draw()})},to:function(d){vips.forEach(function(v){v.to(d)})},toYmd:function(y){vips.forEach(function(v){v.toYmd(y)})}};
   function drawVIP(){vip.draw()}
-  var vcal=vip.cal;
-  if(vcal)vcal.addEventListener("change",function(){if(!vcal.value)return;var p=vcal.value.split("-");customDate=new Date(+p[0],+p[1]-1,+p[2]);var c=$("[data-hcal]",hero);if(c)c.value=vcal.value;vip.to(customDate);drawAll()});
+  var vcal={set value(x){vips.forEach(function(v){if(v.cal)v.cal.value=x})},get value(){return vips[0]&&vips[0].cal?vips[0].cal.value:""}};
+  vips.forEach(function(v){if(v.cal)v.cal.addEventListener("change",function(){if(!v.cal.value)return;var val=v.cal.value,p=val.split("-");customDate=new Date(+p[0],+p[1]-1,+p[2]);var c=$("[data-hcal]",hero);if(c)c.value=val;vcal.value=val;vip.to(customDate);drawAll()})});
 
   function drawSure(){
     var list,title,ymd=selYmd();
@@ -610,11 +612,11 @@ $$("[data-home]").forEach(function(hero){
 });
 
 
-if(!$("[data-home]"))$$("[data-vipbox]").forEach(function(vb){
-  var sel=wat(0), v=makeVIP(vb,function(){return sel});
-  v.draw();
-  if(v.cal)v.cal.addEventListener("change",function(){if(!v.cal.value)return;sel=v.cal.value;v.toYmd(sel);v.draw()});
-});
+if(!$("[data-home]")){
+  var sel=wat(0), vs=$$("[data-vipbox]").map(function(vb){return makeVIP(vb,function(){return sel})});
+  vs.forEach(function(v){v.draw()});
+  vs.forEach(function(v){if(v.cal)v.cal.addEventListener("change",function(){if(!v.cal.value)return;sel=v.cal.value;vs.forEach(function(w){if(w.cal)w.cal.value=sel;w.toYmd(sel);w.draw()})})});
+}
 
 /* ---------- MATCH ANALYSIS page (the reasoning behind an Expert Tip, written in the admin page) ---------- */
 $$("[data-analysis]").forEach(function(el){
@@ -677,7 +679,7 @@ $$("[data-props]").forEach(function(el){
 
 /* ---------- VIP results strip ---------- */
 $$("[data-vip]").forEach(function(el){
-  var V=(D.home&&D.home.vip)||{}, MN=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+  var V=((D.home&&D.home.vip)||{}).gold||{}, MN=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
   var rows=Object.keys(V).filter(function(k){return V[k]&&(V[k].st==="won"||V[k].st==="lost")}).sort().reverse().slice(0,15);
   var sec=el.closest("section.sec");
   if(!rows.length){if(sec)sec.hidden=true;return}
