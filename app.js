@@ -723,7 +723,17 @@ $$("form[data-local]").forEach(function(f){
     var bad=null;
     $$("[required]",f).forEach(function(i){var er=i.parentNode.querySelector(".err");if(er)er.remove();if(!i.value.trim()){bad=bad||i;var m=document.createElement("span");m.className="err";m.textContent="Fill in this field.";i.parentNode.appendChild(m)}else if(i.type==="email"&&!/^\S+@\S+\.\S+$/.test(i.value)){bad=bad||i;var m2=document.createElement("span");m2.className="err";m2.textContent="Enter a valid email address.";i.parentNode.appendChild(m2)}});
     if(bad){e.preventDefault();bad.focus();return}
-    if(PREVIEW){e.preventDefault();var ok=$(".ok",f.parentNode);ok.hidden=false;ok.textContent="Message ready. On the live site this form delivers to your inbox through Netlify Forms.";f.reset()}
+    e.preventDefault();
+    var ok=$(".ok",f.parentNode), S=(window.PB&&PB.site)||{}, fd={};
+    $$("input,textarea,select",f).forEach(function(x){if(x.name&&x.name!=="form-name")fd[x.name]=x.value.trim()});
+    function done(msg,good){ok.hidden=false;ok.textContent=msg;ok.style.color=good?"":"#f87171"}
+    var mail=function(){var body="Name: "+(fd.name||"")+"\nEmail: "+(fd.email||"")+"\n\n"+(fd.message||"");location.href="mailto:"+(S.email||"")+"?subject="+encodeURIComponent("PicksBible: "+(fd.topic||"Contact"))+"&body="+encodeURIComponent(body);done("Your email app should open with the message ready. Press send there. If nothing opens, email us at "+(S.email||"our support address")+".",true)};
+    if(!S.formEndpoint){mail();return}
+    var btn=$("button[type=submit]",f);if(btn){btn.disabled=true;btn.textContent="Sending..."}
+    fetch(S.formEndpoint,{method:"POST",headers:{"Content-Type":"application/json","Accept":"application/json"},body:JSON.stringify(fd)})
+      .then(function(r){if(!r.ok)throw 0;f.reset();done("Thank you. Your message has been sent. We reply within 24 hours.",true)})
+      .catch(function(){done("We could not send that just now. Please email "+(S.email||"us")+" directly.",false)})
+      .then(function(){if(btn){btn.disabled=false;btn.textContent="Send message"}});
   });
   $$("input,textarea",f).forEach(function(i){i.addEventListener("input",function(){var er=i.parentNode.querySelector(".err");if(er)er.remove()})});
 });
