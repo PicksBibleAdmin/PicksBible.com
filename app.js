@@ -350,16 +350,19 @@ function mobileTable(list,sport){
   });
   return '<div class="tscroll mtwrap"><table class="pt mt"><tbody>'+out+'</tbody></table></div><p class="mhint">&#8646; swipe the table for '+(fb?'Over/Under, BTTS and correct score':'spread, totals and projected score')+' &#8646;</p>';
 }
+function dMatch(m){var p=String(m.score||'').split(/[-:]/),h=p[0]&&p[0].trim(),a=p[1]&&p[1].trim();return '<td class="l dm"><div class="dmi"><span class="t">'+esc(m.t)+'</span><span class="tn"><b>'+esc(m.h)+'</b>'+scoreBox(h)+'</span><span class="tn"><b>'+esc(m.a)+'</b>'+scoreBox(a)+'</span></div></td>'}
+function lgBar(name,labels){return '<tr class="lgb"><td class="n">'+esc(name)+'</td>'+labels.map(function(l){return '<td>'+esc(l)+'</td>'}).join("")+'</tr>'}
 function footballTable(list){
   if(!list.length)return '<div class="empty">No football ⚽ predictions for this day yet.</div>';
   if(PHONE.matches)return mobileTable(list,"football");
-  var played=list.some(function(m){return m.score||m.st==="won"||m.st==="lost"});
-  return '<div class="tscroll bwwrap"><table class="pt bw"><thead><tr><th>Time</th><th class="l">Competition</th><th class="l">Home</th><th class="l">Away</th><th>Home Win (1)</th><th>Draw (X)</th><th>Away Win (2)</th><th>Tip</th><th>Confidence</th><th>Over/Under 2.5</th><th>BTTS</th><th>CS Tip</th>'+(played?'<th>Result</th>':'')+'</tr></thead><tbody>'+
+  var lbl=["Home Win (1)","Draw (X)","Away Win (2)","Tip","Confidence","Over/Under 2.5","BTTS","CS Tip"], lastL=null;
+  return '<div class="tscroll bwwrap"><table class="pt bw lgbars"><tbody>'+
     sortByLeague(list).map(function(m){
-      return '<tr><td class="tm">'+esc(m.t)+'</td><td class="l lgn">'+esc(lgName(m.lg))+'</td><td class="l team"><b>'+esc(m.h)+'</b></td><td class="l team"><b>'+esc(m.a)+'</b></td>'+
+      var bar="",k=lgName(m.lg); if(k!==lastL){lastL=k;bar=lgBar(k,lbl)}
+      return bar+'<tr>'+dMatch(m)+''+
         oddCell(m,0,"1")+oddCell(m,1,"X")+oddCell(m,2,"2")+'<td class="kv" data-l="Tip">'+pkBadge(m)+'</td>'+confCell(m)+
         extraPick(m.ou?(m.ou==="Over"?"Over 2.5":"Under 2.5"):"",m.ouo,"Over/Under 2.5")+extraPick(m.gg,m.ggo,"BTTS")+
-        '<td class="cs kv'+(m.cs?'':' na')+'" data-l="CS Tip">'+esc(m.cs||"-")+'</td>'+(played?'<td class="res kv" data-l="Result">'+(m.score?esc(m.score):'-:-')+'</td>':'')+'</tr>';
+        '<td class="cs kv'+(m.cs?'':' na')+'" data-l="CS Tip">'+esc(m.cs||"-")+'</td>'+'</tr>';
     }).join("")+
     '</tbody></table></div>';
 }
@@ -367,12 +370,13 @@ function bbOdd(m,i,k){var v=m.o&&m.o[i]?m.o[i]:"-";return '<td class="od"><span 
 function basketballTable(list){
   if(!list.length)return '<div class="empty">No basketball 🏀 predictions for this day yet.</div>';
   if(PHONE.matches)return mobileTable(list,"basketball");
-  var played=list.some(function(m){return m.score||m.st==="won"||m.st==="lost"});
-  return '<div class="tscroll bwwrap"><table class="pt bw bk"><thead><tr><th>Time</th><th class="l">Competition</th><th class="l">Home</th><th class="l">Away</th><th>Home Win (1)</th><th>Away Win (2)</th><th>Tip</th><th>Confidence</th><th>Projected Spread</th><th>Point Total Tip</th><th>Projected Score</th>'+(played?'<th>Result</th>':'')+'</tr></thead><tbody>'+
+  var lbl=["Home Win (1)","Away Win (2)","Tip","Confidence","Projected Spread","Point Total Tip","Projected Score"], lastL=null;
+  return '<div class="tscroll bwwrap"><table class="pt bw bk lgbars"><tbody>'+
     sortByLeague(list).map(function(m){
+      var bar="",k=lgName(m.lg); if(k!==lastL){lastL=k;bar=lgBar(k,lbl)}
       var tot=m.ts?'<span class="xp"><b>'+esc(m.ts)+(m.tl?' '+esc(m.tl):'')+'</b></span>':'-';
-      return '<tr><td class="tm">'+esc(m.t)+'</td><td class="l lgn">'+esc(lgName(m.lg))+'</td><td class="l team"><b>'+esc(m.h)+'</b></td><td class="l team"><b>'+esc(m.a)+'</b></td>'+
-        bbOdd(m,0,"1")+bbOdd(m,1,"2")+'<td>'+pkBadge(m)+'</td>'+confCell(m)+'<td class="cs">'+esc(m.spread||"-")+'</td><td>'+tot+'</td><td class="cs">'+esc(m.ps||"-")+'</td>'+(played?'<td class="res">'+(m.score?esc(m.score):'-:-')+'</td>':'')+'</tr>';
+      return bar+'<tr>'+dMatch(m)+''+
+        bbOdd(m,0,"1")+bbOdd(m,1,"2")+'<td>'+pkBadge(m)+'</td>'+confCell(m)+'<td class="cs">'+esc(m.spread||"-")+'</td><td>'+tot+'</td><td class="cs">'+esc(m.ps||"-")+'</td>'+'</tr>';
     }).join("")+
     '</tbody></table></div>';
 }

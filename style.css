@@ -701,3 +701,20 @@ table.pt.bw{min-width:0;width:100%}
 .lgres .flag{font-size:17px;width:22px;text-align:center;flex-shrink:0}
 .lgres .lgrt{flex:1;display:flex;flex-direction:column;line-height:1.25}.lgres .lgrt b{font:700 14.5px var(--body)}.lgres .lgrt small{color:#6b7488;font:600 12px var(--body)}
 .lgnone{padding:18px 16px;color:#6b7488;font:600 13px var(--body);margin:0}
+
+/* desktop league bars */
+.pt.bw.lgbars td{border-top:1px solid #eef0f4}
+.pt.bw tr.lgb td{background:#b9cfbf;color:#3d5a49;font:700 11.5px var(--body);text-transform:uppercase;letter-spacing:.03em;padding:9px 6px;text-align:center;border-top:2px solid #fff}
+.pt.bw tr.lgb td.n{text-align:left;color:#14392a;font:800 14px var(--body);letter-spacing:.04em;padding-left:14px}
+.pt.bw.lgbars .team b{min-width:0}
+
+.pt.bw td.dm{min-width:260px;width:26%}
+.pt.bw .dmi{display:grid;grid-template-columns:54px 1fr;grid-template-rows:auto auto;column-gap:8px;row-gap:6px;align-items:center}
+.pt.bw .dmi .t{grid-row:1/3;font-weight:700;color:#1b2433}
+.pt.bw .dmi .tn{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.pt.bw .dmi .tn b{font-weight:600}
+.pt.bw .dmi .bx{display:inline-grid;place-items:center;width:26px;height:26px;border:1.5px solid #cfd5e1;border-radius:6px;font:700 13px var(--body);background:#fff;font-style:normal}
+.pt.bw .dmi .bx.f{background:#eef1f6}
+.pt.bw td.dm{min-width:0;width:300px}.pt.bw .dmi{grid-template-columns:50px 190px}
+.pt.bw tr.lgb td{background:#e7edf5;color:#5b6577;border-top:1px solid #d5dde9}
+.pt.bw tr.lgb td.n{color:#2b4a7a}
