@@ -60,7 +60,7 @@ function addFx(P,f,days){
     var hd=String(f.kickoff||"").slice(0,10), sp=f.sport==="basketball"?"basketball":"football";
     var cname=(f.country&&String(f.competition||"").toLowerCase().indexOf(String(f.country).toLowerCase())!==0?f.country+" ":"")+(f.competition||"");
     if(f.et&&f.et.on&&hd)(P.home.etl[sp][hd]=P.home.etl[sp][hd]||[]).push({h:f.home,a:f.away,lg:f.competition||"",t:String(f.kickoff).slice(11,16),by:f.et.by||"PB Analyst",st:f.et.st||"",sp:sp});
-    if(f.et&&f.et.on&&hd)P.home.et[sp][hd]={h:f.home,a:f.away,lg:f.competition||"",t:String(f.kickoff).slice(11,16),by:f.et.by||"PB Analyst",st:f.et.st||"",reasoning:f.et.reasoning||"",hl:f.et.hl||"",al:f.et.al||"",sp:sp};
+    if(f.et&&f.et.on&&hd)P.home.et[sp][hd]={h:f.home,a:f.away,lg:f.competition||"",t:String(f.kickoff).slice(11,16),by:f.et.by||"PB Analyst",st:f.et.st||((sp==="basketball"?(f.bb&&f.bb.st):(f.fb&&f.fb.st))==="won"||(sp==="basketball"?(f.bb&&f.bb.st):(f.fb&&f.fb.st))==="lost"?(sp==="basketball"?f.bb.st:f.fb.st):""),reasoning:f.et.reasoning||"",hl:f.et.hl||"",al:f.et.al||"",sp:sp,tip:(f.et.pick||(sp==="basketball"?(f.bb&&f.bb.tip):(f.fb&&f.fb.tip))||""),conf:String((sp==="basketball"?(f.bb&&f.bb.conf):(f.fb&&f.fb.conf))||"").replace("%",""),score:(sp==="basketball"?(f.bb&&f.bb.score):(f.fb&&f.fb.score))||"",odd:(function(){var x=sp==="basketball"?(f.bb||{}):(f.fb||{}),t=String(f.et.pick||x.tip||"");return t==="1"?x.o1:t==="2"?x.o2:t==="X"?x.oX:t==="1X"?x.dcOdds:""})()||""};
     if(f.bo&&f.bo.on&&hd){var bl=P.home.bo[sp][hd]=P.home.bo[sp][hd]||[];bl.push({lg:cname,t:(f.bo.st==="won"||f.bo.st==="lost")?"FT":String(f.kickoff).slice(11,16),h:f.home,a:f.away,pick:f.bo.pick||"",st:f.bo.st||"pending",sc:f.bo.score||""})}
     if(!((f.fb&&f.fb.live)||(f.bb&&f.bb.live)))return;
     if(f.sport==="basketball"){
@@ -76,7 +76,7 @@ function addFx(P,f,days){
     var date=String(f.kickoff||"").slice(0,10), day=days[date]; if(!date)return;
     var v=f.fb||{};
     var m={lg:lgKey(P,"football",f.competition,f.country),t:String(f.kickoff).slice(11,16),h:f.home,a:f.away,
-      o:[v.o1||"",v.oX||"",v.o2||""],pk:v.tip||"",tip:v.tip||"-",gg:v.btts||"",ggo:v.bttsOdds||"",ou:v.ou||"",ouo:v.ouOdds||"",conf:v.conf||"",dc:v.dc||"",dco:v.dcOdds||"",cs:v.cs||"",sure:!!v.sure,
+      o:[v.o1||"",v.oX||"",v.o2||""],pk:v.tip||"",tip:v.tip||"-",gg:v.btts||"",ggo:v.bttsOdds||"",ou:v.ou||"",ouo:v.ouOdds||"",conf:v.conf||"",to:v.tipOdds||"",dc:v.dc||"",dco:v.dcOdds||"",cs:v.cs||"",sure:!!v.sure,
       st:v.st||"pending",score:v.score||""};
     (P.byDate.football[date]=P.byDate.football[date]||[]).push(m);   /* any date: used by the calendar picker */
     if(day){var list=P.football[day];m.featured=list.length<6;list.push(m)}
@@ -278,7 +278,16 @@ function scoreLine(m){return m.score?'<span class="sc">'+esc(m.score)+'</span>':
 
 /* ---------- full prediction tables ---------- */
 function oddCell(m,i,k){var v=m.o&&m.o[i]?m.o[i]:"-";return '<td class="od" data-l="'+k+'"><span class="odd'+(m.pk===k?" pk":"")+'">'+esc(v)+'</span></td>'}
-function pkBadge(m){return '<span class="tip '+(m.st==="won"?"won":m.st==="lost"?"lost":"")+'" title="'+esc(m.st)+'">'+esc(m.pk||m.tip||"-")+'</span>'}
+function tipOdd(m){
+  var t=String(m.pk||m.tip||""); if(!t||t==="-")return "";
+  if(m.to)return String(m.to);
+  var bb=m.o&&m.o.length===2, i=bb?{"1":0,"2":1}[t]:{"1":0,"X":1,"2":2}[t];
+  if(i!==undefined&&m.o[i])return String(m.o[i]);
+  if(m.dc===t&&m.dco)return String(m.dco);
+  return "";
+}
+function pkBadge(m){var c=m.st==="won"?"won":m.st==="lost"?"lost":"",o=tipOdd(m),t=esc(m.pk||m.tip||"-");
+  return '<span class="tip'+(o?' tp2':'')+' '+c+'" title="'+esc(m.st)+'">'+(o?'<b>'+t+'</b><i>'+esc(o)+'</i>':t)+'</span>'}
 function dcCell(m){return m.dc?'<td class="kv" data-l="Double Chance"><span class="xp"><b>'+esc(m.dc)+'</b>'+(m.dco?'<i>('+esc(m.dco)+')</i>':'')+'</span></td>':'<td class="kv na" data-l="Double Chance">-</td>'}
 function confCell(m){var n=parseFloat(String(m.conf).replace("%","")),lv=isNaN(n)?"":n<45?" lo":n<=55?" mid":" hi";return m.conf?'<td class="kv" data-l="Confidence"><span class="conf'+lv+'">'+esc(String(m.conf).replace("%",""))+'%</span></td>':'<td class="kv na" data-l="Confidence">-</td>'}
 function extraPick(label,odds,name){return '<td class="kv'+(label?'':' na')+'" data-l="'+esc(name||"")+'">'+(label?'<span class="xp"><b>'+esc(label)+'</b>'+(odds?'<i>('+esc(odds)+')</i>':'')+'</span>':'-')+'</td>'}
@@ -546,11 +555,20 @@ $$("[data-analysis]").forEach(function(el){
   var v=getET(sp,ymd);
   if(!v){el.innerHTML='<div class="panel"><h2>Reasoning not available</h2><p>There is no published expert tip for this date yet.</p><a class="btn" href="index.html">Back to home</a></div>';return}
   var paras=String(v.reasoning||"").split(/\n+/).map(function(t){return t.trim()}).filter(Boolean);
+  var MEAN={"1":sp==="football"?"Home win":"Home team wins","2":sp==="football"?"Away win":"Away team wins","X":"Draw","1X":"Home win or draw","X2":"Away win or draw","12":"Either team wins (no draw)"};
+  var cn=parseFloat(v.conf), clv=isNaN(cn)?"":cn<45?"Low":cn<=55?"Medium":"High", ccl=isNaN(cn)?"":cn<45?"lo":cn<=55?"mid":"hi";
+  var done=v.st==="won"||v.st==="lost", ft=done&&v.score?esc(v.score):"";
+  var tipTxt=v.tip?esc(v.tip):"";
   el.innerHTML=
-   '<div class="panel anhead"><div class="crumbs"><a href="index.html">Home</a> &rsaquo; <a href="expert-tips.html">Expert Tips</a> &rsaquo; Reasoning</div>'+
-   '<div class="vb-main anmatch"><div>'+teamCrest(v.h,v.hl,v.sp)+'<div class="vb-team">'+esc(v.h)+'</div></div><div class="vb-mid"><strong>'+esc(v.t)+'</strong>vs<br>'+esc(v.lg)+'<br>'+esc(ymd)+'</div><div>'+teamCrest(v.a,v.al,v.sp)+'<div class="vb-team">'+esc(v.a)+'</div></div></div>'+
-   '<div class="etlock anlock" role="img" aria-label="Expert tip, locked"><span class="lockico" aria-hidden="true">&#128274;</span><span class="locktxt">Expert tip</span></div></div>'+
-   '<div class="panel"><h2>Expert reasoning</h2>'+(paras.length?paras.map(function(t){return '<p>'+esc(t)+'</p>'}).join(""):'<p>The reasoning for this tip has not been written yet.</p>')+'<p class="note">Expert analysis by '+esc(v.by)+'.</p></div>'+
+   '<div class="panel anhead"><div class="crumbs"><a href="index.html">Home</a> &rsaquo; <a href="expert-tips.html">Expert Tips</a> &rsaquo; '+esc(v.h)+' vs '+esc(v.a)+'</div>'+
+   '<div class="vb-main anmatch"><div>'+teamCrest(v.h,v.hl,v.sp)+'<div class="vb-team">'+esc(v.h)+'</div></div><div class="vb-mid">'+(ft?'<strong class="ftscore">'+ft+'</strong>FT':'<strong>'+esc(v.t)+'</strong>vs')+'<br>'+esc(v.lg)+'<br>'+esc(ymd)+'</div><div>'+teamCrest(v.a,v.al,v.sp)+'<div class="vb-team">'+esc(v.a)+'</div></div></div>'+
+   '<div class="etstats">'+
+    '<div class="etstat"><span class="etk">Best bet</span>'+(tipTxt?'<b class="etbet">'+tipTxt+'</b><small>'+esc(MEAN[v.tip]||"")+(v.odd?' &middot; @ '+esc(v.odd):'')+'</small>':'<b class="etbet na">&ndash;</b><small>Not posted yet</small>')+'</div>'+
+    '<div class="etstat"><span class="etk">Confidence</span>'+(clv?'<b class="etconf '+ccl+'">'+esc(String(Math.round(cn)))+'%</b><i class="etbar"><u class="'+ccl+'" style="width:'+Math.max(4,Math.min(100,cn))+'%"></u></i><small>'+clv+'</small>':'<b class="etbet na">&ndash;</b><small>Not posted yet</small>')+'</div>'+
+    '<div class="etstat"><span class="etk">Result</span><b class="etresbig '+(done?v.st:"pend")+'">'+(v.st==="won"?"&#10003; Won":v.st==="lost"?"Lost":"Pending")+'</b><small>'+(done?(v.score?"Full time "+esc(v.score):"Settled"):"Settled after the match")+'</small></div>'+
+   '</div>'+
+   '<p class="note" style="margin-top:10px">Expert tip by <b>'+esc(v.by)+'</b> &middot; '+(sp==="football"?"&#9917; Football":"&#127936; Basketball")+'</p></div>'+
+   '<div class="panel"><h2>Expert reasoning</h2>'+(paras.length?paras.map(function(t){return '<p>'+esc(t)+'</p>'}).join(""):'<p>The reasoning for this tip has not been written yet.</p>')+'</div>'+
    '<p class="note center" style="margin-top:14px">'+(sp==="football"?"Football":"Basketball")+' predictions are based on statistical analysis and are not guaranteed. Please bet responsibly.</p>';
 });
 

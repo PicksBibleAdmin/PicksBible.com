@@ -186,7 +186,7 @@ tr.lghead td{background:#ffffff0d;padding:10px 8px;border-bottom:1px solid var(-
 <section id="tab-fbtable" hidden>
   <div class="card">
     <h2>Football table <span class="muted" id="fbCount"></span></h2>
-    <p class="note">One row per football fixture (add fixtures in tab 1). Switch <b>Sure</b> on for the matches your analysts hand-pick for the home page "Sure predictions" box (max 10 per day). Enter the odds for 1, X and 2, choose your <b>Tip</b> (1, X or 2), then your <b>GG/NG</b> and <b>Over/Under 2.5</b> picks with their odds, add a correct-score tip, and switch the match <b>Live</b>. Changes save automatically.</p>
+    <p class="note">One row per football fixture (add fixtures in tab 1). Switch <b>Sure</b> on for the matches your analysts hand-pick for the home page "Sure predictions" box (max 10 per day). Enter the odds for 1, X and 2, choose your <b>Tip</b> (1, X, 2, 1X, X2 or 12; for 1X, X2 and 12 type the bookmaker price in the small box that appears under the Tip, for 1, X and 2 the price fills itself in), then your <b>GG/NG</b> and <b>Over/Under 2.5</b> picks with their odds, add a correct-score tip, and switch the match <b>Live</b>. Changes save automatically.</p>
     <div class="tbl"><table class="ft">
       <thead><tr><th>Time</th><th>Competition</th><th>Home</th><th>Away</th><th>1</th><th>X</th><th>2</th><th>Tip</th><th>Confidence %</th><th>Over / Under 2.5</th><th>BTTS</th><th>Double chance</th><th>CS tip</th><th>Result</th><th>Sure</th><th>Live</th></tr></thead>
       <tbody id="fbBody"></tbody>
@@ -606,7 +606,7 @@ function pickFor(id){ resetPick(id); showTab("picks"); }
 
 
 /* ============ FOOTBALL TABLE ============ */
-const fbDefaults = () => ({tip:"",o1:"",oX:"",o2:"",btts:"",bttsOdds:"",ou:"",ouOdds:"",conf:"",dc:"",dcOdds:"",cs:"",st:"",score:"",sure:false,live:false});
+const fbDefaults = () => ({tip:"",tipOdds:"",o1:"",oX:"",o2:"",btts:"",bttsOdds:"",ou:"",ouOdds:"",conf:"",dc:"",dcOdds:"",cs:"",st:"",score:"",sure:false,live:false});
 const fbOf = f => { const v = Object.assign(fbDefaults(), f.fb||{}); if(!v.tip && v.pick) v.tip = v.pick; return v; };
 const hhmm = iso => { const d=new Date(iso); return isNaN(d)?"":d.toLocaleTimeString([], {hour:"2-digit",minute:"2-digit",hour12:false}); };
 const dmon = iso => { const d=new Date(iso); return isNaN(d)?"":d.toLocaleDateString([], {day:"2-digit",month:"short"}); };
@@ -631,7 +631,7 @@ function renderFb(){
       <td class="lg">${esc(f.competition)}<br><small>${esc(f.country||"")}</small></td>
       <td class="tm"><b>${esc(f.home)}</b></td><td class="tm"><b>${esc(f.away)}</b></td>
       ${oddIn("o1",v)}${oddIn("oX",v)}${oddIn("o2",v)}
-      <td><select data-f="tip" class="tipsel"><option value="">-</option>${["1","X","2","1X","X2","12"].map(k=>`<option ${v.tip===k?"selected":""}>${k}</option>`).join("")}</select></td>
+      <td><select data-f="tip" class="tipsel"><option value="">-</option>${["1","X","2","1X","X2","12"].map(k=>`<option ${v.tip===k?"selected":""}>${k}</option>`).join("")}</select>${["1X","X2","12"].includes(v.tip)?`<br><input class="odd" data-f="tipOdds" value="${esc(v.tipOdds||"")}" placeholder="odds" title="Bookmaker price for ${esc(v.tip)}" style="margin-top:4px">`:`<br><small class="muted">odds auto</small>`}</td>
       <td><input class="odd" type="number" step="1" min="0" max="100" data-f="conf" value="${esc(String(v.conf||"").replace("%",""))}" placeholder="%"></td>
       <td><select data-f="ou"><option value="">-</option><option value="Over" ${v.ou==="Over"?"selected":""}>Over 2.5</option><option value="Under" ${v.ou==="Under"?"selected":""}>Under 2.5</option></select>
           <input class="odd" type="number" step="0.01" min="1" data-f="ouOdds" value="${esc(v.ouOdds)}" placeholder="odds"></td>
@@ -693,6 +693,7 @@ $("#fbBody").addEventListener("change", e => {
   }
   f.fb = fbOf(f);
   f.fb[el.dataset.f] = el.type==="checkbox" ? el.checked : el.value.trim();
+  if(el.dataset.f==="tip"){ f.fb.tipOdds=""; Store.save(db); $("#stats").textContent = statsText(); renderFb(); return; }
   Store.save(db); $("#stats").textContent = statsText();
 });
 

@@ -623,3 +623,30 @@ table.pt.bw{min-width:0;width:100%}
 /* expert tip result badge (home Expert Tip card) */
 .etres{font:800 11px var(--body);padding:3px 10px;border-radius:999px;letter-spacing:.03em}
 .etres.won{background:var(--won);color:#04220f}.etres.lost{background:#8b90a3;color:#fff}
+
+/* expert tip page: best bet / confidence / result strip */
+.etstats{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:14px 0 0;text-align:center}
+.etstat{background:#ffffff0a;border:1px solid var(--line,#ffffff1f);border-radius:14px;padding:14px 10px;display:flex;flex-direction:column;align-items:center;gap:6px}
+.etk{font:800 11px var(--body);letter-spacing:.08em;text-transform:uppercase;opacity:.7}
+.etstat small{font-size:12px;opacity:.8}
+.etbet{font:800 30px var(--head,var(--body));min-width:64px;padding:4px 18px;border-radius:12px;background:var(--cyan,#22d3ee);color:#04121c;line-height:1.2}
+.etbet.na{background:#ffffff14;color:inherit}
+.etconf{font:800 28px var(--head,var(--body))}
+.etconf.hi{color:#22c55e}.etconf.mid{color:#f5b301}.etconf.lo{color:#8b90a3}
+.etbar{display:block;width:80%;height:7px;border-radius:99px;background:#ffffff1c;overflow:hidden}
+.etbar u{display:block;height:100%;border-radius:99px;text-decoration:none}
+.etbar u.hi{background:#22c55e}.etbar u.mid{background:#f5b301}.etbar u.lo{background:#8b90a3}
+.etresbig{font:800 22px var(--head,var(--body));padding:6px 16px;border-radius:999px}
+.etresbig.won{background:#22c55e;color:#04220f}.etresbig.lost{background:#8b90a3;color:#fff}.etresbig.pend{background:#f5b30126;color:#f5b301}
+.ftscore{font-size:30px!important}
+@media(max-width:600px){.etstats{grid-template-columns:1fr}.etstat{flex-direction:row;justify-content:space-between;padding:12px 14px}.etbar{display:none}}
+
+/* big tables (hundreds of matches): the list scrolls inside its own box, header stays pinned, the rest of the page stays reachable */
+[data-bigtable] .tscroll{max-height:min(78vh,760px);overflow-y:auto;overflow-x:auto;overscroll-behavior:auto;scrollbar-width:thin}
+[data-bigtable] .tscroll thead th{position:sticky;top:0;z-index:2}
+
+/* tip badge with its price underneath (one pill): yellow pending, green won, gray lost */
+.pt .tip.tp2{display:inline-flex;flex-direction:column;align-items:stretch;justify-content:center;height:auto;padding:0;border-radius:12px;overflow:hidden;min-width:46px;line-height:1.15;text-align:center}
+.pt .tip.tp2 b{font:800 1em var(--body);padding:5px 12px 3px}
+.pt .tip.tp2 i{font:800 .72em var(--body);font-style:normal;padding:3px 8px 4px;background:#ffffff59;letter-spacing:.01em}
+.pt .tip.tp2.lost i{background:#00000026}
