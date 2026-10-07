@@ -31,7 +31,7 @@ h1,h2,h3{font-family:var(--display);font-weight:700;line-height:1.1;text-wrap:ba
 
 /* header */
 .top{position:sticky;top:env(safe-area-inset-top,0px);z-index:40;background:#07051a;border-bottom:1px solid var(--line)}
-.top .wrap{display:grid;grid-template-columns:48px 1fr 64px;align-items:center;height:64px}
+.top .wrap{display:grid;grid-template-columns:48px 1fr 48px;align-items:center;height:64px}
 .iconbtn{background:none;border:0;color:var(--text);cursor:pointer;padding:8px;display:grid;place-items:center;font:600 11px var(--body);gap:2px}
 .iconbtn svg{width:24px;height:24px}
 .brand{justify-self:center;display:flex;align-items:center;gap:10px;text-decoration:none;color:var(--text)}
