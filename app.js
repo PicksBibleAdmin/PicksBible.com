@@ -27,11 +27,17 @@ function flagOf(country){
   return c.toUpperCase().split("").map(function(x){return String.fromCodePoint(127397+x.charCodeAt(0))}).join("");
 }
 function lgKey(P,sport,comp,country){
-  var n=String(comp||"").toLowerCase().replace(/[^a-z0-9]/g,""), cn=String(country||"").toLowerCase();
-  for(var k in P.leagues){var l=P.leagues[k];if(l.sport===sport&&String(l.name).toLowerCase().replace(/[^a-z0-9]/g,"")===n&&(!cn||String(l.country||"").toLowerCase()===cn))return k}
-  if(cn){var any=null,cnt=0;for(var k2 in P.leagues){var l2=P.leagues[k2];if(l2.sport===sport&&String(l2.name).toLowerCase().replace(/[^a-z0-9]/g,"")===n){any=k2;cnt++}} if(cnt===1&&!/^pl_/.test(any))return any}
-  var key="db_"+sport+"_"+n.replace(/[^a-z0-9]+/g,"-");
-  P.leagues[key]={name:comp||"Other",sport:sport,flag:flagOf(country),country:country||"Other"};
+  var nrm=function(x){return String(x||"").toLowerCase().replace(/[^a-z0-9]/g,"")};
+  var cn=nrm(country), n=nrm(comp);
+  if(cn&&n.indexOf(cn)===0&&n.length>cn.length)n=n.slice(cn.length);   /* "Austria Bundesliga" -> "bundesliga" */
+  for(var k in P.leagues){var l=P.leagues[k];if(l.sport===sport&&nrm(l.name)===n&&(!cn||nrm(l.country)===cn))return k}
+  /* a league with a country is NEVER matched to another country's league of the same name (Austria vs Germany Bundesliga) */
+  var key="db_"+sport+"_"+(cn?cn+"_":"")+n;
+  if(!P.leagues[key]){
+    var nm=String(comp||"Other"), c0=String(country||"");
+    if(c0&&nm.toLowerCase().indexOf(c0.toLowerCase())===0&&nm.length>c0.length)nm=nm.slice(c0.length).replace(/^[\s:\-\u00b7]+/,"");
+    P.leagues[key]={name:nm,sport:sport,flag:flagOf(country),country:country||"Other"};
+  }
   return key;
 }
 function applyLive(P,live){
@@ -59,16 +65,16 @@ function addProp(P,p){
 function addFx(P,f,days){
   {
     var hd=String(f.kickoff||"").slice(0,10), sp=f.sport==="basketball"?"basketball":"football";
-    var cname=(f.country&&String(f.competition||"").toLowerCase().indexOf(String(f.country).toLowerCase())!==0?f.country+" ":"")+(f.competition||"");
-    if(f.et&&f.et.on&&hd)(P.home.etl[sp][hd]=P.home.etl[sp][hd]||[]).push({h:f.home,a:f.away,lg:f.competition||"",t:String(f.kickoff).slice(11,16),by:f.et.by||"PB Analyst",st:f.et.st||"",sp:sp});
-    if(f.et&&f.et.on&&hd)P.home.et[sp][hd]={h:f.home,a:f.away,lg:f.competition||"",t:String(f.kickoff).slice(11,16),by:f.et.by||"PB Analyst",st:f.et.st||((sp==="basketball"?(f.bb&&f.bb.st):(f.fb&&f.fb.st))==="won"||(sp==="basketball"?(f.bb&&f.bb.st):(f.fb&&f.fb.st))==="lost"?(sp==="basketball"?f.bb.st:f.fb.st):""),reasoning:f.et.reasoning||"",hl:f.et.hl||"",al:f.et.al||"",sp:sp,tip:(f.et.pick||(sp==="basketball"?(f.bb&&f.bb.tip):(f.fb&&f.fb.tip))||""),conf:String((sp==="basketball"?(f.bb&&f.bb.conf):(f.fb&&f.fb.conf))||"").replace("%",""),score:(sp==="basketball"?(f.bb&&f.bb.score):(f.fb&&f.fb.score))||"",odd:(function(){var x=sp==="basketball"?(f.bb||{}):(f.fb||{}),t=String(f.et.pick||x.tip||"");return t==="1"?x.o1:t==="2"?x.o2:t==="X"?x.oX:t==="1X"?x.dcOdds:""})()||""};
+    var cname=(function(){var c=String(f.country||""),k=String(f.competition||"");if(!c)return k;if(k.toLowerCase().indexOf(c.toLowerCase())===0)k=k.slice(c.length).replace(/^[\s:\-\u00b7]+/,"");return c+": "+k})();
+    if(f.et&&f.et.on&&hd)(P.home.etl[sp][hd]=P.home.etl[sp][hd]||[]).push({h:f.home,a:f.away,lg:cname,t:String(f.kickoff).slice(11,16),by:f.et.by||"PB Analyst",st:f.et.st||"",sp:sp});
+    if(f.et&&f.et.on&&hd)P.home.et[sp][hd]={h:f.home,a:f.away,lg:cname,t:String(f.kickoff).slice(11,16),by:f.et.by||"PB Analyst",st:f.et.st||((sp==="basketball"?(f.bb&&f.bb.st):(f.fb&&f.fb.st))==="won"||(sp==="basketball"?(f.bb&&f.bb.st):(f.fb&&f.fb.st))==="lost"?(sp==="basketball"?f.bb.st:f.fb.st):""),reasoning:f.et.reasoning||"",hl:f.et.hl||"",al:f.et.al||"",hc:f.hc||"",ac:f.ac||"",sp:sp,tip:(f.et.pick||(sp==="basketball"?(f.bb&&f.bb.tip):(f.fb&&f.fb.tip))||""),conf:String((sp==="basketball"?(f.bb&&f.bb.conf):(f.fb&&f.fb.conf))||"").replace("%",""),score:(sp==="basketball"?(f.bb&&f.bb.score):(f.fb&&f.fb.score))||"",odd:(function(){var x=sp==="basketball"?(f.bb||{}):(f.fb||{}),t=String(f.et.pick||x.tip||"");return t==="1"?x.o1:t==="2"?x.o2:t==="X"?x.oX:t==="1X"?x.dcOdds:""})()||""};
     if(f.bo&&f.bo.on&&hd){var bl=P.home.bo[sp][hd]=P.home.bo[sp][hd]||[];bl.push({lg:cname,t:(f.bo.st==="won"||f.bo.st==="lost")?"FT":String(f.kickoff).slice(11,16),h:f.home,a:f.away,pick:f.bo.pick||"",st:f.bo.st||"pending",sc:f.bo.score||""})}
     if(!((f.fb&&f.fb.live)||(f.bb&&f.bb.live)))return;
     if(f.sport==="basketball"){
       var bd=String(f.kickoff||"").slice(0,10), bday=days[bd]; if(!bd)return;
       var b=f.bb||{};
       var bm={lg:lgKey(P,"basketball",f.competition,f.country),t:String(f.kickoff).slice(11,16),h:f.home,a:f.away,
-        o:[b.o1||"",b.o2||""],pk:b.tip||"",tip:b.tip||"-",conf:b.conf||"",spread:b.spread||"",ts:b.totalSide||"",tl:b.totalLine||"",ps:b.ps||"",sure:!!b.sure,st:b.st||"pending",score:b.score||""};
+        o:[b.o1||"",b.o2||""],pk:b.tip||"",tip:b.tip||"-",conf:b.conf||"",spread:b.spread||"",ts:b.totalSide||"",tl:b.totalLine||"",ps:b.ps||"",sure:!!b.sure,xp:!!f.xp,st:b.st||"pending",score:b.score||""};
       (P.byDate.basketball[bd]=P.byDate.basketball[bd]||[]).push(bm);
       if(bday){var bl=P.basketball[bday];bm.featured=bl.length<6;bl.push(bm)}
       return;
@@ -77,7 +83,7 @@ function addFx(P,f,days){
     var date=String(f.kickoff||"").slice(0,10), day=days[date]; if(!date)return;
     var v=f.fb||{};
     var m={lg:lgKey(P,"football",f.competition,f.country),t:String(f.kickoff).slice(11,16),h:f.home,a:f.away,
-      o:[v.o1||"",v.oX||"",v.o2||""],pk:v.tip||"",tip:v.tip||"-",gg:v.btts||"",ggo:v.bttsOdds||"",ou:v.ou||"",ouo:v.ouOdds||"",conf:v.conf||"",to:v.tipOdds||"",dc:v.dc||"",dco:v.dcOdds||"",cs:v.cs||"",sure:!!v.sure,
+      o:[v.o1||"",v.oX||"",v.o2||""],pk:v.tip||"",tip:v.tip||"-",gg:v.btts||"",ggo:v.bttsOdds||"",ou:v.ou||"",ouo:v.ouOdds||"",conf:v.conf||"",to:v.tipOdds||"",dc:v.dc||"",dco:v.dcOdds||"",cs:v.cs||"",sure:!!v.sure,xp:!!f.xp,
       st:v.st||"pending",score:v.score||""};
     (P.byDate.football[date]=P.byDate.football[date]||[]).push(m);   /* any date: used by the calendar picker */
     if(day){var list=P.football[day];m.featured=list.length<6;list.push(m)}
@@ -132,12 +138,22 @@ var DAYS=["yesterday","today","tomorrow"];
    No picture available: neutral ball icon. Never letters / initials. */
 var NATIONS={"afghanistan":"af","albania":"al","algeria":"dz","andorra":"ad","angola":"ao","argentina":"ar","armenia":"am","australia":"au","austria":"at","azerbaijan":"az","bahrain":"bh","bangladesh":"bd","belarus":"by","belgium":"be","belize":"bz","benin":"bj","bolivia":"bo","bosnia and herzegovina":"ba","bosnia & herzegovina":"ba","botswana":"bw","brazil":"br","bulgaria":"bg","burkina faso":"bf","burundi":"bi","cambodia":"kh","cameroon":"cm","canada":"ca","cape verde":"cv","cabo verde":"cv","central african republic":"cf","chad":"td","chile":"cl","china":"cn","china pr":"cn","colombia":"co","comoros":"km","congo":"cg","dr congo":"cd","congo dr":"cd","costa rica":"cr","croatia":"hr","cuba":"cu","cyprus":"cy","czech republic":"cz","czechia":"cz","denmark":"dk","dominican republic":"do","ecuador":"ec","egypt":"eg","el salvador":"sv","england":"gb-eng","equatorial guinea":"gq","eritrea":"er","estonia":"ee","eswatini":"sz","ethiopia":"et","faroe islands":"fo","fiji":"fj","finland":"fi","france":"fr","gabon":"ga","gambia":"gm","georgia":"ge","germany":"de","ghana":"gh","gibraltar":"gi","greece":"gr","grenada":"gd","guatemala":"gt","guinea":"gn","guinea-bissau":"gw","guyana":"gy","haiti":"ht","honduras":"hn","hong kong":"hk","hungary":"hu","iceland":"is","india":"in","indonesia":"id","iran":"ir","iraq":"iq","ireland":"ie","republic of ireland":"ie","israel":"il","italy":"it","ivory coast":"ci","cote d'ivoire":"ci","côte d'ivoire":"ci","jamaica":"jm","japan":"jp","jordan":"jo","kazakhstan":"kz","kenya":"ke","kosovo":"xk","kuwait":"kw","kyrgyzstan":"kg","laos":"la","latvia":"lv","lebanon":"lb","lesotho":"ls","liberia":"lr","libya":"ly","liechtenstein":"li","lithuania":"lt","luxembourg":"lu","madagascar":"mg","malawi":"mw","malaysia":"my","maldives":"mv","mali":"ml","malta":"mt","mauritania":"mr","mauritius":"mu","mexico":"mx","moldova":"md","mongolia":"mn","montenegro":"me","morocco":"ma","mozambique":"mz","myanmar":"mm","namibia":"na","nepal":"np","netherlands":"nl","new zealand":"nz","nicaragua":"ni","niger":"ne","nigeria":"ng","north macedonia":"mk","northern ireland":"gb-nir","norway":"no","oman":"om","pakistan":"pk","palestine":"ps","panama":"pa","papua new guinea":"pg","paraguay":"py","peru":"pe","philippines":"ph","poland":"pl","portugal":"pt","puerto rico":"pr","qatar":"qa","romania":"ro","russia":"ru","rwanda":"rw","san marino":"sm","saudi arabia":"sa","scotland":"gb-sct","senegal":"sn","serbia":"rs","sierra leone":"sl","singapore":"sg","slovakia":"sk","slovenia":"si","somalia":"so","south africa":"za","south korea":"kr","korea republic":"kr","south sudan":"ss","spain":"es","sri lanka":"lk","sudan":"sd","suriname":"sr","sweden":"se","switzerland":"ch","syria":"sy","tajikistan":"tj","tanzania":"tz","thailand":"th","togo":"tg","trinidad and tobago":"tt","tunisia":"tn","turkey":"tr","türkiye":"tr","turkmenistan":"tm","uganda":"ug","ukraine":"ua","united arab emirates":"ae","uae":"ae","uruguay":"uy","usa":"us","united states":"us","uzbekistan":"uz","venezuela":"ve","vietnam":"vn","wales":"gb-wls","yemen":"ye","zambia":"zm","zimbabwe":"zw"};
 function natCode(name){var k=String(name||"").toLowerCase().replace(/\s+(w|women|u-?\d\d)$/i,"").trim();return NATIONS[k]||""}
-function teamCrest(name,logo,sp){
+var TEAM_COLORS={"sporting cp":"#00843D","sporting":"#00843D","benfica":"#E30613","porto":"#003A8F","fc porto":"#003A8F","braga":"#D61F26","manchester city":"#6CABDD","man city":"#6CABDD","manchester united":"#DA291C","man united":"#DA291C","arsenal":"#EF0107","chelsea":"#034694","liverpool":"#C8102E","tottenham":"#132257","tottenham hotspur":"#132257","newcastle":"#241F20","newcastle united":"#241F20","aston villa":"#670E36","west ham":"#7A263A","west ham united":"#7A263A","everton":"#003399","leeds":"#FFCD00","leeds united":"#FFCD00","brighton":"#0057B8","brentford":"#E30613","fulham":"#222222","crystal palace":"#1B458F","wolves":"#FDB913","wolverhampton":"#FDB913","bournemouth":"#DA291C","nottingham forest":"#DD0000","burnley":"#6C1D45","sunderland":"#EB172B","ipswich":"#0E4C92","real madrid":"#7D5BA6","barcelona":"#A50044","atletico madrid":"#CB3524","sevilla":"#D6001C","valencia":"#EE7203","villarreal":"#FDE100","real sociedad":"#0067B1","athletic bilbao":"#EE2523","athletic club":"#EE2523","real betis":"#0BB363","girona":"#CD2534","bayern munich":"#DC052D","bayern":"#DC052D","borussia dortmund":"#FDE100","dortmund":"#FDE100","bayer leverkusen":"#E32221","leverkusen":"#E32221","rb leipzig":"#DD0741","eintracht frankfurt":"#E1000F","stuttgart":"#E32219","wolfsburg":"#65B32E","juventus":"#222222","inter":"#0068A8","inter milan":"#0068A8","ac milan":"#FB090B","milan":"#FB090B","napoli":"#12A0D7","roma":"#8E1F2F","lazio":"#87D8F7","atalanta":"#1E71B8","fiorentina":"#5B2C83","psg":"#004170","paris saint-germain":"#004170","paris saint germain":"#004170","marseille":"#2FAEE0","lyon":"#1F3A93","monaco":"#E51B22","lille":"#E01E13","nice":"#CC0000","ajax":"#D2122E","psv":"#E4002B","psv eindhoven":"#E4002B","feyenoord":"#E4032D","celtic":"#16A34A","rangers":"#1B458F","salzburg":"#E30613","rb salzburg":"#E30613","sturm graz":"#222222","rapid wien":"#00843D","austria vienna":"#7D3C98","grazer ak":"#E30613","lask":"#222222","galatasaray":"#FDB913","fenerbahce":"#FFED00","besiktas":"#222222","olympiacos":"#E30613","panathinaikos":"#16A34A","club brugge":"#2563EB","anderlecht":"#6D28D9","shamrock rovers":"#16A34A","bohemians":"#B91C1C","enyimba":"#2563EB","kano pillars":"#F59E0B","rivers united":"#2563EB","remo stars":"#2563EB","plateau united":"#16A34A","lagos fc":"#4B5563","lakers":"#552583","los angeles lakers":"#552583","warriors":"#1D428A","golden state warriors":"#1D428A","celtics":"#007A33","boston celtics":"#007A33","bulls":"#CE1141","chicago bulls":"#CE1141","knicks":"#F58426","new york knicks":"#F58426","heat":"#98002E","miami heat":"#98002E","bucks":"#00471B","milwaukee bucks":"#00471B","nuggets":"#0E2240","denver nuggets":"#0E2240","suns":"#E56020","phoenix suns":"#E56020","mavericks":"#00538C","dallas mavericks":"#00538C","spurs":"#8A8D8F","san antonio spurs":"#8A8D8F","thunder":"#007AC1","oklahoma city thunder":"#007AC1","76ers":"#006BB6","philadelphia 76ers":"#006BB6","nets":"#222222","brooklyn nets":"#222222","clippers":"#C8102E","la clippers":"#C8102E","rockets":"#CE1141","houston rockets":"#CE1141","timberwolves":"#236192","minnesota timberwolves":"#236192","grizzlies":"#5D76A9","memphis grizzlies":"#5D76A9","cavaliers":"#860038","cleveland cavaliers":"#860038","pacers":"#FDBB30","indiana pacers":"#FDBB30","hawks":"#C8102E","atlanta hawks":"#C8102E","raptors":"#CE1141","toronto raptors":"#CE1141","kings":"#5A2D81","sacramento kings":"#5A2D81","magic":"#0077C0","orlando magic":"#0077C0","pelicans":"#0C2340","new orleans pelicans":"#0C2340","jazz":"#4B2E83","utah jazz":"#4B2E83","hornets":"#00788C","charlotte hornets":"#00788C","wizards":"#E31837","washington wizards":"#E31837","pistons":"#C8102E","detroit pistons":"#C8102E","blazers":"#E03A3E","portland trail blazers":"#E03A3E","trail blazers":"#E03A3E","real madrid baloncesto":"#7D5BA6"};
+function crestColor(name,color){
+  var c=String(color||"").trim(); if(c&&c.charAt(0)!=="#"&&/^[0-9a-f]{3}([0-9a-f]{3})?$/i.test(c))c="#"+c;
+  if(/^#([0-9a-f]{3}|[0-9a-f]{6})$/i.test(c))return c;
+  return TEAM_COLORS[String(name||"").toLowerCase().replace(/\s+(w|women|u-?\d\d)$/i,"").trim()]||"";
+}
+function crestInk(hex){var h=hex.replace("#","");if(h.length===3)h=h.replace(/(.)/g,"$1$1");var r=parseInt(h.substr(0,2),16),g=parseInt(h.substr(2,2),16),b=parseInt(h.substr(4,2),16);return (r*299+g*587+b*114)/1000>170?"#111":"#fff"}
+function crestInitials(name){var w=String(name||"").replace(/[^A-Za-z0-9 ]/g," ").trim().split(/\s+/).filter(Boolean);if(!w.length)return "?";return (w.length>1?w[0].charAt(0)+w[1].charAt(0):w[0].slice(0,2)).toUpperCase()}
+function teamCrest(name,logo,sp,color){
   var ball=sp==="basketball"?"&#127936;":"&#9917;", code=natCode(name), src="", cls="crest img";
   if(logo&&/^https:\/\//i.test(logo)){src=logo;cls+=" logo"}
   else if(code){src="https://flagcdn.com/w160/"+code+".png"}
-  if(!src)return '<div class="crest ball" aria-hidden="true">'+ball+'</div>';
-  return '<div class="'+cls+'" style="overflow:hidden"><img style="width:100%;height:100%;object-fit:'+(logo&&/^https:\/\//i.test(logo)?'contain':'cover')+';display:block" src="'+esc(src)+'" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.className=\'crest ball\';this.parentNode.innerHTML=\''+ball+'\'"></div>';
+  var col=crestColor(name,color);
+  var fb=col?'<div class="crest" style="background:'+col+';color:'+crestInk(col)+'" aria-hidden="true">'+esc(crestInitials(name))+'</div>':'<div class="crest ball" aria-hidden="true">'+ball+'</div>';
+  if(!src)return fb;
+  return '<div class="'+cls+'" style="overflow:hidden" data-fb="'+esc(fb)+'"><img style="width:100%;height:100%;object-fit:'+(logo&&/^https:\/\//i.test(logo)?'contain':'cover')+';display:block" src="'+esc(src)+'" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.outerHTML=this.parentNode.getAttribute(\'data-fb\')"></div>';
 }
 
 var DAYLABEL={yesterday:"Yesterday",today:"Today",tomorrow:"Tomorrow"};
@@ -291,7 +307,13 @@ wireHeaderLeaguePanel("lgOpenBtn","lgPanel","lgModalBody");
 wireHeaderLeaguePanel("lgOpenBtnBB","lgPanelBB","lgModalBodyBB","basketball");
 
 /* ---------- helpers ---------- */
-function lgName(id){return (D.leagues[id]||{name:id}).name}
+function lgName(id){
+  var l=D.leagues[id]; if(!l)return id;
+  var c=l.country, nm=String(l.name);
+  if(!c||c==="Other")return nm;
+  if(nm.toLowerCase().indexOf(String(c).toLowerCase()+":")===0)return nm;
+  return c+": "+nm;
+}
 function lgFlag(id){return (D.leagues[id]||{}).flag||""}
 function tipBadge(m){return '<span class="tip '+(m.st==="won"?"won":m.st==="lost"?"lost":"")+'" title="'+esc(m.st)+'">'+esc(m.tip)+'</span>'}
 function ring(p){return '<span class="ring" style="--p:'+(+p)+'"><b>'+(+p).toFixed(1)+'%</b></span>'}
@@ -344,21 +366,21 @@ function mobileTable(list,sport){
   var fb=sport==="football", labels=fb?["1","X","2","Tip","Conf","O/U 2.5","BTTS","CS"]:["1","2","Tip","Conf","Spread","Total","Proj."], last=null, out="";
   sortByLeague(list).forEach(function(m){
     var key=lgName(m.lg);
-    if(key!==last){last=key;out+='<tr class="lgr"><td class="n">'+esc(key)+'</td>'+labels.map(function(l){return '<td>'+l+'</td>'}).join("")+'</tr>'}
+    if(key!==last){last=key;out+='<tr class="lgr"><td class="n">'+(lgFlag(m.lg)?'<span class="fl">'+lgFlag(m.lg)+'</span>':'')+esc(key)+'</td>'+labels.map(function(l){return '<td>'+l+'</td>'}).join("")+'</tr>'}
     if(fb)out+='<tr>'+mMatch(m)+mOdd(m,0)+mOdd(m,1)+mOdd(m,2)+'<td>'+pkBadge(m)+'</td>'+mConf(m)+mX(m.ou?(m.ou==="Over"?"Over 2.5":"Under 2.5"):"",m.ouo)+mX(m.gg,m.ggo)+mX(m.cs,"")+'</tr>';
     else out+='<tr>'+mMatch(m)+mOdd(m,0)+mOdd(m,1)+'<td>'+pkBadge(m)+'</td>'+mConf(m)+mX(m.spread,"")+mX(m.ts?m.ts+(m.tl?" "+m.tl:""):"","")+mX(m.ps,"")+'</tr>';
   });
   return '<div class="tscroll mtwrap"><table class="pt mt"><tbody>'+out+'</tbody></table></div><p class="mhint">&#8646; swipe the table for '+(fb?'Over/Under, BTTS and correct score':'spread, totals and projected score')+' &#8646;</p>';
 }
 function dMatch(m){var p=String(m.score||'').split(/[-:]/),h=p[0]&&p[0].trim(),a=p[1]&&p[1].trim();return '<td class="l dm"><div class="dmi"><span class="t">'+esc(m.t)+'</span><span class="tn"><b>'+esc(m.h)+'</b>'+scoreBox(h)+'</span><span class="tn"><b>'+esc(m.a)+'</b>'+scoreBox(a)+'</span></div></td>'}
-function lgBar(name,labels){return '<tr class="lgb"><td class="n">'+esc(name)+'</td>'+labels.map(function(l){return '<td>'+esc(l)+'</td>'}).join("")+'</tr>'}
+function lgBar(name,labels,flag){return '<tr class="lgb"><td class="n">'+(flag?'<span class="fl">'+flag+'</span>':'')+esc(name)+'</td>'+labels.map(function(l){return '<td>'+esc(l)+'</td>'}).join("")+'</tr>'}
 function footballTable(list){
   if(!list.length)return '<div class="empty">No football ⚽ predictions for this day yet.</div>';
   if(PHONE.matches)return mobileTable(list,"football");
   var lbl=["Home Win (1)","Draw (X)","Away Win (2)","Tip","Confidence","Over/Under 2.5","BTTS","CS Tip"], lastL=null;
   return '<div class="tscroll bwwrap"><table class="pt bw lgbars"><tbody>'+
     sortByLeague(list).map(function(m){
-      var bar="",k=lgName(m.lg); if(k!==lastL){lastL=k;bar=lgBar(k,lbl)}
+      var bar="",k=lgName(m.lg); if(k!==lastL){lastL=k;bar=lgBar(k,lbl,lgFlag(m.lg))}
       return bar+'<tr>'+dMatch(m)+''+
         oddCell(m,0,"1")+oddCell(m,1,"X")+oddCell(m,2,"2")+'<td class="kv" data-l="Tip">'+pkBadge(m)+'</td>'+confCell(m)+
         extraPick(m.ou?(m.ou==="Over"?"Over 2.5":"Under 2.5"):"",m.ouo,"Over/Under 2.5")+extraPick(m.gg,m.ggo,"BTTS")+
@@ -373,7 +395,7 @@ function basketballTable(list){
   var lbl=["Home Win (1)","Away Win (2)","Tip","Confidence","Projected Spread","Point Total Tip","Projected Score"], lastL=null;
   return '<div class="tscroll bwwrap"><table class="pt bw bk lgbars"><tbody>'+
     sortByLeague(list).map(function(m){
-      var bar="",k=lgName(m.lg); if(k!==lastL){lastL=k;bar=lgBar(k,lbl)}
+      var bar="",k=lgName(m.lg); if(k!==lastL){lastL=k;bar=lgBar(k,lbl,lgFlag(m.lg))}
       var tot=m.ts?'<span class="xp"><b>'+esc(m.ts)+(m.tl?' '+esc(m.tl):'')+'</b></span>':'-';
       return bar+'<tr>'+dMatch(m)+''+
         bbOdd(m,0,"1")+bbOdd(m,1,"2")+'<td>'+pkBadge(m)+'</td>'+confCell(m)+'<td class="cs">'+esc(m.spread||"-")+'</td><td>'+tot+'</td><td class="cs">'+esc(m.ps||"-")+'</td>'+'</tr>';
@@ -434,12 +456,13 @@ $$("[data-bigtable]").forEach(function(el){
     }
     if(customDate){
       var ymd=customDate.getFullYear()+"-"+("0"+(customDate.getMonth()+1)).slice(-2)+"-"+("0"+customDate.getDate()).slice(-2);
-      var cl=((D.byDate&&D.byDate[sport]&&D.byDate[sport][ymd])||[]).filter(lgMatch);
+      var cl=((D.byDate&&D.byDate[sport]&&D.byDate[sport][ymd])||[]).filter(lgMatch).filter(function(m){return !expert||m.xp});
       if(cl.length){$("[data-slot=table]",el).innerHTML=sport==="football"?footballTable(cl):basketballTable(cl);return}
-      $("[data-slot=table]",el).innerHTML='<p class="note center" style="padding:28px 10px">No published predictions for this date yet. Try Yesterday, Today or Tomorrow above, or pick another date.</p>';
+      $("[data-slot=table]",el).innerHTML=expert?'<p class="note center" style="padding:28px 10px">No expert tips selected for this day yet. Try another date.</p>':'<p class="note center" style="padding:28px 10px">No published predictions for this date yet. Try Yesterday, Today or Tomorrow above, or pick another date.</p>';
       return;
     }
-    var list=D[sport][day].filter(lgMatch);
+    var list=D[sport][day].filter(lgMatch).filter(function(m){return !expert||m.xp});
+    if(expert&&!list.length){$("[data-slot=table]",el).innerHTML='<p class="note center" style="padding:28px 10px">No expert tips selected for this day yet. Try another date.</p>';return}
     $("[data-slot=table]",el).innerHTML=sport==="football"?footballTable(list):basketballTable(list);
   }
   REDRAW.push(draw);
@@ -543,7 +566,7 @@ $$("[data-home]").forEach(function(hero){
     var head='<div class="ethalf"><h3>'+(sp==="football"?"&#9917; Football":"&#127936; Basketball")+'</h3>';
     if(!v)return head+'<div class="empty">No matches available.</div></div>';
     return head+
-      '<div class="vb-main"><div>'+teamCrest(v.h,v.hl,v.sp)+'<div class="vb-team">'+esc(v.h)+'</div></div><div class="vb-mid"><strong>'+esc(v.t)+'</strong>vs<br>'+esc(v.lg)+'</div><div>'+teamCrest(v.a,v.al,v.sp)+'<div class="vb-team">'+esc(v.a)+'</div></div></div>'+
+      '<div class="vb-main"><div>'+teamCrest(v.h,v.hl,v.sp,v.hc)+'<div class="vb-team">'+esc(v.h)+'</div></div><div class="vb-mid"><strong>'+esc(v.t)+'</strong>vs<br>'+esc(v.lg)+'</div><div>'+teamCrest(v.a,v.al,v.sp,v.ac)+'<div class="vb-team">'+esc(v.a)+'</div></div></div>'+
       '<a class="etlock" href="expert-tips.html?s='+sp+'&d='+selYmd()+'" aria-label="Open the reasoning for this expert tip"><span class="lockico" aria-hidden="true">&#128274;</span><span class="locktxt">View expert tip</span></a>'+
       '<div class="vb-by"><span>EXPERT TIP BY: <b>'+esc(v.by)+'</b></span>'+(v.st==="won"||v.st==="lost"?'<span class="etres '+v.st+'">'+(v.st==="won"?"&#10003; Won":"Lost")+'</span>':'')+'<span>'+(sp==="football"?"&#9917; Football":"&#127936; Basketball")+'</span></div>'+
       '</div>';
@@ -632,7 +655,7 @@ $$("[data-analysis]").forEach(function(el){
   var tipTxt=v.tip?esc(v.tip):"";
   el.innerHTML=
    '<div class="panel anhead"><div class="crumbs"><a href="index.html">Home</a> &rsaquo; <a href="expert-tips.html">Expert Tips</a> &rsaquo; '+esc(v.h)+' vs '+esc(v.a)+'</div>'+
-   '<div class="vb-main anmatch"><div>'+teamCrest(v.h,v.hl,v.sp)+'<div class="vb-team">'+esc(v.h)+'</div></div><div class="vb-mid">'+(ft?'<strong class="ftscore">'+ft+'</strong>FT':'<strong>'+esc(v.t)+'</strong>vs')+'<br>'+esc(v.lg)+'<br>'+esc(ymd)+'</div><div>'+teamCrest(v.a,v.al,v.sp)+'<div class="vb-team">'+esc(v.a)+'</div></div></div>'+
+   '<div class="vb-main anmatch"><div>'+teamCrest(v.h,v.hl,v.sp,v.hc)+'<div class="vb-team">'+esc(v.h)+'</div></div><div class="vb-mid">'+(ft?'<strong class="ftscore">'+ft+'</strong>FT':'<strong>'+esc(v.t)+'</strong>vs')+'<br>'+esc(v.lg)+'<br>'+esc(ymd)+'</div><div>'+teamCrest(v.a,v.al,v.sp,v.ac)+'<div class="vb-team">'+esc(v.a)+'</div></div></div>'+
    '<div class="etstats">'+
     '<div class="etstat"><span class="etk">Best bet</span>'+(tipTxt?'<b class="etbet">'+tipTxt+'</b><small>'+esc(MEAN[v.tip]||"")+(v.odd?' &middot; @ '+esc(v.odd):'')+'</small>':'<b class="etbet na">&ndash;</b><small>Not posted yet</small>')+'</div>'+
     '<div class="etstat"><span class="etk">Confidence</span>'+(clv?'<b class="etconf '+ccl+'">'+esc(String(Math.round(cn)))+'%</b><i class="etmeter"><u class="'+ccl+'" style="width:'+Math.max(4,Math.min(100,cn))+'%"></u></i><small>'+clv+'</small>':'<b class="etbet na">&ndash;</b><small>Not posted yet</small>')+'</div>'+
@@ -765,7 +788,7 @@ var TIER_ICON={free:"🎯",gold:"🥇",titanium:"🔩"};
 function isNG(){return store("premCountry")==="Nigeria"}
 $$("[data-plans]").forEach(function(el){
   function drawPlans(){el.innerHTML=D.plans.map(function(p,i){var price=isNG()&&p.ngn?p.ngn:p.price;
-    return '<div class="pcard tier-'+esc(p.tier)+'"><div class="pc-head"><span class="pc-chip">'+(TIER_ICON[p.tier]||"")+' '+esc(p.name)+'</span><span class="pc-sub">'+(p.tier==="free"?"For everyone":"VIP membership")+'</span></div>'+
+    return '<div class="pcard tier-'+esc(p.tier)+'"><div class="pc-head"><span class="pc-chip">'+(TIER_ICON[p.tier]||"")+' '+esc(p.name)+'</span><span class="pc-sub">'+(p.tier==="free"?"Basic member":"VIP membership")+'</span></div>'+
       '<div class="pc-price"><b>'+esc(price)+'</b><span>'+(p.tier==="free"?"free forever":"/ month")+'</span></div>'+
       '<ul class="pc-list">'+p.perks.map(function(k){var no=k.charAt(0)==="!";return '<li class="'+(no?'no':'')+'"><b>'+(no?'&#10005;':'&#10003;')+'</b><span>'+esc(no?k.slice(1):k)+'</span></li>'}).join("")+'</ul>'+
       (p.tier==="free"?'<a class="btn ghost wide" href="predictions.html">Start free</a>':'<a class="btn wide" href="checkout.html?plan='+esc(p.tier)+'">Join '+esc(p.name)+'</a>')+'</div>'}).join("");
@@ -834,20 +857,23 @@ $$("[data-checkout]").forEach(function(root){
   Object.keys(D.countryFlags||{}).forEach(function(n){names[n]=1});
   cs.innerHTML=Object.keys(names).sort(function(x,y){return x.localeCompare(y)}).map(function(n){return '<option>'+esc(n)+'</option>'}).join("");
   var start=store("premCountry");cs.value=(start&&names[start])?start:"Nigeria";
-  var METHODS={bank:{i:"&#127974;",n:"Bank Transfer",s:"Pay from your bank app"},card:{i:"&#128179;",n:"Card",s:"Visa, Mastercard, Verve"},usdt:{i:"&#8366;",n:"USDT",s:"Crypto, TRC20 / BEP20"},binance:{i:"&#9670;",n:"Binance",s:"Pay with Binance"},momo:{i:"&#128241;",n:"Mobile Money",s:"Pay from your mobile wallet"}};
+  var METHODS={bank:{i:"&#127974;",n:"Bank Transfer",s:"Pay from your bank app"},card:{i:"&#128179;",n:"Card",s:"Visa, Mastercard, Verve"},whop:{i:"&#128142;",n:"Whop",s:"Pay on Whop checkout"},usdt:{i:"&#8366;",n:"USDT (TRC20)",s:"Crypto transfer on the TRON network"},momo:{i:"&#128241;",n:"Mobile Money",s:"Pay from your mobile wallet"},stripe:{i:"&#128179;",n:"Stripe",s:"Pay by card with Stripe"}};
+  var LIVE=(D.pay&&D.pay.live)||{usdt:true};
+  function isLive(k){return !!LIVE[k]}
   var method=null;
   function ng(){return cs.value==="Nigeria"}
-  function methodsFor(){return ng()?["bank","card","usdt","binance"]:AFR[cs.value]?["momo","bank","card","usdt","binance"]:["card","usdt","binance"]}
+  function methodsFor(){return ng()?["usdt","bank","card","stripe","whop"]:AFR[cs.value]?["usdt","card","stripe","whop","momo"]:["usdt","card","stripe","whop"]}
   function draw(){
     var price=ng()?plan.ngn:plan.price, cur=ng()?"NGN":"USD", ms=methodsFor();
-    if(ms.indexOf(method)<0)method=null;
+    if(ms.indexOf(method)<0||!isLive(method))method=null;
+    if(!method&&isLive("usdt"))method="usdt";
     $q("[data-ck-chip]").textContent=(TIER_ICON[plan.tier]||"")+" "+plan.name;
     $q("[data-ck-plan]").textContent=plan.name; $q("[data-ck-c]").textContent=cs.value; $q("[data-ck-cur]").textContent=cur; $q("[data-ck-total]").textContent=price;
     $q("[data-ck-pay]").textContent=method?METHODS[method].n:"Not selected";
     $q("[data-ck-info]").innerHTML="<b>"+esc(cs.value)+"</b>Preferred currency: "+cur;
     $q("[data-ck-psub]").textContent="Payment options available for "+cs.value+".";
-    $q("[data-ck-methods]").innerHTML=ms.map(function(k){var m=METHODS[k];return '<button type="button" class="ck-m" data-m="'+k+'" aria-pressed="'+(method===k)+'"><i aria-hidden="true">'+m.i+'</i><span>'+m.n+'<small>'+m.s+'</small></span></button>'}).join("");
-    $$("[data-m]",root).forEach(function(b){b.addEventListener("click",function(){method=b.dataset.m;draw()})});
+    $q("[data-ck-methods]").innerHTML=ms.map(function(k){var m=METHODS[k],on=isLive(k);return '<button type="button" class="ck-m'+(on?'':' off')+'" data-m="'+k+'" aria-pressed="'+(method===k)+'"'+(on?'':' disabled aria-disabled="true"')+'><i aria-hidden="true">'+m.i+'</i><span>'+m.n+'<small>'+(on?(k==="bank"?"Nigeria only. ":"")+m.s:"Temporarily unavailable")+'</small></span></button>'}).join("");
+    $$("[data-m]:not([disabled])",root).forEach(function(b){b.addEventListener("click",function(){method=b.dataset.m;draw()})});
     var sum=$q(".ck-sum"); sum.className="ckcard ck-sum tier-"+plan.tier;
   }
   cs.addEventListener("change",function(){store("premCountry",cs.value);draw()});
@@ -858,14 +884,44 @@ $$("[data-checkout]").forEach(function(root){
     if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email))return bad("Please enter a valid email address.");
     if(!method)return bad("Please choose a payment method.");
     err.hidden=true;
-    if(plan.payLink){location.href=plan.payLink;return}
-    /* no automatic checkout link yet: send the order to support on WhatsApp so it can be completed by hand */
-    var price=ng()?plan.ngn:plan.price, num=String(S.whatsapp).replace(/[^0-9]/g,"");
-    var msg="Hi PicksBible, I want to join "+plan.name+" (1 month, "+price+").\nName: "+name+"\nEmail: "+email+(wa?"\nWhatsApp: "+wa:"")+"\nCountry: "+cs.value+"\nPayment method: "+METHODS[method].n;
-    location.href="https://wa.me/"+num+"?text="+encodeURIComponent(msg);
+    var cfg=D.pay||{}, cur=ng()?"NGN":"USD", price=ng()?plan.ngn:plan.price, num=String(S.whatsapp).replace(/[^0-9]/g,"");
+    var order="Name: "+name+"\nEmail: "+email+(wa?"\nWhatsApp: "+wa:"")+"\nCountry: "+cs.value+"\nPlan: "+plan.name+" (1 month, "+price+")\nPayment method: "+METHODS[method].n;
+    function wa_(text){location.href="https://wa.me/"+num+"?text="+encodeURIComponent(text+"\n"+order)}
+    var fw=cfg.flutterwave&&cfg.flutterwave[plan.tier]&&cfg.flutterwave[plan.tier][cur], bank=cfg.bank&&cfg.bank.number?cfg.bank:null, link="";
+    if(method==="whop")link=(cfg.whop&&cfg.whop[plan.tier])||"";
+    else if(method==="stripe")link=(cfg.stripe&&cfg.stripe[plan.tier])||"";
+    else if(method==="card"||method==="momo"||(method==="bank"&&!bank))link=fw||"";
+    if(link){location.href=link;return}
+    var rows=null, warn="";
+    if(method==="usdt"&&cfg.usdt&&cfg.usdt.address){rows=[["Send","<b>"+esc(String(plan.price).replace("$",""))+" USDT</b>"],["Network","<b>"+esc("TRC20")+"</b>"],["Wallet address",'<code>'+esc(cfg.usdt.address)+'</code>',cfg.usdt.address]];warn="Send only USDT on the "+("TRC20")+" network. Sending on another network can lose your funds."}
+    else if(method==="bank"&&bank){rows=[["Amount","<b>"+esc(price)+"</b>"],["Bank","<b>"+esc(bank.bank||"")+"</b>"],["Account name","<b>"+esc(bank.name||"")+"</b>"],["Account number",'<code>'+esc(bank.number)+'</code>',bank.number]]}
+    if(!rows){wa_("Hi PicksBible, I want to join "+plan.name+". Please send me the payment details.");return}
+    var box=$q("[data-ck-pay-box]"); box.hidden=false;
+    box.innerHTML='<h2>Complete your payment</h2><dl>'+rows.map(function(r){return '<div><dt>'+r[0]+'</dt><dd>'+r[1]+(r[2]?' <button type="button" class="ck-copy" data-copy-v="'+esc(r[2])+'">Copy</button>':'')+'</dd></div>'}).join("")+'</dl>'+(warn?'<p class="ck-warn">'+esc(warn)+'</p>':'')+'<button class="btn wide" type="button" data-ck-paid>I have paid, send proof on WhatsApp</button><p class="ck-sub" style="margin:10px 0 0">After sending, tap the button and share your transaction hash or a screenshot. We activate your VIP access once we confirm it.</p>';
+    $$("[data-copy-v]",box).forEach(function(b){b.addEventListener("click",function(){var v=b.dataset.copyV;function done(){b.textContent="Copied"}if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(v).then(done,done);else done()})});
+    $q("[data-ck-paid]").addEventListener("click",function(){wa_("Hi PicksBible, I have made my payment and here is my proof.")});
+    box.scrollIntoView({behavior:"smooth",block:"center"});
   });
   draw();
 });
+/* ---------- one date button everywhere: "Select a date" + the chosen date ---------- */
+(function(){
+  var MON=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"], DOW=["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
+  function fmt(ymd){var p=String(ymd||"").split("-");if(p.length!==3)return "";var d=new Date(Date.UTC(+p[0],+p[1]-1,+p[2],12));return DOW[d.getUTCDay()]+", "+d.getUTCDate()+" "+MON[d.getUTCMonth()]}
+  var btns=$$("label.hcal");
+  btns.forEach(function(l){
+    var inp=$("input",l); if(!inp)return;
+    l.classList.add("datebtn"); l.removeAttribute("title");
+    l.innerHTML='<span class="ic" aria-hidden="true">&#128197;</span><span class="dtx"><small>Select a date</small><b data-dlbl></b></span><span class="ch" aria-hidden="true">&#9662;</span>';
+    l.appendChild(inp);
+    l.addEventListener("click",function(e){if(e.target===inp&&inp.showPicker){try{inp.showPicker()}catch(_){}}});
+  });
+  function refresh(){btns.forEach(function(l){var inp=$("input",l),b=$("[data-dlbl]",l);if(!inp||!b)return;var v=inp.value||window.__pbDay||wat(0);var t=fmt(v);if(b.textContent!==t)b.textContent=t})}
+  refresh(); setInterval(refresh,350);
+  document.addEventListener("change",function(){setTimeout(refresh,0)});
+  document.addEventListener("click",function(){setTimeout(refresh,60)});
+})();
+
 }
 loadLive(main);
 

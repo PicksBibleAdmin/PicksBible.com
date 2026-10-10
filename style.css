@@ -842,3 +842,45 @@ section[data-vipbox]+section[data-vipbox]{margin-top:14px}
 .ck-sum.tier-titanium .pc-chip{background:linear-gradient(135deg,#f1f4f8,#98a3b3);color:#1b2330}
 .ck-sum.tier-titanium .btn.wide{background:linear-gradient(135deg,#f1f4f8,#aab4c2);color:#1b2330}
 .ck-sum.tier-titanium{border-top-color:#c3ccd8}.ck-sum.tier-gold{border-top-color:#f5b301}
+
+.ck-paybox dl{margin:0 0 14px}.ck-paybox dl>div{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:8px;padding:12px 0;border-bottom:1px solid var(--line);font:500 14px var(--body)}
+.ck-paybox dt{color:var(--muted)}.ck-paybox dd{margin:0;color:#fff;display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:flex-end;max-width:100%}
+.ck-paybox code{font:600 13px "Courier New",monospace;background:#0d0a2b;border:1px solid var(--line);padding:6px 10px;border-radius:8px;word-break:break-all}
+.ck-copy{border:1px solid var(--cyan);background:none;color:var(--cyan);border-radius:999px;padding:5px 12px;font:700 12px var(--body);cursor:pointer}
+.ck-warn{margin:0 0 14px;padding:10px 12px;border-radius:8px;background:#f5b30118;border-left:3px solid #f5b301;color:#ffd978;font:600 12.5px/1.45 var(--body)}
+.ck-paybox .btn.wide{margin:0;max-width:none;width:100%;box-sizing:border-box}
+
+/* ---- one date button everywhere ("Select a date") ---- */
+.hcal.datebtn,.hcal.vcal.datebtn{flex:0 0 auto;width:auto;height:auto;display:inline-flex;align-items:center;gap:8px;background:var(--panel-2);border:1px solid #3b3290;border-radius:8px;padding:7px 12px;color:var(--text);text-transform:none;letter-spacing:0;cursor:pointer;position:relative;text-align:left;white-space:nowrap}
+.hcal.datebtn .ic{font-size:18px;line-height:1}
+.hcal.datebtn .dtx{display:grid;line-height:1.15}
+.hcal.datebtn small{font:600 10px var(--body);letter-spacing:.07em;text-transform:uppercase;color:var(--muted)}
+.hcal.datebtn b{font:800 14px var(--body);color:var(--text)}
+.hcal.datebtn .ch{color:var(--cyan);font-size:12px}
+.hcal.datebtn:hover{border-color:var(--cyan)}
+.hdates .hcal.datebtn{padding:6px 12px}
+@media(max-width:700px){.hcal.datebtn{padding:6px 9px;gap:6px}.hcal.datebtn b{font-size:12.5px}.hcal.datebtn small{font-size:9px}.hcal.datebtn .ch{display:none}.hdates .hcal.datebtn{flex:0 0 auto;padding:5px 8px}.bar .hcal.datebtn{margin-left:auto}}
+/* league bar flag */
+.pt.bw tr.lgb td.n .fl,.pt.mt tr.lgr td.n .fl{margin-right:8px;font-size:1.15em}
+.pt.bw tr.lgb td.n{white-space:nowrap}
+.pt.mt tr.lgr td.n{white-space:normal;text-overflow:clip;line-height:1.15;font-size:10.5px;padding-block:4px}
+.pt.mt tr.lgr td.n .fl{margin-right:5px;font-size:1em}
+
+/* payment methods: live vs temporarily unavailable */
+.ck-m.off{opacity:.5;filter:grayscale(.6);cursor:not-allowed}
+.ck-m.off small{color:var(--muted)}
+.pm-list span.first{border:2px solid var(--cyan);background:#0e2a3a;box-shadow:0 0 0 3px #22d3ee22}
+.pm-list span.off{opacity:.5;filter:grayscale(.6)}
+.pm-list em{display:block;font:600 11px var(--body);font-style:normal;color:var(--muted)}
+.pm-list span.first em{color:#7ee7f7}
+.pm-list u.av{font:800 10px var(--body);letter-spacing:.06em;text-transform:uppercase;background:var(--cyan);color:var(--cyan-ink);padding:2px 7px;border-radius:99px;text-decoration:none;margin-left:6px}
+
+.hcal.vcal.datebtn{border:1px solid #3b3290;background:var(--panel-2)}
+@media(max-width:700px){
+  .hdates{flex-wrap:wrap}
+  .hdates>button{flex:1 1 28%}
+  .hdates .hcal.datebtn{flex:1 1 55%;justify-content:center;order:5}
+  .hdates .hprem{order:6;flex:0 0 auto}
+  .bar .hcal.datebtn,.bar .hcal.vcal.datebtn{flex:0 0 auto;margin:2px auto 0}
+  .viphead .hcal.vcal.datebtn{padding:5px 8px}
+}

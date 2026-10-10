@@ -74,6 +74,11 @@ th{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.04
 #tab-home td select{background:#0b0818;border:1px solid var(--line);color:inherit;border-radius:8px;padding:7px 9px}
 #tab-home td input.odd,#tab-home td input.cs{width:90px}
 select.res.won{color:#22c55e;border-color:#22c55e}select.res.lost{color:#ef4444;border-color:#ef4444}
+.datebar .dbarrow{background:var(--panel);color:var(--text);border:1px solid var(--line);border-radius:8px;padding:10px 13px;font:inherit;font-weight:700;cursor:pointer}.datebar .dbarrow:hover{border-color:var(--cyan)}
+.datebtn{position:relative;display:inline-flex;align-items:center;gap:8px;background:var(--panel-2);border:1px solid #3b3290;color:var(--text);padding:7px 14px;border-radius:8px;cursor:pointer;margin:0;text-transform:none;letter-spacing:0;font-size:14px}
+.datebtn:hover{border-color:var(--cyan)}.datebtn .ic{font-size:18px}.datebtn .dtx{display:grid;line-height:1.15}.datebtn small{font-size:10px;letter-spacing:.07em;text-transform:uppercase;color:var(--muted)}.datebtn b{font-size:14px}.datebtn .ch{color:var(--cyan);font-size:12px}
+.datebtn input{position:absolute;inset:0;opacity:0;width:100%;height:100%;cursor:pointer;padding:0;border:0}
+.clr{display:flex;gap:8px;align-items:center}.clr .dot{width:34px;height:34px;border-radius:50%;border:2px solid #fff3;flex:none;display:grid;place-items:center;font:700 12px Barlow,system-ui;color:#fff}.clr input{flex:1;min-width:0}.clrhint{font-size:11.5px;color:var(--muted);margin-top:4px}
 .viewbar{display:flex;align-items:center;gap:10px;margin:0 0 14px;flex-wrap:wrap}.viewbar label{margin:0}.viewbar select{width:auto;min-width:260px}
 tr.gmhead td{padding:8px 8px 8px 22px;border-bottom:1px solid var(--line);color:var(--muted)}
 tr.lghead td{background:#ffffff0d;padding:10px 8px;border-bottom:1px solid var(--line)}
@@ -142,7 +147,7 @@ tr.lghead td{background:#ffffff0d;padding:10px 8px;border-bottom:1px solid var(-
   <button hidden role="tab" data-tab="published" aria-selected="false">Picks &amp; results</button>
   <button role="tab" data-tab="data" aria-selected="false">Data</button>
 </nav>
-<div class="viewbar"><label for="viewMode">Showing</label><select id="viewMode"><option value="current">Current matches (hidden 24 hours after kick-off)</option><option value="past">Past matches (archive, older than 24 hours)</option><option value="all">All matches</option></select><input id="viewSearch" type="search" placeholder="Search any match, past or current" autocomplete="off" style="min-width:240px"><span class="muted" id="viewNote"></span></div>
+<div class="viewbar datebar"><button type="button" class="dbarrow" id="dPrev" aria-label="Previous day">&#9664;</button><label class="datebtn" title="Select a date"><span class="ic" aria-hidden="true">&#128197;</span><span class="dtx"><small>Select a date</small><b id="dLbl"></b></span><span class="ch" aria-hidden="true">&#9662;</span><input type="date" id="viewDate" aria-label="Select a date"></label><button type="button" class="dbarrow" id="dNext" aria-label="Next day">&#9654;</button><button type="button" class="dbarrow" id="dToday">Today</button><span class="muted" id="viewNote" style="font-weight:700"></span><input id="viewSearch" type="search" placeholder="Search any match on any date" autocomplete="off" style="min-width:240px;flex:1"></div>
 
 <!-- FIXTURES -->
 <section id="tab-fixtures">
@@ -167,6 +172,8 @@ tr.lghead td{background:#ffffff0d;padding:10px 8px;border-bottom:1px solid var(-
         <div><label>Home team</label><input name="home" required></div>
         <div><label>Away team</label><input name="away" required></div>
         <div><label>Kick-off</label><input name="kickoff" type="datetime-local" required></div>
+        <div><label>Home team colour (hex)</label><div class="clr"><span class="dot" id="hDot">??</span><input name="hc" id="hcIn" placeholder="e.g. #E30613" maxlength="7" autocomplete="off"></div><div class="clrhint" id="hHint"></div></div>
+        <div><label>Away team colour (hex)</label><div class="clr"><span class="dot" id="aDot">??</span><input name="ac" id="acIn" placeholder="e.g. #E30613" maxlength="7" autocomplete="off"></div><div class="clrhint" id="aHint"></div></div>
       </div>
             <div class="row end">
         <button type="button" class="btn ghost" disabled title="Connected in the backend step">Load fixtures from API</button>
@@ -188,7 +195,7 @@ tr.lghead td{background:#ffffff0d;padding:10px 8px;border-bottom:1px solid var(-
     <h2>Football table <span class="muted" id="fbCount"></span></h2>
     <p class="note">One row per football fixture (add fixtures in tab 1). Switch <b>Sure</b> on for the matches your analysts hand-pick for the home page "Sure predictions" box (max 10 per day). Enter the odds for 1, X and 2, choose your <b>Tip</b> (1, X, 2, 1X, X2 or 12; for 1X, X2 and 12 type the bookmaker price in the small box that appears under the Tip, for 1, X and 2 the price fills itself in), then your <b>GG/NG</b> and <b>Over/Under 2.5</b> picks with their odds, add a correct-score tip, and switch the match <b>Live</b>. Changes save automatically.</p>
     <div class="tbl"><table class="ft">
-      <thead><tr><th>Time</th><th>Competition</th><th>Home</th><th>Away</th><th>1</th><th>X</th><th>2</th><th>Tip</th><th>Confidence %</th><th>Over / Under 2.5</th><th>BTTS</th><th>Double chance</th><th>CS tip</th><th>Result</th><th>Sure</th><th>Live</th></tr></thead>
+      <thead><tr><th>Time</th><th>Competition</th><th>Home</th><th>Away</th><th>1</th><th>X</th><th>2</th><th>Tip</th><th>Confidence %</th><th>Over / Under 2.5</th><th>BTTS</th><th>Double chance</th><th>CS tip</th><th>Result</th><th>Sure</th><th>⭐ Expert tip</th><th>Live</th></tr></thead>
       <tbody id="fbBody"></tbody>
     </table></div>
   </div>
@@ -200,7 +207,7 @@ tr.lghead td{background:#ffffff0d;padding:10px 8px;border-bottom:1px solid var(-
     <h2>Basketball table <span class="muted" id="bbCount"></span></h2>
     <p class="note">One row per basketball fixture (add fixtures in tab 1, choose Basketball). Switch <b>Sure</b> on for the games your analysts hand-pick for the home page "Sure predictions" box (max 10 per day). Enter the odds for Home and Away, choose your <b>Tip</b> (1 or 2), the <b>projected spread</b> (e.g. -6.5 or +20.5), the <b>point total tip</b> (Over/Under and the line) and the <b>projected score</b>, then switch the game <b>Live</b>. Changes save automatically.</p>
     <div class="tbl"><table class="ft">
-      <thead><tr><th>Time</th><th>Competition</th><th>Home</th><th>Away</th><th>Home win (1)</th><th>Away win (2)</th><th>Tip</th><th>Confidence %</th><th>Projected spread</th><th>Point total tip</th><th>Projected score</th><th>Result</th><th>Sure</th><th>Live</th></tr></thead>
+      <thead><tr><th>Time</th><th>Competition</th><th>Home</th><th>Away</th><th>Home win (1)</th><th>Away win (2)</th><th>Tip</th><th>Confidence %</th><th>Projected spread</th><th>Point total tip</th><th>Projected score</th><th>Result</th><th>Sure</th><th>⭐ Expert tip</th><th>Live</th></tr></thead>
       <tbody id="bbBody"></tbody>
     </table></div>
   </div>
@@ -510,7 +517,7 @@ async function onSignedIn(user){
 function showTab(name){
   document.querySelectorAll("nav.tabs button").forEach(b=>b.setAttribute("aria-selected", b.dataset.tab===name));
   ["fixtures","fbtable","bbtable","bbprops","home","results","picks","published","data"].forEach(t=>$("#tab-"+t).hidden = t!==name);
-  { const vb=document.querySelector(".viewbar"); if(vb) vb.style.display = name==="results" ? "none" : ""; }   /* the Showing / search bar does not apply to the Results tab */
+  { const vb=document.querySelector(".viewbar"); if(vb) vb.style.display = ["fixtures","fbtable","bbtable","bbprops"].includes(name) ? "" : "none"; }   /* the Showing / search bar does not apply to the Results tab */
 }
 document.querySelectorAll("nav.tabs button").forEach(b=>b.onclick=()=>{ if(b.dataset.tab==="picks") resetPick(); showTab(b.dataset.tab); });
 
@@ -521,7 +528,7 @@ const LG = window.PB_LEAGUES || {football:[],basketball:[],top:{football:[],bask
 let sport = "football";
 function setLeague(country, league){
   fxForm.country.value = country||""; fxForm.competition.value = league||"";
-  $("#lgBtn").textContent = league ? `${country} · ${league} ▾` : "🌍 Select A League ▾";
+  $("#lgBtn").textContent = league ? `${country}: ${league} ▾` : "🌍 Select A League ▾";
 }
 let editingId = null;
 function setSport(sp){
@@ -532,14 +539,14 @@ function setSport(sp){
   setLeague("",""); buildPanel(""); closePanel();
 }
 function groupHtml(key, badge, label, leagues, top){
-  return `<div class="lggroup${top?" lgtop":""}"><button type="button" class="lgcountry" data-key="${esc(key)}" aria-expanded="false"><span class="badge">${esc(badge)}</span><span class="lgname">${esc(label)}</span><span class="toggle">+</span></button><div class="lgsub" hidden>${leagues.map(([c,l])=>`<button type="button" class="lgleague" data-c="${esc(c)}" data-l="${esc(l)}"><span>${esc(l)}</span><span>${sport==="football"?"⚽":"🏀"}</span></button>`).join("")}</div></div>`;
+  return `<div class="lggroup${top?" lgtop":""}"><button type="button" class="lgcountry" data-key="${esc(key)}" aria-expanded="false"><span class="badge">${esc(badge)}</span><span class="lgname">${esc(label)}</span><span class="toggle">+</span></button><div class="lgsub" hidden>${leagues.map(([c,l])=>`<button type="button" class="lgleague" data-c="${esc(c)}" data-l="${esc(l)}"><span>${esc(c)}: ${esc(l)}</span><span>${sport==="football"?"⚽":"🏀"}</span></button>`).join("")}</div></div>`;
 }
 const norm = t => String(t).normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase();
 function buildPanel(q){
   q = norm(q.trim()); let html = "";
   const match = (c,l) => !q || norm(c).includes(q) || norm(l).includes(q);
   if(!q && LG.top[sport]?.length) html += groupHtml("__top__","⭐","Top League",LG.top[sport],true);
-  for(const g of LG[sport]){
+  for(const g of [...LG[sport]].sort((x,y)=>String(x.c).localeCompare(String(y.c),undefined,{sensitivity:"base"}))){
     const rows = g.l.filter(l=>match(g.c,l)).map(l=>[g.c,l]);
     if(rows.length) html += groupHtml(g.c, g.code, g.c, rows, false);
   }
@@ -569,22 +576,40 @@ $("#lgBody").onclick = e => {
 document.addEventListener("click", e => { if(!$("#lgPanel").hidden && !$("#lgPanel").contains(e.target)) closePanel(); });
 document.addEventListener("keydown", e => { if(e.key==="Escape") closePanel(); });
 document.querySelectorAll(".seg button").forEach(b=>b.onclick=()=>setSport(b.dataset.sport));
-const compLabel = f => f.country ? `${f.country} · ${f.competition}` : (f.competition||"");
+const TEAM_COLORS = {"sporting cp":"#00843D","sporting":"#00843D","benfica":"#E30613","porto":"#003A8F","fc porto":"#003A8F","braga":"#D61F26","manchester city":"#6CABDD","man city":"#6CABDD","manchester united":"#DA291C","man united":"#DA291C","arsenal":"#EF0107","chelsea":"#034694","liverpool":"#C8102E","tottenham":"#132257","tottenham hotspur":"#132257","newcastle":"#241F20","newcastle united":"#241F20","aston villa":"#670E36","west ham":"#7A263A","west ham united":"#7A263A","everton":"#003399","leeds":"#FFCD00","leeds united":"#FFCD00","brighton":"#0057B8","brentford":"#E30613","fulham":"#222222","crystal palace":"#1B458F","wolves":"#FDB913","wolverhampton":"#FDB913","bournemouth":"#DA291C","nottingham forest":"#DD0000","burnley":"#6C1D45","sunderland":"#EB172B","ipswich":"#0E4C92","real madrid":"#7D5BA6","barcelona":"#A50044","atletico madrid":"#CB3524","sevilla":"#D6001C","valencia":"#EE7203","villarreal":"#FDE100","real sociedad":"#0067B1","athletic bilbao":"#EE2523","athletic club":"#EE2523","real betis":"#0BB363","girona":"#CD2534","bayern munich":"#DC052D","bayern":"#DC052D","borussia dortmund":"#FDE100","dortmund":"#FDE100","bayer leverkusen":"#E32221","leverkusen":"#E32221","rb leipzig":"#DD0741","eintracht frankfurt":"#E1000F","stuttgart":"#E32219","wolfsburg":"#65B32E","juventus":"#222222","inter":"#0068A8","inter milan":"#0068A8","ac milan":"#FB090B","milan":"#FB090B","napoli":"#12A0D7","roma":"#8E1F2F","lazio":"#87D8F7","atalanta":"#1E71B8","fiorentina":"#5B2C83","psg":"#004170","paris saint-germain":"#004170","paris saint germain":"#004170","marseille":"#2FAEE0","lyon":"#1F3A93","monaco":"#E51B22","lille":"#E01E13","nice":"#CC0000","ajax":"#D2122E","psv":"#E4002B","psv eindhoven":"#E4002B","feyenoord":"#E4032D","celtic":"#16A34A","rangers":"#1B458F","salzburg":"#E30613","rb salzburg":"#E30613","sturm graz":"#222222","rapid wien":"#00843D","austria vienna":"#7D3C98","grazer ak":"#E30613","lask":"#222222","galatasaray":"#FDB913","fenerbahce":"#FFED00","besiktas":"#222222","olympiacos":"#E30613","panathinaikos":"#16A34A","club brugge":"#2563EB","anderlecht":"#6D28D9","shamrock rovers":"#16A34A","bohemians":"#B91C1C","enyimba":"#2563EB","kano pillars":"#F59E0B","rivers united":"#2563EB","remo stars":"#2563EB","plateau united":"#16A34A","lagos fc":"#4B5563","lakers":"#552583","los angeles lakers":"#552583","warriors":"#1D428A","golden state warriors":"#1D428A","celtics":"#007A33","boston celtics":"#007A33","bulls":"#CE1141","chicago bulls":"#CE1141","knicks":"#F58426","new york knicks":"#F58426","heat":"#98002E","miami heat":"#98002E","bucks":"#00471B","milwaukee bucks":"#00471B","nuggets":"#0E2240","denver nuggets":"#0E2240","suns":"#E56020","phoenix suns":"#E56020","mavericks":"#00538C","dallas mavericks":"#00538C","spurs":"#8A8D8F","san antonio spurs":"#8A8D8F","thunder":"#007AC1","oklahoma city thunder":"#007AC1","76ers":"#006BB6","philadelphia 76ers":"#006BB6","nets":"#222222","brooklyn nets":"#222222","clippers":"#C8102E","la clippers":"#C8102E","rockets":"#CE1141","houston rockets":"#CE1141","timberwolves":"#236192","minnesota timberwolves":"#236192","grizzlies":"#5D76A9","memphis grizzlies":"#5D76A9","cavaliers":"#860038","cleveland cavaliers":"#860038","pacers":"#FDBB30","indiana pacers":"#FDBB30","hawks":"#C8102E","atlanta hawks":"#C8102E","raptors":"#CE1141","toronto raptors":"#CE1141","kings":"#5A2D81","sacramento kings":"#5A2D81","magic":"#0077C0","orlando magic":"#0077C0","pelicans":"#0C2340","new orleans pelicans":"#0C2340","jazz":"#4B2E83","utah jazz":"#4B2E83","hornets":"#00788C","charlotte hornets":"#00788C","wizards":"#E31837","washington wizards":"#E31837","pistons":"#C8102E","detroit pistons":"#C8102E","blazers":"#E03A3E","portland trail blazers":"#E03A3E","trail blazers":"#E03A3E","real madrid baloncesto":"#7D5BA6"};
+const HEXRE = /^#([0-9a-f]{3}|[0-9a-f]{6})$/i;
+const normHex = v => { v=String(v||"").trim(); if(v && v[0]!=="#") v="#"+v; return HEXRE.test(v)?v.toUpperCase():""; };
+const teamKey = n => String(n||"").toLowerCase().replace(/\s+(w|women|u-?\d\d)$/i,"").trim();
+const colorOf = name => { const k=teamKey(name); if(!k) return ""; for(const f of (db.fixtures||[])){ if(f.hc && teamKey(f.home)===k) return f.hc; if(f.ac && teamKey(f.away)===k) return f.ac; } return TEAM_COLORS[k] || ""; };
+const initialsOf = n => { const w=String(n||"").replace(/[^A-Za-z0-9 ]/g," ").trim().split(/\s+/).filter(Boolean); if(!w.length) return "??"; return (w.length>1?w[0][0]+w[1][0]:w[0].slice(0,2)).toUpperCase(); };
+function syncColor(side){
+  const name = fxForm[side==="h"?"home":"away"].value, inp = fxForm[side==="h"?"hc":"ac"], dot = $("#"+side+"Dot"), hint = $("#"+side+"Hint");
+  const typed = normHex(inp.value), auto = colorOf(name), col = typed || auto;
+  dot.style.background = col || "#4b5563"; dot.textContent = col ? initialsOf(name) : "??";
+  const h=col.replace("#",""), hh=h.length===3?h.replace(/(.)/g,"$1$1"):h; dot.style.color = col && (parseInt(hh.substr(0,2),16)*299+parseInt(hh.substr(2,2),16)*587+parseInt(hh.substr(4,2),16)*114)/1000>170 ? "#111" : "#fff";
+  hint.textContent = typed ? "Custom colour. It is remembered for this team." : auto ? "Found automatically" : (name ? "No colour on file. Type a hex code and it is remembered." : "");
+  hint.style.color = typed||auto ? "var(--won)" : "var(--pend)";
+}
+["home","away","hc","ac"].forEach(n => fxForm[n].addEventListener("input", () => { syncColor("h"); syncColor("a"); }));
+let lastKickDefault = "";
+function applyKickoffDefault(){ if(editingId) return; const v=fxForm.kickoff.value; if(!v || v===lastKickDefault){ lastKickDefault = viewDate+"T12:00"; fxForm.kickoff.value = lastKickDefault; } }
+const compLabel = f => { const c=String(f.country||""), k=String(f.competition||""); if(!c) return k; if(k.toLowerCase().startsWith(c.toLowerCase()+":")) return k; return `${c}: ${k}`; };
 
 fxForm.onsubmit = e => {
   e.preventDefault();
   const f = Object.fromEntries(new FormData(fxForm));
   if(!f.competition) return toast("Select a league first");
+  f.hc = normHex(f.hc) || colorOf(f.home) || ""; f.ac = normHex(f.ac) || colorOf(f.away) || "";
   if(editingId){
     const x = db.fixtures.find(q=>q.id===editingId);
-    if(x){ x.country=f.country; x.competition=f.competition; x.home=f.home; x.away=f.away; x.kickoff=f.kickoff; }
+    if(x){ x.country=f.country; x.competition=f.competition; x.home=f.home; x.away=f.away; x.kickoff=f.kickoff; x.hc=f.hc; x.ac=f.ac; }
     stopEdit(); commit(); toast("Fixture updated"); return;
   }
   db.fixtures.push({id:uid(), ...f});
-  fxForm.reset(); setSport(sport); commit(); toast("Fixture added");
+  fxForm.reset(); setSport(sport); syncColor("h"); syncColor("a"); applyKickoffDefault(); commit(); toast("Fixture added");
 };
 function stopEdit(){
-  editingId = null; fxForm.reset(); setSport(sport);
+  editingId = null; fxForm.reset(); setSport(sport); syncColor("h"); syncColor("a"); applyKickoffDefault();
   $("#fxSubmit").textContent = "Add fixture"; $("#fxCancel").hidden = true; $("#fxEditing").hidden = true;
 }
 $("#fxCancel").onclick = stopEdit;
@@ -592,7 +617,7 @@ function editFixture(id){
   const f = db.fixtures.find(x=>x.id===id); if(!f) return;
   editingId = null; setSport(f.sport); editingId = id;
   setLeague(f.country, f.competition);
-  fxForm.home.value = f.home; fxForm.away.value = f.away; fxForm.kickoff.value = f.kickoff;
+  fxForm.home.value = f.home; fxForm.away.value = f.away; fxForm.kickoff.value = f.kickoff; fxForm.hc.value = f.hc||""; fxForm.ac.value = f.ac||""; syncColor("h"); syncColor("a");
   $("#fxSubmit").textContent = "Save changes"; $("#fxCancel").hidden = false;
   const n = $("#fxEditing"); n.hidden = false; n.innerHTML = "Editing: <b>"+esc(f.home)+" v "+esc(f.away)+"</b>. Change the league, teams or kick-off, then press Save changes. Your odds and tips are kept.";
   showTab("fixtures"); window.scrollTo({top:0,behavior:"smooth"});
@@ -613,7 +638,10 @@ const dmon = iso => { const d=new Date(iso); return isNaN(d)?"":d.toLocaleDateSt
 const oddIn = (key,v) => `<td><input class="odd" type="number" step="0.01" min="1" data-f="${key}" value="${esc(v[key])}" placeholder="-"></td>`;
 const watDay = o => { const t = new Date(new Intl.DateTimeFormat("en-CA",{timeZone:"Africa/Lagos"}).format(new Date())+"T12:00:00Z"); t.setUTCDate(t.getUTCDate()+o); return t.toISOString().slice(0,10); };
 const HIDE_AFTER_HOURS = 24;   /* a match leaves the working lists this many hours after kick-off (it stays in the database / Past view) */
-const inView = f => { const q=($("#viewSearch").value||"").trim().toLowerCase(); if(q) return (f.home+" "+f.away+" "+(f.competition||"")+" "+(f.country||"")).toLowerCase().includes(q); const m=$("#viewMode").value; if(m==="all") return true; const t=new Date(f.kickoff).getTime(), old=!isNaN(t) && t < Date.now()-HIDE_AFTER_HOURS*36e5; return m==="past" ? old : !old; };
+let viewDate = watDay(0);
+const inView = f => { const q=($("#viewSearch").value||"").trim().toLowerCase(); if(q) return (f.home+" "+f.away+" "+(f.competition||"")+" "+(f.country||"")).toLowerCase().includes(q); return String(f.kickoff||"").slice(0,10)===viewDate; };
+const fmtDay = ymd => { const d=new Date(ymd+"T12:00:00Z"); return isNaN(d)?ymd:d.toLocaleDateString("en-GB",{weekday:"short",day:"numeric",month:"short",year:"numeric",timeZone:"UTC"}); };
+const shiftDay = (ymd,n) => { const d=new Date(ymd+"T12:00:00Z"); d.setUTCDate(d.getUTCDate()+n); return d.toISOString().slice(0,10); };
 const lgSort = (a,b) => ((a.country||"")+"|"+(a.competition||"")).localeCompare((b.country||"")+"|"+(b.competition||"")) || a.kickoff.localeCompare(b.kickoff);
 const lgHead = (f,n,cols,emoji) => `<tr class="lghead"><td colspan="${cols}">${emoji} <b>${esc(compLabel(f))}</b> <span class="muted">(${n})</span></td></tr>`;
 function leagueGrouped(rows, cols, emoji, rowFn){
@@ -624,11 +652,11 @@ function leagueGrouped(rows, cols, emoji, rowFn){
 function renderFb(){
   const rows = db.fixtures.filter(f=>f.sport==="football"&&inView(f)).sort(lgSort);
   $("#fbCount").textContent = rows.length?`(${rows.length})`:"";
-  $("#fbBody").innerHTML = rows.length ? leagueGrouped(rows,16,"⚽",f=>{
+  $("#fbBody").innerHTML = rows.length ? leagueGrouped(rows,17,"⚽",f=>{
     const v=fbOf(f);
     return `<tr data-id="${f.id}">
       <td class="t">${esc(hhmm(f.kickoff))}<br><small>${esc(dmon(f.kickoff))}</small> <button type="button" class="btn ghost sm" data-edtime title="Edit date and time">Edit</button></td>
-      <td class="lg">${esc(f.competition)}<br><small>${esc(f.country||"")}</small></td>
+      <td class="lg">${esc(compLabel(f))}</td>
       <td class="tm"><b>${esc(f.home)}</b></td><td class="tm"><b>${esc(f.away)}</b></td>
       ${oddIn("o1",v)}${oddIn("oX",v)}${oddIn("o2",v)}
       <td><select data-f="tip" class="tipsel"><option value="">-</option>${["1","X","2","1X","X2","12"].map(k=>`<option ${v.tip===k?"selected":""}>${k}</option>`).join("")}</select>${["1X","X2","12"].includes(v.tip)?`<br><input class="odd" data-f="tipOdds" value="${esc(v.tipOdds||"")}" placeholder="odds" title="Bookmaker price for ${esc(v.tip)}" style="margin-top:4px">`:`<br><small class="muted">odds auto</small>`}</td>
@@ -643,8 +671,9 @@ function renderFb(){
       <td><select data-f="st"><option value="">pending</option><option value="won" ${v.st==="won"?"selected":""}>won</option><option value="lost" ${v.st==="lost"?"selected":""}>lost</option></select>
           <input class="cs" data-f="score" value="${esc(v.score)}" placeholder="2-1" maxlength="9"></td>
       <td><label class="sw"><input type="checkbox" data-f="sure" ${v.sure?"checked":""}><i></i></label></td>
+      <td><label class="sw"><input type="checkbox" data-f="xp" ${f.xp?"checked":""}><i></i></label></td>
       <td><label class="sw"><input type="checkbox" data-f="live" ${v.live?"checked":""}><i></i></label></td></tr>`;
-  }) : `<tr><td colspan="16" class="empty">No football fixtures yet. Add one in tab 1 (choose Football).</td></tr>`;
+  }) : `<tr><td colspan="17" class="empty">No football fixtures yet. Add one in tab 1 (choose Football).</td></tr>`;
 }
 /* ============ BASKETBALL TABLE ============ */
 const bbDefaults = () => ({o1:"",o2:"",tip:"",conf:"",spread:"",totalSide:"",totalLine:"",ps:"",st:"",score:"",sure:false,live:false});
@@ -652,11 +681,11 @@ const bbOf = f => Object.assign(bbDefaults(), f.bb||{});
 function renderBb(){
   const rows = db.fixtures.filter(f=>f.sport==="basketball"&&inView(f)).sort(lgSort);
   $("#bbCount").textContent = rows.length?`(${rows.length})`:"";
-  $("#bbBody").innerHTML = rows.length ? leagueGrouped(rows,14,"🏀",f=>{
+  $("#bbBody").innerHTML = rows.length ? leagueGrouped(rows,15,"🏀",f=>{
     const v=bbOf(f);
     return `<tr data-id="${f.id}">
       <td class="t">${esc(hhmm(f.kickoff))}<br><small>${esc(dmon(f.kickoff))}</small> <button type="button" class="btn ghost sm" data-edtime title="Edit date and time">Edit</button></td>
-      <td class="lg">${esc(f.competition)}<br><small>${esc(f.country||"")}</small></td>
+      <td class="lg">${esc(compLabel(f))}</td>
       <td class="tm"><b>${esc(f.home)}</b></td><td class="tm"><b>${esc(f.away)}</b></td>
       ${oddIn("o1",v)}${oddIn("o2",v)}
       <td><select data-f="tip" class="tipsel"><option value="">-</option>${["1","2"].map(k=>`<option ${v.tip===k?"selected":""}>${k}</option>`).join("")}</select></td>
@@ -668,8 +697,9 @@ function renderBb(){
       <td><select data-f="st"><option value="">pending</option><option value="won" ${v.st==="won"?"selected":""}>won</option><option value="lost" ${v.st==="lost"?"selected":""}>lost</option></select>
           <input class="cs" data-f="score" value="${esc(v.score)}" placeholder="2-1" maxlength="9"></td>
       <td><label class="sw"><input type="checkbox" data-f="sure" ${v.sure?"checked":""}><i></i></label></td>
+      <td><label class="sw"><input type="checkbox" data-f="xp" ${f.xp?"checked":""}><i></i></label></td>
       <td><label class="sw"><input type="checkbox" data-f="live" ${v.live?"checked":""}><i></i></label></td></tr>`;
-  }) : `<tr><td colspan="14" class="empty">No basketball fixtures yet. Add one in tab 1 (choose Basketball).</td></tr>`;
+  }) : `<tr><td colspan="15" class="empty">No basketball fixtures yet. Add one in tab 1 (choose Basketball).</td></tr>`;
 }
 $("#bbBody").addEventListener("change", e => {
   const el=e.target, tr=el.closest("tr"); if(!tr||!el.dataset.f) return;
@@ -679,6 +709,7 @@ $("#bbBody").addEventListener("change", e => {
     const day=String(f.kickoff).slice(0,10), box=x=>x.sport==="basketball"?(x.bb||{}):(x.fb||{});
     if(db.fixtures.filter(x=>x.id!==f.id && x.sport===f.sport && String(x.kickoff).slice(0,10)===day && box(x).sure).length>=10){ toast("Maximum 10 Sure predictions per sport per day. Untick one first."); el.checked=false; return; }
   }
+  if(el.dataset.f==="xp"){ f.xp = el.checked; Store.save(db); $("#stats").textContent = statsText(); toast(el.checked?"Added to Expert Tips":"Removed from Expert Tips"); return; }
   f.bb = bbOf(f);
   f.bb[el.dataset.f] = el.type==="checkbox" ? el.checked : el.value.trim();
   Store.save(db); $("#stats").textContent = statsText();
@@ -691,6 +722,7 @@ $("#fbBody").addEventListener("change", e => {
     const day=String(f.kickoff).slice(0,10), box=x=>x.sport==="basketball"?(x.bb||{}):(x.fb||{});
     if(db.fixtures.filter(x=>x.id!==f.id && x.sport===f.sport && String(x.kickoff).slice(0,10)===day && box(x).sure).length>=10){ toast("Maximum 10 Sure predictions per sport per day. Untick one first."); el.checked=false; return; }
   }
+  if(el.dataset.f==="xp"){ f.xp = el.checked; Store.save(db); $("#stats").textContent = statsText(); toast(el.checked?"Added to Expert Tips":"Removed from Expert Tips"); return; }
   f.fb = fbOf(f);
   f.fb[el.dataset.f] = el.type==="checkbox" ? el.checked : el.value.trim();
   if(el.dataset.f==="tip"){ f.fb.tipOdds=""; Store.save(db); $("#stats").textContent = statsText(); renderFb(); return; }
@@ -740,7 +772,11 @@ function renderHome(){
   }
   $("#vpBody").innerHTML = h;
 }
-$("#viewMode").onchange = render; $("#viewSearch").oninput = render;
+function setViewDate(ymd){ if(!ymd) return; viewDate = ymd; $("#viewDate").value = ymd; $("#dLbl").textContent = fmtDay(ymd); if(typeof applyKickoffDefault==="function") applyKickoffDefault(); render(); }
+$("#viewDate").onchange = e => setViewDate(e.target.value);
+$("#dPrev").onclick = () => setViewDate(shiftDay(viewDate,-1)); $("#dNext").onclick = () => setViewDate(shiftDay(viewDate,1)); $("#dToday").onclick = () => setViewDate(watDay(0));
+$("#viewDate").addEventListener("click", e => { try{ e.target.showPicker && e.target.showPicker(); }catch(_){} });
+$("#viewSearch").oninput = render;
 $("#hbDate").onchange = renderHome; $("#vpMonth").onchange = renderHome; 
 function hbLimitOk(f,g){
   const day=String(f.kickoff).slice(0,10), lim = g==="et"?1:5;
@@ -1032,10 +1068,11 @@ document.querySelectorAll("[data-rsday]").forEach(b=>b.onclick=()=>{ $("#rsDate"
 
 /* ============ RENDER ============ */
 function render(){
+  applyKickoffDefault(); syncColor("h"); syncColor("a");
   $("#stats").textContent = statsText(); renderFb(); renderBb(); renderProps(); renderHome(); renderResults();
   const fxs = db.fixtures.filter(inView).sort((a,b)=>a.kickoff.localeCompare(b.kickoff));
   $("#fxCount").textContent = fxs.length?`(${fxs.length})`:"";
-  { const older = db.fixtures.filter(f=>!inView(f)).length; $("#viewNote").textContent = (older && !$("#viewSearch").value.trim()) ? `${older} other match${older===1?"":"es"} stored, hidden from this view` : ""; }
+  { const q=$("#viewSearch").value.trim(); $("#viewNote").textContent = q ? `${fxs.length} match${fxs.length===1?"":"es"} found` : `${fxs.length} match${fxs.length===1?"":"es"} on this date`; $("#dLbl").textContent = fmtDay(viewDate); $("#viewDate").value = viewDate; }
   const gk = f => (f.sport==="football"?"0":"1")+"|"+(f.country||"")+"|"+(f.competition||"");
   fxs.sort((a,b)=>gk(a).localeCompare(gk(b)) || a.kickoff.localeCompare(b.kickoff));
   const cnt = {}; fxs.forEach(f=>{ cnt[gk(f)] = (cnt[gk(f)]||0)+1; });
