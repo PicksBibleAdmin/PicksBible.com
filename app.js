@@ -314,6 +314,7 @@ function lgName(id){
   if(nm.toLowerCase().indexOf(String(c).toLowerCase()+":")===0)return nm;
   return c+": "+nm;
 }
+function flagByLabel(lbl){var c=String(lbl||"").split(":")[0].trim(),k,f="";for(k in D.leagues){var l=D.leagues[k];if(l.country===c&&l.flag){f=l.flag;break}}return f||flagOf(c)||""}
 function lgFlag(id){return (D.leagues[id]||{}).flag||""}
 function tipBadge(m){return '<span class="tip '+(m.st==="won"?"won":m.st==="lost"?"lost":"")+'" title="'+esc(m.st)+'">'+esc(m.tip)+'</span>'}
 function ring(p){return '<span class="ring" style="--p:'+(+p)+'"><b>'+(+p).toFixed(1)+'%</b></span>'}
@@ -421,6 +422,12 @@ $$("[data-featured]").forEach(function(el){
   draw();
 });
 
+/* keep the chosen date (and sport) in the address bar so a refresh or shared link returns to the same view */
+function urlDay(){var v=new URLSearchParams(location.search).get("date");if(!/^\d{4}-\d{2}-\d{2}$/.test(v||""))return null;if(v<wat(-30)||v>wat(30))return null;return v}
+function urlSport(){var v=new URLSearchParams(location.search).get("sp");return v==="basketball"||v==="football"?v:null}
+function putUrl(ymd,sp){try{var u=new URL(location.href);if(ymd&&ymd!==wat(0))u.searchParams.set("date",ymd);else u.searchParams.delete("date");if(sp)u.searchParams.set("sp",sp);history.replaceState(null,"",u.pathname+u.search+u.hash)}catch(e){}}
+function applyUrlDay(st){var v=urlDay();if(!v)return;if(v===wat(-1))st.day="yesterday";else if(v===wat(0))st.day="today";else if(v===wat(1))st.day="tomorrow";else{var p=v.split("-");st.custom=new Date(+p[0],+p[1]-1,+p[2])}}
+
 /* big table with sport toggle, day switch, calendar date picker and league accordion filter */
 $$("[data-bigtable]").forEach(function(el){
   var fixed=el.dataset.sport||"";
@@ -429,11 +436,13 @@ $$("[data-bigtable]").forEach(function(el){
   var hash=(location.hash||"").slice(1);
   var league=D.leagues[hash]?hash:"";
   if(league&&!fixed)sport=D.leagues[league].sport;
+  if(!fixed&&urlSport())sport=urlSport();
   /* a league can be a real league code, or a country placeholder from the picker (no fixtures yet under that exact code) -> then match by country */
   function lgInfo(code){if(D.leagues[code])return D.leagues[code];for(var c in LG_COUNTRIES)for(var i=0;i<LG_COUNTRIES[c].length;i++)if(LG_COUNTRIES[c][i].code===code)return {name:LG_COUNTRIES[c][i].name,country:c,sport:LG_COUNTRIES[c][i].sport,ph:true};return null}
   function lgMatch(m){if(!league)return true;if(D.leagues[league])return m.lg===league;var i=lgInfo(league);return !!i&&(D.leagues[m.lg]||{}).country===i.country}
   var title=$("[data-slot=title]",el);
   var customDate=null; /* a Date the calendar picked that isn't yesterday/today/tomorrow */
+  (function(){var st={day:day,custom:null};applyUrlDay(st);day=st.day;customDate=st.custom})();
   var propsWrap=el.nextElementSibling;
   if(!propsWrap||!propsWrap.hasAttribute("data-props-wrap"))propsWrap=null;
 
@@ -441,6 +450,7 @@ $$("[data-bigtable]").forEach(function(el){
   function draw(){
     window.__pbSport=sport;document.dispatchEvent(new CustomEvent("pb:sport",{detail:sport}));
     window.__pbDay=customDate?ymdOf(customDate):wat({yesterday:-1,today:0,tomorrow:1}[day]);document.dispatchEvent(new CustomEvent("pb:day",{detail:window.__pbDay}));
+    putUrl(window.__pbDay,sport);
     $$(".toggle button[data-sport]",el).forEach(function(b){b.setAttribute("aria-pressed",String(b.dataset.sport===sport))});
     $$(".tabs button",el).forEach(function(b){b.setAttribute("aria-pressed",String(!customDate&&b.dataset.day===day))});
     var lgBtn=$("[data-lgopen]",el);
@@ -555,7 +565,8 @@ function makeVIP(vipbox,getSel){
 }
 
 $$("[data-home]").forEach(function(hero){
-  var sport="football", day="today", customDate=null;
+  var sport=urlSport()||"football", day="today", customDate=null;
+  (function(){var st={day:day,custom:null};applyUrlDay(st);day=st.day;customDate=st.custom})();
   var sure=$("[data-sure]"), botd=$("[data-botd]"), propsWrap=$("[data-props-wrap]"), et=$("[data-experttip]"), vipbox=$("[data-vipbox]"), vipboxes=$$("[data-vipbox]");
   var MON=["January","February","March","April","May","June","July","August","September","October","November","December"];
   function selYmd(){return customDate?ymdOf(customDate):wat({yesterday:-1,today:0,tomorrow:1}[day])}
@@ -566,7 +577,7 @@ $$("[data-home]").forEach(function(hero){
     var head='<div class="ethalf"><h3>'+(sp==="football"?"&#9917; Football":"&#127936; Basketball")+'</h3>';
     if(!v)return head+'<div class="empty">No matches available.</div></div>';
     return head+
-      '<div class="vb-main"><div>'+teamCrest(v.h,v.hl,v.sp,v.hc)+'<div class="vb-team">'+esc(v.h)+'</div></div><div class="vb-mid"><strong>'+esc(v.t)+'</strong>vs<br>'+esc(v.lg)+'</div><div>'+teamCrest(v.a,v.al,v.sp,v.ac)+'<div class="vb-team">'+esc(v.a)+'</div></div></div>'+
+      '<div class="vb-lg"><span class="fl">'+flagByLabel(v.lg)+'</span>'+esc(v.lg)+'</div><div class="vb-main"><div class="vb-t">'+teamCrest(v.h,v.hl,v.sp,v.hc)+'<div class="vb-team">'+esc(v.h)+'</div></div><div class="vb-mid"><strong>'+esc(v.t)+'</strong><span class="vs">VS</span></div><div class="vb-t">'+teamCrest(v.a,v.al,v.sp,v.ac)+'<div class="vb-team">'+esc(v.a)+'</div></div></div>'+
       '<a class="etlock" href="expert-tips.html?s='+sp+'&d='+selYmd()+'" aria-label="Open the reasoning for this expert tip"><span class="lockico" aria-hidden="true">&#128274;</span><span class="locktxt">View expert tip</span></a>'+
       '<div class="vb-by"><span>EXPERT TIP BY: <b>'+esc(v.by)+'</b></span>'+(v.st==="won"||v.st==="lost"?'<span class="etres '+v.st+'">'+(v.st==="won"?"&#10003; Won":"Lost")+'</span>':'')+'<span>'+(sp==="football"?"&#9917; Football":"&#127936; Basketball")+'</span></div>'+
       '</div>';
@@ -587,7 +598,8 @@ $$("[data-home]").forEach(function(hero){
     $$("[data-bsport]",botd).forEach(function(b){b.setAttribute("aria-pressed",String(b.dataset.bsport===sport))});
     var rows=getBO(sport,selYmd()).slice(0,5);
     $("[data-botdlist]",botd).innerHTML=rows.length?rows.map(function(r){
-      return '<div class="bdrow"><div class="bdlg">'+esc(r.lg)+'</div><div class="bdmain"><span class="bdt">'+esc(r.t)+'</span><span class="bdm"><b>'+esc(r.h)+'</b>'+(r.sc?'<i>'+esc(r.sc)+'</i>':'<i>vs</i>')+'<b>'+esc(r.a)+'</b></span><span class="bdpick '+(r.st==="won"?"won":r.st==="lost"?"lost":"")+'">'+esc(r.pick)+'</span></div></div>';
+      var pk=esc(r.pick), st=r.st==="won"?"won":r.st==="lost"?"lost":"";
+      return '<div class="bdrow"><div class="bdt">'+esc(r.t)+'</div><div class="bdc"><div class="bdlg"><span class="fl">'+flagByLabel(r.lg)+'</span>'+esc(r.lg)+'</div><div class="bdm"><b>'+esc(r.h)+'</b><i>'+(r.sc?esc(r.sc):'VS')+'</i><b>'+esc(r.a)+'</b></div></div><div class="bdpk"><small>'+(st==="won"?"WON":st==="lost"?"LOST":"TIP")+'</small><span class="bdpick '+st+'">'+pk+'</span></div></div>';
     }).join(""):'<div class="empty">No matches available.</div>';
   }
   $$("[data-bsport]",botd).forEach(function(b){b.addEventListener("click",function(){setSport(b.dataset.bsport)})});
@@ -621,7 +633,7 @@ $$("[data-home]").forEach(function(hero){
     $$("[data-ssport]",sure).forEach(function(b){b.setAttribute("aria-pressed",String(b.dataset.ssport===sport))});
     $$("[data-hday]",hero).forEach(function(b){b.setAttribute("aria-pressed",String(!customDate&&b.dataset.hday===day))});
   }
-  function drawAll(){syncHero();drawET();drawBO();drawVIP();drawSure();window.__pbSport=sport;document.dispatchEvent(new CustomEvent("pb:sport",{detail:sport}));window.__pbDay=selYmd();document.dispatchEvent(new CustomEvent("pb:day",{detail:window.__pbDay}))}
+  function drawAll(){putUrl(selYmd(),sport);syncHero();drawET();drawBO();drawVIP();drawSure();window.__pbSport=sport;document.dispatchEvent(new CustomEvent("pb:sport",{detail:sport}));window.__pbDay=selYmd();document.dispatchEvent(new CustomEvent("pb:day",{detail:window.__pbDay}))}
   $$("[data-ssport]",sure).forEach(function(b){b.addEventListener("click",function(){setSport(b.dataset.ssport)})});
   $$("[data-hday]",hero).forEach(function(b){b.addEventListener("click",function(){
     day=b.dataset.hday;customDate=null;var c=$("[data-hcal]",hero);if(c)c.value="";if(vcal)vcal.value="";
@@ -631,6 +643,7 @@ $$("[data-home]").forEach(function(hero){
   if(cal)cal.addEventListener("change",function(){
     if(!cal.value){customDate=null}else{var p=cal.value.split("-");customDate=new Date(+p[0],+p[1]-1,+p[2]);vip.to(customDate);if(vcal)vcal.value=cal.value}
     drawAll()});
+  if(customDate){var cv=ymdOf(customDate);if(cal)cal.value=cv;vcal.value=cv;vip.to(customDate)}else{vip.toYmd(selYmd())}
   drawAll();REDRAW.push(drawAll);
 });
 
@@ -886,7 +899,9 @@ $$("[data-checkout]").forEach(function(root){
     err.hidden=true;
     var cfg=D.pay||{}, cur=ng()?"NGN":"USD", price=ng()?plan.ngn:plan.price, num=String(S.whatsapp).replace(/[^0-9]/g,"");
     var order="Name: "+name+"\nEmail: "+email+(wa?"\nWhatsApp: "+wa:"")+"\nCountry: "+cs.value+"\nPlan: "+plan.name+" (1 month, "+price+")\nPayment method: "+METHODS[method].n;
-    function wa_(text){location.href="https://wa.me/"+num+"?text="+encodeURIComponent(text+"\n"+order)}
+    function wa_(text){location.href="https://api.whatsapp.com/send/?phone="+num+"&text="+encodeURIComponent(text+"\n"+order)}
+    if(method==="bank"){wa_("Hi PicksBible, I want to join "+plan.name+". Please send me the payment details.");return}
+    if(method==="usdt"){location.href="usdt-payment.html?plan="+encodeURIComponent(plan.tier)+"&n="+encodeURIComponent(name)+"&e="+encodeURIComponent(email);return}
     var fw=cfg.flutterwave&&cfg.flutterwave[plan.tier]&&cfg.flutterwave[plan.tier][cur], bank=cfg.bank&&cfg.bank.number?cfg.bank:null, link="";
     if(method==="whop")link=(cfg.whop&&cfg.whop[plan.tier])||"";
     else if(method==="stripe")link=(cfg.stripe&&cfg.stripe[plan.tier])||"";
@@ -912,7 +927,7 @@ $$("[data-checkout]").forEach(function(root){
   btns.forEach(function(l){
     var inp=$("input",l); if(!inp)return;
     l.classList.add("datebtn"); l.removeAttribute("title");
-    l.innerHTML='<span class="ic" aria-hidden="true">&#128197;</span><span class="dtx"><small>Select a date</small><b data-dlbl></b></span><span class="ch" aria-hidden="true">&#9662;</span>';
+    l.innerHTML='<span class="ic" aria-hidden="true"><svg class="cal17" viewBox="0 0 34 34" width="22" height="22" aria-hidden="true"><rect x="3" y="6" width="28" height="25" rx="5" fill="#fff"/><path d="M3 11a5 5 0 015-5h18a5 5 0 015 5v3H3z" fill="#ef4444"/><rect x="9" y="2" width="3" height="7" rx="1.5" fill="#cbd5e1"/><rect x="22" y="2" width="3" height="7" rx="1.5" fill="#cbd5e1"/><text x="17" y="27" text-anchor="middle" font-family="Arial,sans-serif" font-weight="800" font-size="13" fill="#1f2937">17</text></svg></span><span class="dtx"><small>Select a date</small><b data-dlbl></b></span><span class="ch" aria-hidden="true">&#9662;</span>';
     l.appendChild(inp);
     l.addEventListener("click",function(e){if(e.target===inp&&inp.showPicker){try{inp.showPicker()}catch(_){}}});
   });
@@ -924,6 +939,37 @@ $$("[data-checkout]").forEach(function(root){
 
 }
 loadLive(main);
+
+/* ---------- flag emoji -> flag pictures (Windows desktop cannot draw emoji flags) ---------- */
+(function(){
+  var RE=/(?:\uD83C[\uDDE6-\uDDFF]){2}|\uD83C\uDFF4(?:\uDB40[\uDC61-\uDC7A])+\uDB40\uDC7F/g;
+  function code(m){
+    if(m.charCodeAt(1)===0xDFF4){var t="";for(var i=2;i<m.length-2;i+=2)t+=String.fromCharCode(m.charCodeAt(i+1)-0xDC00);return t.slice(0,2)+"-"+t.slice(2)}
+    return String.fromCharCode(97+m.charCodeAt(1)-0xDDE6)+String.fromCharCode(97+m.charCodeAt(3)-0xDDE6);
+  }
+  function conv(root){
+    var w=document.createTreeWalker(root,NodeFilter.SHOW_TEXT,null),list=[],n;
+    while((n=w.nextNode())){var p=n.parentNode&&n.parentNode.nodeName;if(p==="SCRIPT"||p==="STYLE"||p==="TEXTAREA"||p==="OPTION"||p==="TITLE")continue;RE.lastIndex=0;if(RE.test(n.nodeValue))list.push(n)}
+    list.forEach(function(n){
+      var txt=n.nodeValue,frag=document.createDocumentFragment(),last=0,m;RE.lastIndex=0;
+      while((m=RE.exec(txt))){
+        if(m.index>last)frag.appendChild(document.createTextNode(txt.slice(last,m.index)));
+        var c=code(m[0]),img=document.createElement("img");
+        img.className="flg";img.alt=c.slice(0,2).toUpperCase();img.width=20;img.height=14;img.loading="lazy";img.decoding="async";
+        img.src="https://flagcdn.com/w40/"+c+".png";img.srcset="https://flagcdn.com/w80/"+c+".png 2x";
+        img.onerror=function(){var s=document.createElement("span");s.textContent=this.alt;s.className="flg-t";if(this.parentNode)this.parentNode.replaceChild(s,this)};
+        frag.appendChild(img);last=m.index+m[0].length;
+      }
+      if(last<txt.length)frag.appendChild(document.createTextNode(txt.slice(last)));
+      n.parentNode.replaceChild(frag,n);
+    });
+  }
+  var queued=false;
+  function run(){queued=false;conv(document.body)}
+  function q(){if(!queued){queued=true;(window.requestAnimationFrame||setTimeout)(run)}}
+  function start(){run();new MutationObserver(q).observe(document.body,{childList:true,subtree:true,characterData:true})}
+  if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",start);else start();
+})();
 
 })();
 
