@@ -14,6 +14,8 @@ window.PB = {
     domain: "picksbible.com",
     email: "picksbiblesupport@gmail.com",
     whatsapp: "+234 912 982 3308",
+    /* Google Analytics 4 Measurement ID, looks like G-ABC123XYZ. Leave "" to keep analytics switched off. */
+    ga: "G-YWBG3JQDKC",
     /* paste your Formspree form link here (https://formspree.io/f/xxxxxxxx) so Contact Us messages arrive in your inbox; while empty, the form opens the visitor's email app instead */
     formEndpoint: "",
     telegram: "https://t.me/picksbibleforum",
