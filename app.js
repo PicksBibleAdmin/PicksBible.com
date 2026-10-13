@@ -555,7 +555,7 @@ function makeVIP(vipbox,getSel){
       return '<div class="vcol'+(x.ymd===sel?" sel":"")+(x.ymd===today?" today":"")+'" data-ymd="'+x.ymd+'"><span class="vdow">'+dow+'</span><b class="vday">'+x.d+'</b><span class="vodds">'+(x.odds?esc(x.odds):'&ndash;')+'</span><span class="voddsl">odds</span>'+mark+'</div>';
     }).join("");
     $("[data-vipmonth]",vipbox).textContent=MON[M]+" "+Y;
-    $("[data-vipstat]",vipbox).innerHTML=(won+lost)?'<span class="vw"><b>'+won+'</b> won</span><span class="vl"><b>'+lost+'</b> lost</span>':'No results yet';
+    $("[data-vipstat]",vipbox).innerHTML='';
     var target=$(".vcol.sel",wrap)||$(".vcol.today",wrap);
     if(target)wrap.scrollLeft=Math.max(0,target.offsetLeft-wrap.clientWidth/2+target.offsetWidth/2);
   }
@@ -939,6 +939,23 @@ $$("[data-checkout]").forEach(function(root){
 
 }
 loadLive(main);
+
+/* ---------- Google Analytics 4 (switched on by site.ga in data.js) + the three events that matter ---------- */
+(function(){
+  var id=window.PB&&PB.site&&PB.site.ga; if(!id||!/^G-[A-Z0-9]+$/i.test(id))return;
+  if(!window.__gaLoaded){window.__gaLoaded=true; window.dataLayer=window.dataLayer||[]; window.gtag=function(){dataLayer.push(arguments)};
+  var sc=document.createElement("script"); sc.async=true; sc.src="https://www.googletagmanager.com/gtag/js?id="+encodeURIComponent(id); document.head.appendChild(sc);
+  gtag("js",new Date()); gtag("config",id,{anonymize_ip:true});}
+  var q=new URLSearchParams(location.search);
+  if(/usdt-payment\.html$/.test(location.pathname))gtag("event","view_usdt_payment",{plan:q.get("plan")||""});
+  document.addEventListener("click",function(e){
+    var t=e.target.closest&&e.target.closest("[data-ck-go],[data-up-wa],[data-plan-pick],a[href*='checkout.html']");if(!t)return;
+    var plan=q.get("plan")||t.getAttribute("data-plan-pick")||"";
+    if(t.hasAttribute("data-ck-go"))gtag("event","continue_to_payment",{plan:plan});
+    else if(t.hasAttribute("data-up-wa"))gtag("event","whatsapp_proof_click",{plan:plan});
+    else gtag("event","choose_plan",{plan:plan});
+  },true);
+})();
 
 /* ---------- flag emoji -> flag pictures (Windows desktop cannot draw emoji flags) ---------- */
 (function(){

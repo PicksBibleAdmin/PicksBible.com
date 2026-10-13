@@ -377,3 +377,11 @@ window.PB = {
 
   ]
 };
+
+/* ---- Google Analytics 4: loads from this file so it works on every page. Set site.ga above. ---- */
+(function(){
+  var id=window.PB&&PB.site&&PB.site.ga; if(!id||!/^G-[A-Z0-9]+$/i.test(id)||window.__gaLoaded)return;
+  window.__gaLoaded=true; window.dataLayer=window.dataLayer||[]; window.gtag=function(){dataLayer.push(arguments)};
+  var s=document.createElement("script"); s.async=true; s.src="https://www.googletagmanager.com/gtag/js?id="+encodeURIComponent(id); document.head.appendChild(s);
+  gtag("js",new Date()); gtag("config",id,{anonymize_ip:true});
+})();
