@@ -1,0 +1,1121 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>PicksBible Admin</title>
+<link rel="icon" href="img/pb-logo.png">
+<style>
+:root{--bg:#0b0820;--panel:#141032;--panel-2:#1b1642;--line:#2c2660;--cyan:#22d3ee;--cyan-ink:#062a33;--purple:#6d28d9;--text:#eef0ff;--muted:#a3a8d6;--won:#22c55e;--lost:#ef4444;--pend:#f5b301;--r:10px}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font:15px/1.45 Barlow,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+.wrap{max-width:1180px;margin:0 auto;padding:0 16px}
+header{background:var(--panel);border-bottom:1px solid var(--line)}
+header .wrap{display:flex;align-items:center;gap:12px;padding-top:12px;padding-bottom:12px}
+header img{height:32px}
+header h1{font-size:18px;margin:0;flex:1}
+header h1 small{color:var(--muted);font-weight:500;margin-left:6px}
+nav.tabs{display:flex;gap:6px;flex-wrap:wrap;margin:16px 0}
+nav.tabs button{background:var(--panel);color:var(--muted);border:1px solid var(--line);padding:9px 14px;border-radius:8px;cursor:pointer;font:inherit;font-weight:600}
+nav.tabs button[aria-selected=true]{background:var(--purple);color:#fff;border-color:var(--purple)}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:16px;margin-bottom:16px}
+.card h2{margin:0 0 12px;font-size:17px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px}
+label{display:block;font-size:12px;color:var(--muted);margin-bottom:4px;text-transform:uppercase;letter-spacing:.04em}
+input,select,textarea{width:100%;background:var(--bg);color:var(--text);border:1px solid var(--line);border-radius:8px;padding:10px;font:inherit}
+textarea{min-height:80px;resize:vertical}
+input:focus,select:focus,textarea:focus{outline:2px solid var(--cyan);outline-offset:1px}
+.btn{background:var(--cyan);color:var(--cyan-ink);border:0;border-radius:8px;padding:10px 16px;font:inherit;font-weight:700;cursor:pointer}
+.btn.ghost{background:transparent;color:var(--text);border:1px solid var(--line)}
+.btn.danger{background:transparent;color:var(--lost);border:1px solid var(--lost)}
+.btn.sm{padding:5px 10px;font-size:13px}
+.inv{position:absolute;left:0;right:0;top:100%;z-index:20;max-height:320px;overflow:auto;border:1px solid var(--line);border-radius:10px;background:#120f2e;box-shadow:0 12px 30px #000a;margin-top:4px}.hbseg{display:flex;border:1px solid var(--line);border-radius:999px;overflow:hidden;background:var(--bg)}.hbseg button{flex:1;border:0;background:transparent;color:var(--muted);padding:10px 16px;font:inherit;font-weight:700;cursor:pointer}.hbseg button[aria-pressed=true]{background:#e9fbff;color:var(--cyan-ink)}.hbseg button.bb[aria-pressed=true]{background:#fff1e0;color:#7c2d12}.inv .ih{position:sticky;top:0;background:#1a1740;padding:6px 12px;font-size:12px;font-weight:700;color:var(--muted,#9aa)}.inv .ir{display:flex;align-items:center;gap:10px;padding:6px 12px;border-top:1px solid var(--line);font-size:13px}.inv .ir .m{flex:1}.inv .ir .t{width:48px;font-weight:700}.inv .ir.done{opacity:.5}.inv .em{padding:14px;color:var(--muted,#9aa)}
+.btn[disabled]{opacity:.45;cursor:not-allowed}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.row.end{justify-content:flex-end;margin-top:12px}
+.muted{color:var(--muted)}
+.note{background:var(--panel-2);border-left:3px solid var(--pend);padding:10px 12px;border-radius:6px;font-size:13px;color:var(--muted);margin:0 0 14px}
+table{width:100%;border-collapse:collapse}
+th,td{text-align:left;padding:9px 8px;border-bottom:1px solid var(--line);vertical-align:top;font-size:14px}
+th{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
+.tbl{overflow-x:auto}
+.tag{display:inline-block;padding:2px 8px;border-radius:99px;font-size:12px;font-weight:700;background:var(--panel-2);border:1px solid var(--line)}
+.tag.won{color:var(--won);border-color:var(--won)}.tag.lost{color:var(--lost);border-color:var(--lost)}
+.tag.pending,.tag.draft{color:var(--pend);border-color:var(--pend)}.tag.live{color:var(--cyan);border-color:var(--cyan)}
+.tag.prem{background:var(--purple);border-color:var(--purple)}
+.empty{text-align:center;color:var(--muted);padding:24px}
+#login{max-width:360px;margin:12vh auto;padding:0 16px}
+
+/* sport toggle + league picker (mirrors the site's Select A League panel) */
+.seg{display:flex;border:1px solid var(--line);border-radius:999px;overflow:hidden;background:var(--bg)}
+.seg button{flex:1;border:0;background:transparent;color:var(--muted);padding:10px 12px;font:inherit;font-weight:700;cursor:pointer}
+.seg button[aria-pressed=true]{background:#e9fbff;color:var(--cyan-ink)}
+.seg button.bb[aria-pressed=true]{background:#fff1e0;color:#7c2d12}
+.lgwrap{position:relative}
+.lg-select{width:100%;text-align:left;background:#e9fbff;color:var(--cyan-ink);border:1px solid #0e7490;border-radius:999px;font:600 14px inherit;padding:10px 16px;cursor:pointer}
+.lg-select.bb{background:#fff1e0;border-color:#c2410c;color:#7c2d12}
+.lgpanel{position:absolute;top:calc(100% + 8px);left:0;z-index:30;background:#fbfbfd;color:#0b1734;border-radius:10px;width:min(400px,92vw);max-height:62vh;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 16px 40px #0007;border:1px solid #e4e6f0}
+.lgsearch{padding:10px;border-bottom:1px solid #eef0f6;background:#fff}
+.lgsearch input{background:#f3f4fa;color:#0b1734;border:1px solid #dfe2ee;border-radius:8px;padding:9px 10px}
+.lgpanel-body{overflow-y:auto;padding:4px 0}
+.lggroup{border-bottom:1px solid #eef0f6}.lggroup:last-child{border-bottom:0}
+.lgtop{background:#f7f8fc}
+.lgcountry{display:flex;align-items:center;gap:12px;background:none;border:0;color:#0b1734;text-align:left;padding:12px 16px;cursor:pointer;font:700 15px inherit;width:100%}
+.lgcountry:hover{background:#f3f4fa}
+.lgcountry .badge{font-size:13px;font-weight:800;width:24px;text-align:center;color:#2d4373;flex-shrink:0}
+.lgcountry .lgname{flex:1}
+.lgcountry .toggle{color:#16a34a;font:800 18px inherit;width:18px;text-align:center}
+.lgsub{display:flex;flex-direction:column;padding:0 0 6px}
+.lgleague{display:flex;justify-content:space-between;gap:10px;background:none;border:0;color:#2d4373;text-align:left;padding:9px 16px 9px 52px;cursor:pointer;font:600 13.5px inherit;width:100%}
+.lgleague:hover{background:#eef2fb;color:#1447e6}
+.lgempty{padding:18px;text-align:center;color:#6b7290;font-size:14px}
+
+/* spreadsheet-style tables: no vertical column lines */
+#tab-home td input:not([type=checkbox]){background:#0b0818;border:1px solid var(--line);color:inherit;border-radius:8px;padding:7px 9px;font:inherit}
+#tab-home td select{background:#0b0818;border:1px solid var(--line);color:inherit;border-radius:8px;padding:7px 9px}
+#tab-home td input.odd,#tab-home td input.cs{width:90px}
+select.res.won{color:#22c55e;border-color:#22c55e}select.res.lost{color:#ef4444;border-color:#ef4444}
+.datebar .dbarrow{background:var(--panel);color:var(--text);border:1px solid var(--line);border-radius:8px;padding:10px 13px;font:inherit;font-weight:700;cursor:pointer}.datebar .dbarrow:hover{border-color:var(--cyan)}
+.datebtn{position:relative;display:inline-flex;align-items:center;gap:8px;background:var(--panel-2);border:1px solid #3b3290;color:var(--text);padding:7px 14px;border-radius:8px;cursor:pointer;margin:0;text-transform:none;letter-spacing:0;font-size:14px}
+.datebtn:hover{border-color:var(--cyan)}.datebtn .ic{font-size:18px}.datebtn .dtx{display:grid;line-height:1.15}.datebtn small{font-size:10px;letter-spacing:.07em;text-transform:uppercase;color:var(--muted)}.datebtn b{font-size:14px}.datebtn .ch{color:var(--cyan);font-size:12px}
+.datebtn input{position:absolute;inset:0;opacity:0;width:100%;height:100%;cursor:pointer;padding:0;border:0}
+.clr{display:flex;gap:8px;align-items:center}.clr .dot{width:34px;height:34px;border-radius:50%;border:2px solid #fff3;flex:none;display:grid;place-items:center;font:700 12px Barlow,system-ui;color:#fff}.clr input{flex:1;min-width:0}.clrhint{font-size:11.5px;color:var(--muted);margin-top:4px}
+.viewbar{display:flex;align-items:center;gap:10px;margin:0 0 14px;flex-wrap:wrap}.viewbar label{margin:0}.viewbar select{width:auto;min-width:260px}
+tr.gmhead td{padding:8px 8px 8px 22px;border-bottom:1px solid var(--line);color:var(--muted)}
+tr.lghead td{background:#ffffff0d;padding:10px 8px;border-bottom:1px solid var(--line)}
+.ft{border-collapse:collapse;min-width:100%}
+.ft th,.ft td{border:0;border-bottom:1px solid var(--line);padding:8px 5px;white-space:nowrap;text-align:left}
+.ft th{font-size:11px}
+.ft tbody tr:hover{background:#ffffff08}
+.ft td.lg,.ft td.tm{white-space:normal;min-width:110px;max-width:150px}
+.ft td.tm{min-width:90px;max-width:130px}
+.ft .t{font-weight:700}.ft .t small,.ft .lg small{color:var(--muted);font-weight:400}
+.ft input,.ft select{width:auto;padding:6px 6px;background:transparent;border:0;border-bottom:1px solid transparent;border-radius:0}
+.ft input:hover,.ft select:hover{border-bottom-color:var(--line)}
+.ft input:focus,.ft select:focus{outline:0;border-bottom-color:var(--cyan);background:var(--panel-2)}
+.ft input.odd{width:58px}
+.ft select.tipsel{min-width:52px;font-weight:800}.ft input.cs{width:58px}
+.ft input[type=number]{-moz-appearance:textfield;appearance:textfield}
+.ft input[type=number]::-webkit-outer-spin-button,.ft input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+.ft select{background:var(--bg);border:1px solid var(--line);border-radius:6px}
+.ft .pickcell{display:flex;align-items:center;gap:2px}
+.ft .pickcell input[type=radio]{width:16px;height:16px;accent-color:var(--cyan);padding:0}
+.ft .pickcell.sel input.odd{color:var(--cyan);font-weight:800}
+.sw{position:relative;display:inline-block;width:38px;height:22px}
+.ft .sw input{position:absolute;opacity:0;width:100%;height:100%;margin:0;cursor:pointer;padding:0}
+.sw i{position:absolute;inset:0;background:var(--line);border-radius:99px;transition:.15s;pointer-events:none}
+.sw i:after{content:"";position:absolute;top:3px;left:3px;width:16px;height:16px;background:#fff;border-radius:50%;transition:.15s}
+.sw input:checked+i{background:var(--won)}.sw input:checked+i:after{left:19px}
+[hidden]{display:none!important}
+.toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:var(--won);color:#04220f;padding:10px 16px;border-radius:8px;font-weight:700}
+</style></head>
+<body>
+<div id="jserr" style="display:none;background:#7f1d1d;color:#fff;padding:10px 14px;font:14px/1.4 system-ui;position:fixed;top:0;left:0;right:0;z-index:99"></div>
+<script>window.addEventListener("error",function(e){var b=document.getElementById("jserr");b.style.display="block";b.textContent="Page script error: "+e.message+" (line "+e.lineno+"). The admin.html file is damaged. Re-upload the original file.";});</script>
+
+<!-- ============ LOGIN ============ -->
+<div id="login">
+  <div class="card">
+    <h2>PicksBible Admin</h2>
+    <p class="note">Sign in with your PicksBible admin account.</p>
+    <label for="em">Email</label>
+    <input id="em" type="email" autocomplete="username">
+    <label for="pw" style="margin-top:10px;display:block">Password</label>
+    <input id="pw" type="password" autocomplete="current-password">
+    <div class="row end"><button class="btn" id="loginBtn">Sign in</button></div>
+    <p class="muted" style="font-size:11px;margin:10px 0 0">Build 2026-10-04-Y (Firebase)</p>
+    <p id="loginErr" class="muted" style="color:var(--lost)" hidden></p>
+  </div>
+</div>
+
+<!-- ============ APP ============ -->
+<div id="app" hidden>
+<header><div class="wrap">
+  <img src="img/pb-logo.png" alt="">
+  <h1>PicksBible Admin <small id="stats"></small> <small id="sync" class="muted"></small></h1>
+  <button class="btn ghost sm" id="logout">Sign out</button>
+</div></header>
+
+<div class="wrap">
+<nav class="tabs" role="tablist">
+  <button role="tab" data-tab="fixtures" aria-selected="true">1. Fixtures</button>
+  <button role="tab" data-tab="fbtable" aria-selected="false">2. Football table</button>
+  <button role="tab" data-tab="bbtable" aria-selected="false">3. Basketball table</button>
+  <button role="tab" data-tab="bbprops" aria-selected="false">4. Basketball props</button>
+  <button role="tab" data-tab="home" aria-selected="false">5. Home boxes</button>
+  <button role="tab" data-tab="results" aria-selected="false" id="tabResultsBtn">6. Results</button>
+  <button hidden role="tab" data-tab="picks" aria-selected="false">New pick</button>
+  <button hidden role="tab" data-tab="published" aria-selected="false">Picks &amp; results</button>
+  <button role="tab" data-tab="data" aria-selected="false">Data</button>
+</nav>
+<div class="viewbar datebar"><button type="button" class="dbarrow" id="dPrev" aria-label="Previous day">&#9664;</button><label class="datebtn" title="Select a date"><span class="ic" aria-hidden="true"><svg class="cal17" viewBox="0 0 34 34" width="22" height="22" aria-hidden="true"><rect x="3" y="6" width="28" height="25" rx="5" fill="#fff"/><path d="M3 11a5 5 0 015-5h18a5 5 0 015 5v3H3z" fill="#ef4444"/><rect x="9" y="2" width="3" height="7" rx="1.5" fill="#cbd5e1"/><rect x="22" y="2" width="3" height="7" rx="1.5" fill="#cbd5e1"/><text x="17" y="27" text-anchor="middle" font-family="Arial,sans-serif" font-weight="800" font-size="13" fill="#1f2937">17</text></svg></span><span class="dtx"><small>Select a date</small><b id="dLbl"></b></span><span class="ch" aria-hidden="true">&#9662;</span><input type="date" id="viewDate" aria-label="Select a date"></label><button type="button" class="dbarrow" id="dNext" aria-label="Next day">&#9654;</button><button type="button" class="dbarrow" id="dToday">Today</button><span class="muted" id="viewNote" style="font-weight:700"></span><input id="viewSearch" type="search" placeholder="Search any match on any date" autocomplete="off" style="min-width:240px;flex:1"></div>
+
+<!-- FIXTURES -->
+<section id="tab-fixtures">
+  <div class="card">
+    <h2>Add fixture</h2>
+    <p class="note">Fixture details (teams, competition, kickoff) will be filled automatically from a sports data API in the backend step. For now, add them by hand or use the button below once the API is connected.</p>
+    <div id="fxEditing" class="note" hidden style="border-left-color:var(--pend)"></div>
+    <form id="fxForm">
+      <div class="grid">
+        <div><label>Sport</label>
+          <div class="seg" role="group" aria-label="Sport"><button type="button" data-sport="football" aria-pressed="true">⚽ Football</button><button type="button" class="bb" data-sport="basketball" aria-pressed="false">🏀 Basketball</button></div>
+          <input type="hidden" name="sport" value="football"></div>
+        <div><label>Competition</label>
+          <div class="lgwrap">
+            <button class="lg-select" type="button" id="lgBtn" aria-haspopup="true" aria-expanded="false">🌍 Select A League ▾</button>
+            <div class="lgpanel" id="lgPanel" hidden>
+              <div class="lgsearch"><input id="lgSearch" type="search" placeholder="Search any country or league…" autocomplete="off"></div>
+              <div class="lgpanel-body" id="lgBody"></div>
+            </div>
+          </div>
+          <input type="hidden" name="country"><input type="hidden" name="competition"></div>
+        <div><label>Home team</label><input name="home" required></div>
+        <div><label>Away team</label><input name="away" required></div>
+        <div><label>Kick-off</label><input name="kickoff" type="datetime-local" required></div>
+        <div><label>Home team colour (hex)</label><div class="clr"><span class="dot" id="hDot">??</span><input name="hc" id="hcIn" placeholder="e.g. #E30613" maxlength="7" autocomplete="off"></div><div class="clrhint" id="hHint"></div></div>
+        <div><label>Away team colour (hex)</label><div class="clr"><span class="dot" id="aDot">??</span><input name="ac" id="acIn" placeholder="e.g. #E30613" maxlength="7" autocomplete="off"></div><div class="clrhint" id="aHint"></div></div>
+      </div>
+            <div class="row end">
+        <button type="button" class="btn ghost" disabled title="Connected in the backend step">Load fixtures from API</button>
+        <button type="button" class="btn ghost" id="fxCancel" hidden>Cancel edit</button>
+        <button class="btn" id="fxSubmit">Add fixture</button>
+      </div>
+    </form>
+  </div>
+  <div class="card">
+    <h2>Fixtures <span class="muted" id="fxCount"></span></h2>
+    <div class="tbl"><table><thead><tr><th>Kick-off</th><th>Match</th><th>Competition</th><th></th></tr></thead><tbody id="fxBody"></tbody></table></div>
+  </div>
+</section>
+
+
+<!-- FOOTBALL TABLE -->
+<section id="tab-fbtable" hidden>
+  <div class="card">
+    <h2>Football table <span class="muted" id="fbCount"></span></h2>
+    <p class="note">One row per football fixture (add fixtures in tab 1). Switch <b>Sure</b> on for the matches your analysts hand-pick for the home page "Sure predictions" box (max 10 per day). Enter the odds for 1, X and 2, choose your <b>Tip</b> (1, X, 2, 1X, X2 or 12; for 1X, X2 and 12 type the bookmaker price in the small box that appears under the Tip, for 1, X and 2 the price fills itself in), then your <b>GG/NG</b> and <b>Over/Under 2.5</b> picks with their odds, add a correct-score tip, and switch the match <b>Live</b>. Changes save automatically.</p>
+    <div class="tbl"><table class="ft">
+      <thead><tr><th>Time</th><th>Competition</th><th>Home</th><th>Away</th><th>1</th><th>X</th><th>2</th><th>Tip</th><th>Confidence %</th><th>Over / Under 2.5</th><th>BTTS</th><th>Double chance</th><th>CS tip</th><th>Result</th><th>Sure</th><th>⭐ Expert tip</th><th>Live</th></tr></thead>
+      <tbody id="fbBody"></tbody>
+    </table></div>
+  </div>
+</section>
+
+<!-- BASKETBALL TABLE -->
+<section id="tab-bbtable" hidden>
+  <div class="card">
+    <h2>Basketball table <span class="muted" id="bbCount"></span></h2>
+    <p class="note">One row per basketball fixture (add fixtures in tab 1, choose Basketball). Switch <b>Sure</b> on for the games your analysts hand-pick for the home page "Sure predictions" box (max 10 per day). Enter the odds for Home and Away, choose your <b>Tip</b> (1 or 2), the <b>projected spread</b> (e.g. -6.5 or +20.5), the <b>point total tip</b> (Over/Under and the line) and the <b>projected score</b>, then switch the game <b>Live</b>. Changes save automatically.</p>
+    <div class="tbl"><table class="ft">
+      <thead><tr><th>Time</th><th>Competition</th><th>Home</th><th>Away</th><th>Home win (1)</th><th>Away win (2)</th><th>Tip</th><th>Confidence %</th><th>Projected spread</th><th>Point total tip</th><th>Projected score</th><th>Result</th><th>Sure</th><th>⭐ Expert tip</th><th>Live</th></tr></thead>
+      <tbody id="bbBody"></tbody>
+    </table></div>
+  </div>
+</section>
+
+<!-- HOME BOXES -->
+<section id="tab-home" hidden>
+  <div class="card">
+    <h2>Home page boxes</h2>
+    <p class="note">Pick a date and a sport, switch Football or Basketball, open the match list (or type a team), then add it as the <b>Expert tip</b> (ONE per sport per day) or as a <b>Bet of the day</b> (up to FIVE per sport per day). Only the matches you choose appear in the table below, so busy days never clog the page. Write the reasoning or pick, and after the game set the result and score. Switch a box off to remove the match from the home page. Matches come from tab 1. Changes save automatically.</p>
+    <div class="row" style="margin-bottom:10px"><div><label>Date</label><input type="date" id="hbDate"></div>
+      <div><label>Sport</label><div class="hbseg" id="hbSeg" role="group" aria-label="Sport"><button type="button" data-hs="football" aria-pressed="true">⚽ Football</button><button type="button" class="bb" data-hs="basketball" aria-pressed="false">🏀 Basketball</button></div><input type="hidden" id="hbSport" value="football"></div>
+      <div style="flex:1;min-width:260px;position:relative"><label>Matches on this date</label><input id="hbSearch" autocomplete="off" placeholder="Click to open the list, or type a team ▾" style="width:100%"><div class="inv" id="hbInv" hidden></div></div></div>
+    <p class="note" id="hbNote" style="margin-top:0"></p>
+    <div class="inv" id="hbInv"></div>
+    <div class="tbl"><table class="ft">
+      <thead><tr><th>Time</th><th>Match</th><th>Expert tip</th><th>Reasoning &amp; By</th><th>Bet of the day</th><th>Pick</th><th>Result</th><th>Score</th></tr></thead>
+      <tbody id="hbBody"></tbody>
+    </table></div>
+  </div>
+  <div class="card">
+    <h2>VIP results <span class="muted">(Gold and Titanium, one box per day each)</span></h2>
+    <p class="note">Enter each tier's odds for the day and mark it Won or Lost. Days left empty show a dash on the site. Results entered before the tiers existed count as Titanium.</p>
+    <div class="row" style="margin-bottom:10px"><div><label>Month</label><input type="month" id="vpMonth"></div></div>
+    <div class="tbl"><table class="ft"><thead><tr><th>Day</th><th>Gold odds</th><th>Gold result</th><th>Titanium odds</th><th>Titanium result</th></tr></thead><tbody id="vpBody"></tbody></table></div>
+  </div>
+</section>
+
+<!-- BASKETBALL PROPS -->
+<!-- RESULTS: settle yesterday's (or any day's) tips -->
+<section id="tab-results" hidden>
+  <div class="card">
+    <h2>Results <span class="muted" id="rsCount"></span></h2>
+    <p class="note">Pick a day, then mark each tip <b>won</b> or <b>lost</b> and add the final score if you like. The site updates by itself: won shows green, lost shows gray, and the score appears in the table. Matches leave the other tabs 24 hours after kick-off but stay here, so you can settle or correct any day (use the date box to go back as far as you need).</p>
+    <div class="viewbar"><label for="rsDate">Day</label><input id="rsDate" type="date" style="width:auto">
+      <button type="button" class="btn ghost sm" data-rsday="0">Today</button><button type="button" class="btn ghost sm" data-rsday="-1">Yesterday</button><button type="button" class="btn ghost sm" data-rsday="-2">2 days ago</button>
+      <label style="display:flex;align-items:center;gap:6px"><input type="checkbox" id="rsOpen" style="width:auto"> Only not settled</label><span class="muted" id="rsNote"></span></div>
+    <div class="tbl"><table class="ft">
+      <thead><tr><th>Time</th><th>Competition</th><th>Match</th><th>Our tip</th><th>Result</th><th>Final score</th></tr></thead>
+      <tbody id="rsBody"></tbody>
+    </table></div>
+    <p class="note" style="margin-top:12px">The <b>Sure predictions</b> box on the home page is taken from this table (the picks your analysts switch on as <b>Sure</b> in the Football and Basketball table tabs, up to 10 per sport per day), so settling a tip here updates it too.</p>
+  </div>
+  <div class="card">
+    <h2>Expert tip <span class="muted" id="rsEtCount"></span></h2>
+    <div class="tbl"><table class="ft"><thead><tr><th>Time</th><th>Match</th><th>Expert</th><th>Result</th></tr></thead><tbody id="rsEtBody"></tbody></table></div>
+  </div>
+  <div class="card">
+    <h2>Bets of the day <span class="muted" id="rsBoCount"></span></h2>
+    <div class="tbl"><table class="ft"><thead><tr><th>Time</th><th>Match</th><th>Pick</th><th>Result</th><th>Final score</th></tr></thead><tbody id="rsBoBody"></tbody></table></div>
+  </div>
+  <div class="card">
+    <h2>Basketball props <span class="muted" id="rsPrCount"></span></h2>
+    <div class="tbl"><table class="ft"><thead><tr><th>Game</th><th>Prop</th><th>Pick</th><th>Odds</th><th>Result</th></tr></thead><tbody id="rsPrBody"></tbody></table></div>
+  </div>
+</section>
+
+<section id="tab-bbprops" hidden>
+  <div class="card">
+    <h2>Add player / team prop</h2>
+    <div id="propEditing" class="note" hidden style="border-left-color:var(--pend)"></div>
+    <form id="bbForm">
+      <div class="grid">
+        <div style="grid-column:1/-1"><label>Basketball game</label><select name="fixtureId" required></select></div>
+        <div><label>Prop type</label><select name="market" id="bbMarket"></select></div>
+        <div id="bbPlayerW"><label>Player</label><input name="player" placeholder="e.g. Nikola Jokic"></div>
+        <div id="bbTeamW"><label>Team</label><select name="team"></select></div>
+        <div id="bbLineW"><label>Line</label><input name="line" type="number" step="0.5" placeholder="e.g. 24.5"></div>
+        <div id="bbSideW"><label>Over / Under</label><select name="side"><option>Over</option><option>Under</option></select></div>
+        <div><label>Odds (decimal)</label><input name="odds" type="number" step="0.01" min="1"></div>
+      </div>
+      <div class="row end"><button type="button" class="btn ghost" id="propCancel" hidden>Cancel edit</button><button class="btn" id="propSubmit">Add prop</button></div>
+    </form>
+  </div>
+  <div class="card">
+    <h2>Props <span class="muted" id="propsCount"></span></h2>
+    <div class="tbl"><table class="ft">
+      <thead><tr><th>Game</th><th>Prop</th><th>Pick</th><th>Odds</th><th>Result</th><th>Live</th><th></th></tr></thead>
+      <tbody id="propsBody"></tbody>
+    </table></div>
+  </div>
+</section>
+
+<!-- NEW PICK -->
+<section id="tab-picks" hidden>
+  <div class="card">
+    <h2 id="pickTitle">New pick</h2>
+    <form id="pkForm">
+      <input type="hidden" name="id">
+      <div class="grid">
+        <div style="grid-column:1/-1"><label>Fixture</label><select name="fixtureId" required></select></div>
+        <div><label>Bet type (market)</label><select name="market" required></select></div>
+        <div><label>Your pick</label><input name="selection" required placeholder="e.g. Over 2.5, 1X, Arsenal -1.5"></div>
+        <div><label>Odds (decimal)</label><input name="odds" type="number" step="0.01" min="1"></div>
+        <div><label>Confidence</label><select name="confidence"><option>High</option><option selected>Medium</option><option>Low</option></select></div>
+                <div><label>Access</label><select name="access"><option value="free">Free</option><option value="premium">Premium</option></select></div>
+      </div>
+      <div style="margin-top:12px"><label>Analysis (optional)</label><textarea name="analysis"></textarea></div>
+      <div class="row end">
+        <button type="button" class="btn ghost" id="pkCancel">Cancel</button>
+        <button type="submit" class="btn ghost" data-status="draft">Save draft</button>
+        <button type="submit" class="btn" data-status="published">Publish</button>
+      </div>
+    </form>
+  </div>
+</section>
+
+<!-- PICKS & RESULTS -->
+<section id="tab-published" hidden>
+  <div class="card">
+    <div class="row" style="margin-bottom:10px">
+      <h2 style="margin:0;flex:1">Picks &amp; results</h2>
+      <select id="fStatus" style="width:auto"><option value="">All</option><option value="draft">Drafts</option><option value="published">Published</option></select>
+    </div>
+    <div class="tbl"><table><thead><tr><th>Match</th><th>Pick</th><th>Status</th><th>Result</th><th></th></tr></thead><tbody id="pkBody"></tbody></table></div>
+  </div>
+</section>
+
+<!-- DATA -->
+<section id="tab-data" hidden>
+  <div class="card">
+    <h2>Data</h2>
+    <p class="note">Everything is stored in the PicksBible database (Firestore) and saves automatically. Download a backup now and then anyway.</p>
+    <div class="row">
+      <button class="btn" id="exp">Download backup (JSON)</button>
+      <label class="btn ghost" style="margin:0;text-transform:none;letter-spacing:0;font-size:15px;color:var(--text)">Import backup<input type="file" id="imp" accept=".json" hidden></label>
+      <button class="btn danger" id="wipe">Erase all</button>
+    </div>
+  </div>
+</section>
+</div>
+</div>
+
+<div class="toast" id="toast" hidden></div>
+
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+<script src="leagues.js"></script>
+<script>
+/* ============ CONFIG (edit here) ============ */
+const CONFIG = {
+  FIREBASE: {
+    apiKey: "AIzaSyBBnSFHx_z1YWwOXz6sdKOSzelTIuvusa8",
+    authDomain: "picksbible-7fa7f.firebaseapp.com",
+    projectId: "picksbible-7fa7f",
+    storageBucket: "picksbible-7fa7f.firebasestorage.app",
+    messagingSenderId: "670341631512",
+    appId: "1:670341631512:web:7478818fbb53b5cec6fd6d"
+  },
+  // Convenience only. The REAL gate is in the Firestore security rules (firestore.rules).
+  ADMINS: ["p.ejigabusiness@gmail.com"],
+  // Bet types offered in the dropdown. To be finalised with the owner.
+  MARKETS: {
+    football:   ["1X2 / Double Chance","Over/Under Goals","Both Teams To Score","Handicap","HT/FT","Correct Score","Other"],
+    basketball: ["Moneyline","Spread","Total Over/Under","Player Prop","Other"]
+  },
+};
+
+/* ============ DATA LAYER (Firebase Auth + Firestore) ============ */
+const COLS = ["fixtures","props","picks"];
+const EMPTY = () => ({fixtures:[],picks:[],props:[],vip:[]});
+const clean = o => JSON.parse(JSON.stringify(o));                 /* drops undefined (Firestore rejects it) */
+/* `live` is copied to the top level so the security rules can let the public read ONLY live items */
+const liveOf = (col,r) => col==="fixtures" ? !!((r.fb && r.fb.live) || (r.bb && r.bb.live) || (r.et && r.et.on) || (r.bo && r.bo.on)) : col==="props" ? !!r.live : r.status==="published";
+const Store = {
+  lastSnap:null, fb:null, auth:null, fs:null, last:{fixtures:{},props:{},picks:{}}, timer:null, busy:false, again:false,
+  init(){
+    firebase.initializeApp(CONFIG.FIREBASE);
+    this.auth = firebase.auth(); this.fs = firebase.firestore();
+  },
+  async load(){
+    const out = EMPTY();
+    for(const c of COLS){
+      const snap = await this.fs.collection(c).get();
+      this.last[c] = {};
+      snap.forEach(d => { const r = d.data(); if(c!=="props") delete r.live; r.id = r.id || d.id; if(c==="picks"){ if(r.kind==="vip"){ out.vip.push(r); this.last[c][r.id] = JSON.stringify(this.docOf(c,r)); return; } r.status = r.status || "draft"; } out[c].push(r); this.last[c][r.id] = JSON.stringify(this.docOf(c,r)); });
+    }
+    return out;
+  },
+  docOf(c,r){
+    const d = clean(r); d.live = liveOf(c,r);
+    if(c==="props"){ /* copy match info onto the prop so the public site needs no extra reads */
+      const f = (typeof db!=="undefined" && db.fixtures||[]).find(x=>x.id===r.fixtureId);
+      if(f){ d.home=f.home; d.away=f.away; d.competition=f.competition; d.country=f.country||""; d.kickoff=f.kickoff; }
+    }
+    return d;
+  },
+  setSync(t,bad){ const e=document.getElementById("sync"); if(e){ e.textContent=t; e.style.color=bad?"var(--lost)":""; } },
+  save(){ this.setSync("Saving…"); clearTimeout(this.timer); this.timer = setTimeout(()=>this.flush(), 500); },
+  async flush(){
+    if(this.busy){ this.again = true; return; }
+    this.busy = true;
+    try{
+      let batch = this.fs.batch(), n = 0; const commits = [];
+      const push = async () => { if(n){ commits.push(batch.commit()); batch = this.fs.batch(); n = 0; } };
+      const next = {fixtures:{},props:{},picks:{}};
+      for(const c of COLS){
+        const seen = {};
+        for(const r of (c==="picks" ? db.picks.concat(db.vip||[]) : db[c])){
+          const d = this.docOf(c,r), j = JSON.stringify(d); seen[r.id] = 1; next[c][r.id] = j;
+          if(this.last[c][r.id] !== j){ batch.set(this.fs.collection(c).doc(r.id), d); if(++n >= 400) await push(); }
+        }
+        for(const id in this.last[c]) if(!seen[id]){ batch.delete(this.fs.collection(c).doc(id)); delete next[c][id]; if(++n >= 400) await push(); }
+      }
+      await push(); await Promise.all(commits);
+      this.last = next;
+      /* public snapshot: ONE document holding everything that is Live. The public site reads only this. */
+      const cutoff = new Date(Date.now()-3*864e5).toISOString().slice(0,10), farOut = new Date(Date.now()+30*864e5).toISOString().slice(0,10);
+      const cut120 = new Date(Date.now()-120*864e5).toISOString().slice(0,10), cut45 = new Date(Date.now()-45*864e5).toISOString().slice(0,10);
+      const homeBox = f => { const k=String(f.kickoff||"").slice(0,10); return k>=cut45 && k<=farOut && ((f.et&&f.et.on)||(f.bo&&f.bo.on)); };
+      const recent = r => { const k=String(r.kickoff||"").slice(0,10); return k >= cutoff && k <= farOut; };
+      const snap = {
+        fixtures: db.fixtures.filter(f=>liveOf("fixtures",f) && (recent(f) || homeBox(f))).map(f=>this.docOf("fixtures",f)),
+        vip:      (db.vip||[]).filter(v=>v.ymd>=cut120).map(v=>({ymd:v.ymd,tier:v.tier==="bronze"?"bronze":"gold",odds:v.odds||"",st:v.st||""})),
+        props:    db.props.filter(r=>liveOf("props",r)).map(r=>this.docOf("props",r)).filter(recent)
+      };
+      const sj = JSON.stringify(snap);
+      if(sj !== this.lastSnap){ snap.updatedAt = new Date().toISOString(); await this.fs.collection("public").doc("live").set(snap); this.lastSnap = sj; }
+      /* ARCHIVE: one small document per past day (2 to 30 days back) so visitors can open any of the last 30 days
+         without making the live document too big. Only days whose content changed are written again. */
+      const watA = o => { const t = new Date(new Intl.DateTimeFormat("en-CA",{timeZone:"Africa/Lagos"}).format(new Date())+"T12:00:00Z"); t.setUTCDate(t.getUTCDate()+o); return t.toISOString().slice(0,10); };
+      const arch = {}, archP = {}; for(let i=2;i<=30;i++){ arch[watA(-i)] = []; archP[watA(-i)] = []; }
+      db.fixtures.filter(f=>liveOf("fixtures",f)).forEach(f=>{ const k=String(f.kickoff||"").slice(0,10); if(arch[k]) arch[k].push(this.docOf("fixtures",f)); });
+      db.props.filter(r=>liveOf("props",r)).forEach(r=>{ const d=this.docOf("props",r), k=String(d.kickoff||"").slice(0,10); if(archP[k]) archP[k].push(d); });
+      this.lastDays = this.lastDays || {};
+      const liveIds = new Set(snap.fixtures.map(f=>f.id)); let archivedOnly = 0;
+      for(const k of Object.keys(arch)){
+        const list = arch[k].sort((a,b)=>String(a.kickoff).localeCompare(String(b.kickoff)));
+        archivedOnly += list.filter(f=>!liveIds.has(f.id)).length;
+        const plist = archP[k];
+        if(!list.length && !plist.length){ if(this.lastDays[k]){ await this.fs.collection("public").doc("day-"+k).delete(); delete this.lastDays[k]; } continue; }
+        const j = JSON.stringify([list,plist]);
+        if(this.lastDays[k] !== j){ await this.fs.collection("public").doc("day-"+k).set({day:k, fixtures:list, props:plist, updatedAt:new Date().toISOString()}); this.lastDays[k] = j; }
+      }
+      /* tell the editor exactly what the public site will show (it only shows yesterday / today / tomorrow, Nigerian time) */
+      const wat = o => { const t = new Date(new Intl.DateTimeFormat("en-CA",{timeZone:"Africa/Lagos"}).format(new Date())+"T12:00:00Z"); t.setUTCDate(t.getUTCDate()+o); return t.toISOString().slice(0,10); };
+      const dayOf = r => String(r.kickoff||"").slice(0,10);
+      const showFx = snap.fixtures.length;   /* football: any date from 3 days ago onward; older days (up to 30) are published as one archive document per day */
+      const showPr = snap.props.length;
+      const liveFx = db.fixtures.filter(f=>liveOf("fixtures",f)).length, livePr = db.props.filter(r=>liveOf("props",r)).length;
+      const hidden = (liveFx-showFx-archivedOnly)+(livePr-showPr);
+      this.setSync("Saved ✓ · on the site now: "+showFx+" match"+(showFx===1?"":"es")+" (any date)"+", "+showPr+" prop"+(showPr===1?"":"s")
+        + (hidden>0 ? " · "+hidden+" Live item"+(hidden===1?"":"s")+" NOT shown: matches need a kickoff date (not older than 30 days); props follow the match date" : ""), hidden>0);
+    }catch(e){
+      console.error(e); this.setSync("NOT SAVED – "+(e.code||e.message),true); toast("Could not save: "+(e.code||e.message));
+    }
+    this.busy = false;
+    if(this.again){ this.again = false; this.flush(); }
+  },
+  /* one-off: move data that earlier builds kept in this browser into the database */
+  localLeftovers(){ try{ const d = JSON.parse(localStorage.getItem("pb_admin_v1")); return d && (d.fixtures||[]).length ? d : null; }catch(e){ return null; } }
+};
+Store.save = Store.save.bind(Store);
+let db = EMPTY();
+const uid = () => Date.now().toString(36)+Math.random().toString(36).slice(2,6);
+const esc = s => String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const $ = s => document.querySelector(s);
+const fmt = iso => { const d=new Date(iso); return isNaN(d)?"":d.toLocaleString([], {day:"2-digit",month:"short",hour:"2-digit",minute:"2-digit"}); };
+function toast(m){ const t=$("#toast"); t.textContent=m; t.hidden=false; clearTimeout(toast.t); toast.t=setTimeout(()=>t.hidden=true,2200); }
+function commit(){ Store.save(db); render(); }
+function statsText(){ const live=db.picks.filter(p=>p.status==="published").length + db.fixtures.filter(f=>(f.fb&&f.fb.live)||(f.bb&&f.bb.live)||(f.et&&f.et.on)||(f.bo&&f.bo.on)).length + db.props.filter(p=>p.live).length; return `${db.fixtures.length} fixtures · ${live} live`; }
+
+/* ============ LOGIN ============ */
+let entered = false;
+function enter(){ $("#login").hidden=true; $("#app").hidden=false; entered=true; render(); }
+function loginMsg(t){ const e=$("#loginErr"); e.textContent=t||""; e.hidden=!t; }
+const AUTH_ERR = {
+  "auth/invalid-credential":"Wrong email or password.", "auth/wrong-password":"Wrong email or password.", "auth/user-not-found":"Wrong email or password.",
+  "auth/invalid-email":"That email address is not valid.", "auth/too-many-requests":"Too many attempts. Wait a few minutes and try again.",
+  "auth/network-request-failed":"No connection. Check your internet and try again.", "auth/user-disabled":"This account has been disabled."
+};
+$("#loginBtn").onclick = async () => {
+  loginMsg(""); const em=$("#em").value.trim(), pw=$("#pw").value;
+  if(!em || !pw) return loginMsg("Enter your email and password.");
+  $("#loginBtn").disabled = true;
+  try{ await Store.auth.signInWithEmailAndPassword(em, pw); }
+  catch(e){ loginMsg(AUTH_ERR[e.code] || ("Sign-in failed: "+(e.code||e.message))); }
+  $("#loginBtn").disabled = false;
+};
+$("#pw").addEventListener("keydown",e=>{ if(e.key==="Enter") $("#loginBtn").click(); });
+$("#em").addEventListener("keydown",e=>{ if(e.key==="Enter") $("#pw").focus(); });
+$("#logout").onclick = async () => { try{ await Store.auth.signOut(); }catch(e){} location.reload(); };
+
+async function onSignedIn(user){
+  if(CONFIG.ADMINS.length && !CONFIG.ADMINS.map(x=>x.toLowerCase()).includes((user.email||"").toLowerCase())){
+    await Store.auth.signOut(); return loginMsg("This account is not an admin.");
+  }
+  loginMsg(""); $("#loginBtn").disabled = true; $("#loginBtn").textContent = "Loading…";
+  try{
+    db = await Store.load(); db.props = db.props || []; db.vip = db.vip || [];
+    db.props.forEach(p=>{ if(PROP_KEY_MIGRATE[p.market]) p.market = PROP_KEY_MIGRATE[p.market]; });
+    const old = Store.localLeftovers();
+    if(old && !db.fixtures.length && !db.props.length && confirm("This browser has "+old.fixtures.length+" fixture(s) saved from before the database was connected.\n\nUpload them to the database now?")){
+      db = old; db.props = db.props || []; db.picks = db.picks || []; Store.save();
+    }
+    Store.lastSnap = null; Store.save(); resetPick(); enter();
+  }catch(e){
+    console.error(e);
+    loginMsg(e.code==="permission-denied" ? "Signed in, but the database refused access. The security rules do not list this email yet." : "Could not load the database: "+(e.code||e.message));
+    try{ await Store.auth.signOut(); }catch(_){}
+  }
+  $("#loginBtn").disabled = false; $("#loginBtn").textContent = "Sign in";
+}
+
+/* ============ TABS ============ */
+function showTab(name){
+  document.querySelectorAll("nav.tabs button").forEach(b=>b.setAttribute("aria-selected", b.dataset.tab===name));
+  ["fixtures","fbtable","bbtable","bbprops","home","results","picks","published","data"].forEach(t=>$("#tab-"+t).hidden = t!==name);
+  { const vb=document.querySelector(".viewbar"); if(vb) vb.style.display = ["fixtures","fbtable","bbtable","bbprops"].includes(name) ? "" : "none"; }   /* the Showing / search bar does not apply to the Results tab */
+}
+document.querySelectorAll("nav.tabs button").forEach(b=>b.onclick=()=>{ if(b.dataset.tab==="picks") resetPick(); showTab(b.dataset.tab); });
+
+/* ============ FIXTURES ============ */
+/* ---- sport toggle + league picker ---- */
+const fxForm = $("#fxForm");
+const LG = window.PB_LEAGUES || {football:[],basketball:[],top:{football:[],basketball:[]}};
+let sport = "football";
+function setLeague(country, league){
+  fxForm.country.value = country||""; fxForm.competition.value = league||"";
+  $("#lgBtn").textContent = league ? `${country}: ${league} ▾` : "🌍 Select A League ▾";
+}
+let editingId = null;
+function setSport(sp){
+  if(editingId && sp!==sport) return toast("Sport can't be changed while editing. Cancel and add a new fixture instead.");
+  sport = sp; fxForm.sport.value = sp;
+  document.querySelectorAll(".seg button").forEach(b=>b.setAttribute("aria-pressed", b.dataset.sport===sp));
+  $("#lgBtn").classList.toggle("bb", sp==="basketball");
+  setLeague("",""); buildPanel(""); closePanel();
+}
+function groupHtml(key, badge, label, leagues, top){
+  return `<div class="lggroup${top?" lgtop":""}"><button type="button" class="lgcountry" data-key="${esc(key)}" aria-expanded="false"><span class="badge">${esc(badge)}</span><span class="lgname">${esc(label)}</span><span class="toggle">+</span></button><div class="lgsub" hidden>${leagues.map(([c,l])=>`<button type="button" class="lgleague" data-c="${esc(c)}" data-l="${esc(l)}"><span>${esc(c)}: ${esc(l)}</span><span>${sport==="football"?"⚽":"🏀"}</span></button>`).join("")}</div></div>`;
+}
+const norm = t => String(t).normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase();
+function buildPanel(q){
+  q = norm(q.trim()); let html = "";
+  const match = (c,l) => !q || norm(c).includes(q) || norm(l).includes(q);
+  if(!q && LG.top[sport]?.length) html += groupHtml("__top__","⭐","Top League",LG.top[sport],true);
+  for(const g of [...LG[sport]].sort((x,y)=>String(x.c).localeCompare(String(y.c),undefined,{sensitivity:"base"}))){
+    const rows = g.l.filter(l=>match(g.c,l)).map(l=>[g.c,l]);
+    if(rows.length) html += groupHtml(g.c, g.code, g.c, rows, false);
+  }
+  const body = $("#lgBody");
+  body.innerHTML = html || `<div class="lgempty">${LG[sport].length?"No match.":"leagues.js is missing. Upload it next to admin.html."}</div>`;
+  if(q) body.querySelectorAll(".lgcountry").forEach(b=>toggleGroup(b,true));
+}
+function toggleGroup(b, open){
+  b.setAttribute("aria-expanded", String(open));
+  b.querySelector(".toggle").textContent = open ? "−" : "+";
+  b.nextElementSibling.hidden = !open;
+}
+function closePanel(){ $("#lgPanel").hidden = true; $("#lgBtn").setAttribute("aria-expanded","false"); }
+$("#lgBtn").onclick = e => {
+  e.stopPropagation();
+  const open = $("#lgPanel").hidden;
+  $("#lgPanel").hidden = !open; $("#lgBtn").setAttribute("aria-expanded", String(open));
+  if(open){ $("#lgSearch").value=""; buildPanel(""); $("#lgSearch").focus(); }
+};
+$("#lgSearch").oninput = e => buildPanel(e.target.value);
+$("#lgBody").onclick = e => {
+  const g = e.target.closest(".lgcountry");
+  if(g) return toggleGroup(g, g.getAttribute("aria-expanded")!=="true");
+  const l = e.target.closest(".lgleague");
+  if(l){ setLeague(l.dataset.c, l.dataset.l); closePanel(); }
+};
+document.addEventListener("click", e => { if(!$("#lgPanel").hidden && !$("#lgPanel").contains(e.target)) closePanel(); });
+document.addEventListener("keydown", e => { if(e.key==="Escape") closePanel(); });
+document.querySelectorAll(".seg button").forEach(b=>b.onclick=()=>setSport(b.dataset.sport));
+const TEAM_COLORS = {"sporting cp":"#00843D","sporting":"#00843D","benfica":"#E30613","porto":"#003A8F","fc porto":"#003A8F","braga":"#D61F26","manchester city":"#6CABDD","man city":"#6CABDD","manchester united":"#DA291C","man united":"#DA291C","arsenal":"#EF0107","chelsea":"#034694","liverpool":"#C8102E","tottenham":"#132257","tottenham hotspur":"#132257","newcastle":"#241F20","newcastle united":"#241F20","aston villa":"#670E36","west ham":"#7A263A","west ham united":"#7A263A","everton":"#003399","leeds":"#FFCD00","leeds united":"#FFCD00","brighton":"#0057B8","brentford":"#E30613","fulham":"#222222","crystal palace":"#1B458F","wolves":"#FDB913","wolverhampton":"#FDB913","bournemouth":"#DA291C","nottingham forest":"#DD0000","burnley":"#6C1D45","sunderland":"#EB172B","ipswich":"#0E4C92","real madrid":"#7D5BA6","barcelona":"#A50044","atletico madrid":"#CB3524","sevilla":"#D6001C","valencia":"#EE7203","villarreal":"#FDE100","real sociedad":"#0067B1","athletic bilbao":"#EE2523","athletic club":"#EE2523","real betis":"#0BB363","girona":"#CD2534","bayern munich":"#DC052D","bayern":"#DC052D","borussia dortmund":"#FDE100","dortmund":"#FDE100","bayer leverkusen":"#E32221","leverkusen":"#E32221","rb leipzig":"#DD0741","eintracht frankfurt":"#E1000F","stuttgart":"#E32219","wolfsburg":"#65B32E","juventus":"#222222","inter":"#0068A8","inter milan":"#0068A8","ac milan":"#FB090B","milan":"#FB090B","napoli":"#12A0D7","roma":"#8E1F2F","lazio":"#87D8F7","atalanta":"#1E71B8","fiorentina":"#5B2C83","psg":"#004170","paris saint-germain":"#004170","paris saint germain":"#004170","marseille":"#2FAEE0","lyon":"#1F3A93","monaco":"#E51B22","lille":"#E01E13","nice":"#CC0000","ajax":"#D2122E","psv":"#E4002B","psv eindhoven":"#E4002B","feyenoord":"#E4032D","celtic":"#16A34A","rangers":"#1B458F","salzburg":"#E30613","rb salzburg":"#E30613","sturm graz":"#222222","rapid wien":"#00843D","austria vienna":"#7D3C98","grazer ak":"#E30613","lask":"#222222","galatasaray":"#FDB913","fenerbahce":"#FFED00","besiktas":"#222222","olympiacos":"#E30613","panathinaikos":"#16A34A","club brugge":"#2563EB","anderlecht":"#6D28D9","shamrock rovers":"#16A34A","bohemians":"#B91C1C","enyimba":"#2563EB","kano pillars":"#F59E0B","rivers united":"#2563EB","remo stars":"#2563EB","plateau united":"#16A34A","lagos fc":"#4B5563","lakers":"#552583","los angeles lakers":"#552583","warriors":"#1D428A","golden state warriors":"#1D428A","celtics":"#007A33","boston celtics":"#007A33","bulls":"#CE1141","chicago bulls":"#CE1141","knicks":"#F58426","new york knicks":"#F58426","heat":"#98002E","miami heat":"#98002E","bucks":"#00471B","milwaukee bucks":"#00471B","nuggets":"#0E2240","denver nuggets":"#0E2240","suns":"#E56020","phoenix suns":"#E56020","mavericks":"#00538C","dallas mavericks":"#00538C","spurs":"#8A8D8F","san antonio spurs":"#8A8D8F","thunder":"#007AC1","oklahoma city thunder":"#007AC1","76ers":"#006BB6","philadelphia 76ers":"#006BB6","nets":"#222222","brooklyn nets":"#222222","clippers":"#C8102E","la clippers":"#C8102E","rockets":"#CE1141","houston rockets":"#CE1141","timberwolves":"#236192","minnesota timberwolves":"#236192","grizzlies":"#5D76A9","memphis grizzlies":"#5D76A9","cavaliers":"#860038","cleveland cavaliers":"#860038","pacers":"#FDBB30","indiana pacers":"#FDBB30","hawks":"#C8102E","atlanta hawks":"#C8102E","raptors":"#CE1141","toronto raptors":"#CE1141","kings":"#5A2D81","sacramento kings":"#5A2D81","magic":"#0077C0","orlando magic":"#0077C0","pelicans":"#0C2340","new orleans pelicans":"#0C2340","jazz":"#4B2E83","utah jazz":"#4B2E83","hornets":"#00788C","charlotte hornets":"#00788C","wizards":"#E31837","washington wizards":"#E31837","pistons":"#C8102E","detroit pistons":"#C8102E","blazers":"#E03A3E","portland trail blazers":"#E03A3E","trail blazers":"#E03A3E","real madrid baloncesto":"#7D5BA6"};
+const HEXRE = /^#([0-9a-f]{3}|[0-9a-f]{6})$/i;
+const normHex = v => { v=String(v||"").trim(); if(v && v[0]!=="#") v="#"+v; return HEXRE.test(v)?v.toUpperCase():""; };
+const teamKey = n => String(n||"").toLowerCase().replace(/\s+(w|women|u-?\d\d)$/i,"").trim();
+const colorOf = name => { const k=teamKey(name); if(!k) return ""; for(const f of (db.fixtures||[])){ if(f.hc && teamKey(f.home)===k) return f.hc; if(f.ac && teamKey(f.away)===k) return f.ac; } return TEAM_COLORS[k] || ""; };
+const initialsOf = n => { const w=String(n||"").replace(/[^A-Za-z0-9 ]/g," ").trim().split(/\s+/).filter(Boolean); if(!w.length) return "??"; return (w.length>1?w[0][0]+w[1][0]:w[0].slice(0,2)).toUpperCase(); };
+function syncColor(side){
+  const name = fxForm[side==="h"?"home":"away"].value, inp = fxForm[side==="h"?"hc":"ac"], dot = $("#"+side+"Dot"), hint = $("#"+side+"Hint");
+  const typed = normHex(inp.value), auto = colorOf(name), col = typed || auto;
+  dot.style.background = col || "#4b5563"; dot.textContent = col ? initialsOf(name) : "??";
+  const h=col.replace("#",""), hh=h.length===3?h.replace(/(.)/g,"$1$1"):h; dot.style.color = col && (parseInt(hh.substr(0,2),16)*299+parseInt(hh.substr(2,2),16)*587+parseInt(hh.substr(4,2),16)*114)/1000>170 ? "#111" : "#fff";
+  hint.textContent = typed ? "Custom colour. It is remembered for this team." : auto ? "Found automatically" : (name ? "No colour on file. Type a hex code and it is remembered." : "");
+  hint.style.color = typed||auto ? "var(--won)" : "var(--pend)";
+}
+["home","away","hc","ac"].forEach(n => fxForm[n].addEventListener("input", () => { syncColor("h"); syncColor("a"); }));
+let lastKickDefault = "";
+function applyKickoffDefault(){ if(editingId) return; const v=fxForm.kickoff.value; if(!v || v===lastKickDefault){ lastKickDefault = viewDate+"T12:00"; fxForm.kickoff.value = lastKickDefault; } }
+const compLabel = f => { const c=String(f.country||""), k=String(f.competition||""); if(!c) return k; if(k.toLowerCase().startsWith(c.toLowerCase()+":")) return k; return `${c}: ${k}`; };
+
+fxForm.onsubmit = e => {
+  e.preventDefault();
+  const f = Object.fromEntries(new FormData(fxForm));
+  if(!f.competition) return toast("Select a league first");
+  f.hc = normHex(f.hc) || colorOf(f.home) || ""; f.ac = normHex(f.ac) || colorOf(f.away) || "";
+  if(editingId){
+    const x = db.fixtures.find(q=>q.id===editingId);
+    if(x){ x.country=f.country; x.competition=f.competition; x.home=f.home; x.away=f.away; x.kickoff=f.kickoff; x.hc=f.hc; x.ac=f.ac; }
+    stopEdit(); commit(); toast("Fixture updated"); return;
+  }
+  db.fixtures.push({id:uid(), ...f});
+  fxForm.reset(); setSport(sport); syncColor("h"); syncColor("a"); applyKickoffDefault(); commit(); toast("Fixture added");
+};
+function stopEdit(){
+  editingId = null; fxForm.reset(); setSport(sport); syncColor("h"); syncColor("a"); applyKickoffDefault();
+  $("#fxSubmit").textContent = "Add fixture"; $("#fxCancel").hidden = true; $("#fxEditing").hidden = true;
+}
+$("#fxCancel").onclick = stopEdit;
+function editFixture(id){
+  const f = db.fixtures.find(x=>x.id===id); if(!f) return;
+  editingId = null; setSport(f.sport); editingId = id;
+  setLeague(f.country, f.competition);
+  fxForm.home.value = f.home; fxForm.away.value = f.away; fxForm.kickoff.value = f.kickoff; fxForm.hc.value = f.hc||""; fxForm.ac.value = f.ac||""; syncColor("h"); syncColor("a");
+  $("#fxSubmit").textContent = "Save changes"; $("#fxCancel").hidden = false;
+  const n = $("#fxEditing"); n.hidden = false; n.innerHTML = "Editing: <b>"+esc(f.home)+" v "+esc(f.away)+"</b>. Change the league, teams or kick-off, then press Save changes. Your odds and tips are kept.";
+  showTab("fixtures"); window.scrollTo({top:0,behavior:"smooth"});
+}
+function delFixture(id){
+  if(db.picks.some(p=>p.fixtureId===id) && !confirm("This fixture has picks. Delete it and its picks?")) return;
+  db.fixtures = db.fixtures.filter(f=>f.id!==id);
+  db.picks = db.picks.filter(p=>p.fixtureId!==id); db.props = db.props.filter(p=>p.fixtureId!==id); commit();
+}
+function pickFor(id){ resetPick(id); showTab("picks"); }
+
+
+/* ============ FOOTBALL TABLE ============ */
+const fbDefaults = () => ({tip:"",tipOdds:"",o1:"",oX:"",o2:"",btts:"",bttsOdds:"",ou:"",ouOdds:"",conf:"",dc:"",dcOdds:"",cs:"",st:"",score:"",sure:false,live:false});
+const fbOf = f => { const v = Object.assign(fbDefaults(), f.fb||{}); if(!v.tip && v.pick) v.tip = v.pick; return v; };
+const hhmm = iso => { const d=new Date(iso); return isNaN(d)?"":d.toLocaleTimeString([], {hour:"2-digit",minute:"2-digit",hour12:false}); };
+const dmon = iso => { const d=new Date(iso); return isNaN(d)?"":d.toLocaleDateString([], {day:"2-digit",month:"short"}); };
+const oddIn = (key,v) => `<td><input class="odd" type="number" step="0.01" min="1" data-f="${key}" value="${esc(v[key])}" placeholder="-"></td>`;
+const watDay = o => { const t = new Date(new Intl.DateTimeFormat("en-CA",{timeZone:"Africa/Lagos"}).format(new Date())+"T12:00:00Z"); t.setUTCDate(t.getUTCDate()+o); return t.toISOString().slice(0,10); };
+const HIDE_AFTER_HOURS = 24;   /* a match leaves the working lists this many hours after kick-off (it stays in the database / Past view) */
+let viewDate = watDay(0);
+const inView = f => { const q=($("#viewSearch").value||"").trim().toLowerCase(); if(q) return (f.home+" "+f.away+" "+(f.competition||"")+" "+(f.country||"")).toLowerCase().includes(q); return String(f.kickoff||"").slice(0,10)===viewDate; };
+const fmtDay = ymd => { const d=new Date(ymd+"T12:00:00Z"); return isNaN(d)?ymd:d.toLocaleDateString("en-GB",{weekday:"short",day:"numeric",month:"short",year:"numeric",timeZone:"UTC"}); };
+const shiftDay = (ymd,n) => { const d=new Date(ymd+"T12:00:00Z"); d.setUTCDate(d.getUTCDate()+n); return d.toISOString().slice(0,10); };
+const lgSort = (a,b) => ((a.country||"")+"|"+(a.competition||"")).localeCompare((b.country||"")+"|"+(b.competition||"")) || a.kickoff.localeCompare(b.kickoff);
+const lgHead = (f,n,cols,emoji) => `<tr class="lghead"><td colspan="${cols}">${emoji} <b>${esc(compLabel(f))}</b> <span class="muted">(${n})</span></td></tr>`;
+function leagueGrouped(rows, cols, emoji, rowFn){
+  const cnt = {}, key = f => (f.country||"")+"|"+(f.competition||""); rows.forEach(f=>{ cnt[key(f)] = (cnt[key(f)]||0)+1; });
+  let last = null;
+  return rows.map(f=>{ let h=""; if(key(f)!==last){ last=key(f); h=lgHead(f,cnt[last],cols,emoji); } return h+rowFn(f); }).join("");
+}
+function renderFb(){
+  const rows = db.fixtures.filter(f=>f.sport==="football"&&inView(f)).sort(lgSort);
+  $("#fbCount").textContent = rows.length?`(${rows.length})`:"";
+  $("#fbBody").innerHTML = rows.length ? leagueGrouped(rows,17,"⚽",f=>{
+    const v=fbOf(f);
+    return `<tr data-id="${f.id}">
+      <td class="t">${esc(hhmm(f.kickoff))}<br><small>${esc(dmon(f.kickoff))}</small> <button type="button" class="btn ghost sm" data-edtime title="Edit date and time">Edit</button></td>
+      <td class="lg">${esc(compLabel(f))}</td>
+      <td class="tm"><b>${esc(f.home)}</b></td><td class="tm"><b>${esc(f.away)}</b></td>
+      ${oddIn("o1",v)}${oddIn("oX",v)}${oddIn("o2",v)}
+      <td><select data-f="tip" class="tipsel"><option value="">-</option>${["1","X","2","1X","X2","12"].map(k=>`<option ${v.tip===k?"selected":""}>${k}</option>`).join("")}</select>${["1X","X2","12"].includes(v.tip)?`<br><input class="odd" data-f="tipOdds" value="${esc(v.tipOdds||"")}" placeholder="odds" title="Bookmaker price for ${esc(v.tip)}" style="margin-top:4px">`:`<br><small class="muted">odds auto</small>`}</td>
+      <td><input class="odd" type="number" step="1" min="0" max="100" data-f="conf" value="${esc(String(v.conf||"").replace("%",""))}" placeholder="%"></td>
+      <td><select data-f="ou"><option value="">-</option><option value="Over" ${v.ou==="Over"?"selected":""}>Over 2.5</option><option value="Under" ${v.ou==="Under"?"selected":""}>Under 2.5</option></select>
+          <input class="odd" type="number" step="0.01" min="1" data-f="ouOdds" value="${esc(v.ouOdds)}" placeholder="odds"></td>
+      <td><select data-f="btts"><option value="">-</option><option ${v.btts==="GG"?"selected":""}>GG</option><option ${v.btts==="NG"?"selected":""}>NG</option></select>
+          <input class="odd" type="number" step="0.01" min="1" data-f="bttsOdds" value="${esc(v.bttsOdds)}" placeholder="odds"></td>
+      <td><select data-f="dc"><option value="">-</option>${["1X","12","X2"].map(k=>`<option ${v.dc===k?"selected":""}>${k}</option>`).join("")}</select>
+          <input class="odd" type="number" step="0.01" min="1" data-f="dcOdds" value="${esc(v.dcOdds)}" placeholder="odds"></td>
+      <td><input class="cs" data-f="cs" value="${esc(v.cs)}" placeholder="2-1" maxlength="7"></td>
+      <td><select data-f="st"><option value="">pending</option><option value="won" ${v.st==="won"?"selected":""}>won</option><option value="lost" ${v.st==="lost"?"selected":""}>lost</option></select>
+          <input class="cs" data-f="score" value="${esc(v.score)}" placeholder="2-1" maxlength="9"></td>
+      <td><label class="sw"><input type="checkbox" data-f="sure" ${v.sure?"checked":""}><i></i></label></td>
+      <td><label class="sw"><input type="checkbox" data-f="xp" ${f.xp?"checked":""}><i></i></label></td>
+      <td><label class="sw"><input type="checkbox" data-f="live" ${v.live?"checked":""}><i></i></label></td></tr>`;
+  }) : `<tr><td colspan="17" class="empty">No football fixtures yet. Add one in tab 1 (choose Football).</td></tr>`;
+}
+/* ============ BASKETBALL TABLE ============ */
+const bbDefaults = () => ({o1:"",o2:"",tip:"",conf:"",spread:"",totalSide:"",totalLine:"",ps:"",st:"",score:"",sure:false,live:false});
+const bbOf = f => Object.assign(bbDefaults(), f.bb||{});
+function renderBb(){
+  const rows = db.fixtures.filter(f=>f.sport==="basketball"&&inView(f)).sort(lgSort);
+  $("#bbCount").textContent = rows.length?`(${rows.length})`:"";
+  $("#bbBody").innerHTML = rows.length ? leagueGrouped(rows,15,"🏀",f=>{
+    const v=bbOf(f);
+    return `<tr data-id="${f.id}">
+      <td class="t">${esc(hhmm(f.kickoff))}<br><small>${esc(dmon(f.kickoff))}</small> <button type="button" class="btn ghost sm" data-edtime title="Edit date and time">Edit</button></td>
+      <td class="lg">${esc(compLabel(f))}</td>
+      <td class="tm"><b>${esc(f.home)}</b></td><td class="tm"><b>${esc(f.away)}</b></td>
+      ${oddIn("o1",v)}${oddIn("o2",v)}
+      <td><select data-f="tip" class="tipsel"><option value="">-</option>${["1","2"].map(k=>`<option ${v.tip===k?"selected":""}>${k}</option>`).join("")}</select></td>
+      <td><input class="odd" type="number" step="1" min="0" max="100" data-f="conf" value="${esc(String(v.conf||"").replace("%",""))}" placeholder="%"></td>
+      <td><input class="odd" data-f="spread" value="${esc(v.spread)}" placeholder="-6.5" maxlength="7"></td>
+      <td><select data-f="totalSide"><option value="">-</option><option value="Over" ${v.totalSide==="Over"?"selected":""}>Over</option><option value="Under" ${v.totalSide==="Under"?"selected":""}>Under</option></select>
+          <input class="odd" data-f="totalLine" value="${esc(v.totalLine)}" placeholder="165.5" maxlength="7"></td>
+      <td><input class="cs" data-f="ps" value="${esc(v.ps)}" placeholder="98-91" maxlength="9"></td>
+      <td><select data-f="st"><option value="">pending</option><option value="won" ${v.st==="won"?"selected":""}>won</option><option value="lost" ${v.st==="lost"?"selected":""}>lost</option></select>
+          <input class="cs" data-f="score" value="${esc(v.score)}" placeholder="2-1" maxlength="9"></td>
+      <td><label class="sw"><input type="checkbox" data-f="sure" ${v.sure?"checked":""}><i></i></label></td>
+      <td><label class="sw"><input type="checkbox" data-f="xp" ${f.xp?"checked":""}><i></i></label></td>
+      <td><label class="sw"><input type="checkbox" data-f="live" ${v.live?"checked":""}><i></i></label></td></tr>`;
+  }) : `<tr><td colspan="15" class="empty">No basketball fixtures yet. Add one in tab 1 (choose Basketball).</td></tr>`;
+}
+$("#bbBody").addEventListener("change", e => {
+  const el=e.target, tr=el.closest("tr"); if(!tr||!el.dataset.f) return;
+  const f=db.fixtures.find(x=>x.id===tr.dataset.id); if(!f) return;
+  if(el.dataset.f==="kickoff"){ if(!el.value) return; f.kickoff = el.value; commit(); toast("Date and time updated"); return; }
+  if(el.dataset.f==="sure" && el.checked){
+    const day=String(f.kickoff).slice(0,10), box=x=>x.sport==="basketball"?(x.bb||{}):(x.fb||{});
+    if(db.fixtures.filter(x=>x.id!==f.id && x.sport===f.sport && String(x.kickoff).slice(0,10)===day && box(x).sure).length>=10){ toast("Maximum 10 Sure predictions per sport per day. Untick one first."); el.checked=false; return; }
+  }
+  if(el.dataset.f==="xp"){ f.xp = el.checked; Store.save(db); $("#stats").textContent = statsText(); toast(el.checked?"Added to Expert Tips":"Removed from Expert Tips"); return; }
+  f.bb = bbOf(f);
+  f.bb[el.dataset.f] = el.type==="checkbox" ? el.checked : el.value.trim();
+  Store.save(db); $("#stats").textContent = statsText();
+});
+$("#fbBody").addEventListener("change", e => {
+  const el=e.target, tr=el.closest("tr"); if(!tr||!el.dataset.f) return;
+  const f=db.fixtures.find(x=>x.id===tr.dataset.id); if(!f) return;
+  if(el.dataset.f==="kickoff"){ if(!el.value) return; f.kickoff = el.value; commit(); toast("Date and time updated"); return; }
+  if(el.dataset.f==="sure" && el.checked){
+    const day=String(f.kickoff).slice(0,10), box=x=>x.sport==="basketball"?(x.bb||{}):(x.fb||{});
+    if(db.fixtures.filter(x=>x.id!==f.id && x.sport===f.sport && String(x.kickoff).slice(0,10)===day && box(x).sure).length>=10){ toast("Maximum 10 Sure predictions per sport per day. Untick one first."); el.checked=false; return; }
+  }
+  if(el.dataset.f==="xp"){ f.xp = el.checked; Store.save(db); $("#stats").textContent = statsText(); toast(el.checked?"Added to Expert Tips":"Removed from Expert Tips"); return; }
+  f.fb = fbOf(f);
+  f.fb[el.dataset.f] = el.type==="checkbox" ? el.checked : el.value.trim();
+  if(el.dataset.f==="tip"){ f.fb.tipOdds=""; Store.save(db); $("#stats").textContent = statsText(); renderFb(); return; }
+  Store.save(db); $("#stats").textContent = statsText();
+});
+
+
+/* ============ HOME BOXES (Expert tip, Bets of the day, VIP results) ============ */
+const todayStr = () => new Intl.DateTimeFormat("en-CA",{timeZone:"Africa/Lagos"}).format(new Date());
+$("#hbDate").value = todayStr(); $("#vpMonth").value = todayStr().slice(0,7);
+function renderHome(){
+  const day = $("#hbDate").value, dayAll = db.fixtures.filter(f=>String(f.kickoff||"").slice(0,10)===day).sort((a,b)=>a.kickoff.localeCompare(b.kickoff));
+  const rows = dayAll.filter(f=>(f.et&&f.et.on)||(f.bo&&f.bo.on));
+  const sp = $("#hbSport").value, lgOf=f=>(f.country||"")+" · "+(f.competition||"");
+  const sport = dayAll.filter(f=>f.sport===sp);
+  const q=($("#hbSearch").value||"").trim().toLowerCase();
+  const cand = sport.filter(f=>!(f.et&&f.et.on) && !(f.bo&&f.bo.on)).filter(f=>!q||(f.home+" "+f.away+" "+lgOf(f)).toLowerCase().includes(q)).sort(lgSort);
+  const CAP=60, shown=cand.slice(0,CAP); let ih="", last=null;
+  shown.forEach(f=>{ const k=lgOf(f); if(k!==last){ last=k; ih+=`<div class="ih">${esc(k)}</div>`; }
+    const e=f.et&&f.et.on, b=f.bo&&f.bo.on;
+    ih+=`<div class="ir ${e||b?"done":""}" data-id="${f.id}"><span class="t">${esc(hhmm(f.kickoff))}</span><span class="m"><b>${esc(f.home)}</b> v <b>${esc(f.away)}</b></span>`+
+      (e?`<span class="muted">Expert tip ✓</span>`:`<button type="button" class="btn ghost sm" data-add="et">Expert tip</button>`)+
+      (b?`<span class="muted">Bet of the day ✓</span>`:`<button type="button" class="btn ghost sm" data-add="bo">Bet of the day</button>`)+`</div>`; });
+  if(cand.length>CAP) ih+=`<div class="em">Showing ${CAP} of ${cand.length}. Type a team or choose a league to narrow the list.</div>`;
+  $("#hbInv").innerHTML = cand.length ? ih : `<div class="em">No matches available.</div>`;
+  $("#hbNote").textContent = `${dayAll.length} match${dayAll.length===1?"":"es"} on this date, ${rows.length} chosen for the home page.`;
+  $("#hbBody").innerHTML = rows.length ? rows.map(f=>{
+    const e=f.et||{}, b=f.bo||{};
+    return `<tr data-id="${f.id}">
+      <td class="t">${esc(hhmm(f.kickoff))}</td>
+      <td class="tm"><b>${esc(f.home)}</b> v <b>${esc(f.away)}</b><br><small>${f.sport==="football"?"Football":"Basketball"} · ${esc(f.competition)}</small></td>
+      <td><label class="sw"><input type="checkbox" data-g="et" data-f="on" ${e.on?"checked":""}><i></i></label></td>
+      <td>${e.on?`<textarea data-g="et" data-f="reasoning" rows="3" style="min-width:240px;max-width:320px" placeholder="Why this tip? (new line = new paragraph)">${esc(e.reasoning||"")}</textarea><br><input data-g="et" data-f="by" value="${esc(e.by||"PB Analyst")}" placeholder="By" style="width:140px"><br><input data-g="et" data-f="hl" value="${esc(e.hl||"")}" placeholder="Home logo link" style="width:150px"> <input data-g="et" data-f="al" value="${esc(e.al||"")}" placeholder="Away logo link" style="width:150px"><br><small class="muted">National teams get their flag automatically. For clubs, paste an https image link, or leave blank for a neutral ball icon.</small><br>Result: <select data-g="et" data-f="st"><option value="">pending</option><option value="won" ${e.st==="won"?"selected":""}>won</option><option value="lost" ${e.st==="lost"?"selected":""}>lost</option></select>`:'<span class="muted">-</span>'}</td>
+      <td><label class="sw"><input type="checkbox" data-g="bo" data-f="on" ${b.on?"checked":""}><i></i></label></td>
+      <td>${b.on?`<input data-g="bo" data-f="pick" value="${esc(b.pick||"")}" placeholder="1X" style="width:110px">`:'<span class="muted">-</span>'}</td>
+      <td>${b.on?`<select data-g="bo" data-f="st">${["pending","won","lost"].map(r=>`<option ${(b.st||"pending")===r?"selected":""}>${r}</option>`).join("")}</select>`:'<span class="muted">-</span>'}</td>
+      <td>${b.on?`<input class="cs" data-g="bo" data-f="score" value="${esc(b.score||"")}" placeholder="2-1" maxlength="9">`:'<span class="muted">-</span>'}</td></tr>`;
+  }).join("") : `<tr><td colspan="8" class="empty">Nothing chosen for this date yet. Choose a match above.</td></tr>`;
+  const ym=$("#vpMonth").value||todayStr().slice(0,7), [y,m]=ym.split("-").map(Number), n=new Date(y,m,0).getDate();
+  let h="";
+  for(let d=1; d<=n; d++){
+    /* internal tier keys: "bronze" = shown as Gold, "gold" (and old untiered rows) = shown as Titanium */
+    const ymd=`${ym}-${String(d).padStart(2,"0")}`, vb=(db.vip||[]).find(x=>x.ymd===ymd&&x.tier==="bronze")||{}, vg=(db.vip||[]).find(x=>x.ymd===ymd&&x.tier!=="bronze")||{};
+    const cells=(t,v)=>`<td><input class="odd" data-t="${t}" data-v="odds" value="${esc(v.odds||"")}" placeholder="2.43" maxlength="7"></td>
+      <td><select data-t="${t}" data-v="st"><option value="">-</option>${["won","lost"].map(r=>`<option ${v.st===r?"selected":""}>${r}</option>`).join("")}</select></td>`;
+    h+=`<tr data-ymd="${ymd}"><td>${d} ${new Date(y,m-1,d).toLocaleDateString("en-GB",{weekday:"short"})}</td>${cells("bronze",vb)}${cells("gold",vg)}</tr>`;
+  }
+  $("#vpBody").innerHTML = h;
+}
+function setViewDate(ymd){ if(!ymd) return; viewDate = ymd; $("#viewDate").value = ymd; $("#dLbl").textContent = fmtDay(ymd); if(typeof applyKickoffDefault==="function") applyKickoffDefault(); render(); }
+$("#viewDate").onchange = e => setViewDate(e.target.value);
+$("#dPrev").onclick = () => setViewDate(shiftDay(viewDate,-1)); $("#dNext").onclick = () => setViewDate(shiftDay(viewDate,1)); $("#dToday").onclick = () => setViewDate(watDay(0));
+$("#viewDate").addEventListener("click", e => { try{ e.target.showPicker && e.target.showPicker(); }catch(_){} });
+$("#viewSearch").oninput = render;
+$("#hbDate").onchange = renderHome; $("#vpMonth").onchange = renderHome; 
+function hbLimitOk(f,g){
+  const day=String(f.kickoff).slice(0,10), lim = g==="et"?1:5;
+  const n = db.fixtures.filter(x=>x.id!==f.id && x.sport===f.sport && String(x.kickoff).slice(0,10)===day && x[g] && x[g].on).length;
+  if(n>=lim){ toast(g==="et" ? "Only one Expert tip per sport per day. Switch the other one off first." : "Maximum 5 Bets of the day per sport. Switch one off first."); return false; }
+  return true;
+}
+function hbAdd(id,g){
+  const f=db.fixtures.find(x=>x.id===id); if(!f) return;
+  if(!hbLimitOk(f,g)) return;
+  f[g]=f[g]||{}; f[g].on=true; if(g==="bo" && !f.bo.st) f.bo.st="pending";
+  commit(); toast(g==="et"?"Added as Expert tip":"Added as Bet of the day");
+}
+$("#hbInv").addEventListener("click", e => { const b=e.target.closest("[data-add]"); if(!b) return; hbAdd(b.closest(".ir").dataset.id,b.dataset.add); hbOpen(false); $("#hbSearch").value=""; });
+const hbOpen = o => { $("#hbInv").hidden = !o; };
+$("#hbSearch").onfocus = $("#hbSearch").onclick = () => { renderHome(); hbOpen(true); };
+$("#hbSearch").oninput = () => { renderHome(); hbOpen(true); };
+document.addEventListener("click", e => { if(!e.target.closest("#hbInv") && e.target!==$("#hbSearch")) hbOpen(false); });
+$("#hbSeg").addEventListener("click", e => { const b=e.target.closest("[data-hs]"); if(!b) return; e.stopPropagation(); $("#hbSport").value=b.dataset.hs; $("#hbSearch").value="";
+  document.querySelectorAll("#hbSeg button").forEach(x=>x.setAttribute("aria-pressed", x===b)); hbOpen(false); renderHome(); });
+$("#hbBody").addEventListener("change", e => {
+  const el=e.target, tr=el.closest("tr"); if(!tr||!el.dataset.g) return;
+  const f=db.fixtures.find(x=>x.id===tr.dataset.id); if(!f) return;
+  const g=el.dataset.g, val = el.type==="checkbox" ? el.checked : el.value.trim();
+  if(el.dataset.f==="on" && val){
+    const day=String(f.kickoff).slice(0,10), lim = g==="et"?1:5;
+    const n = db.fixtures.filter(x=>x.id!==f.id && x.sport===f.sport && String(x.kickoff).slice(0,10)===day && x[g] && x[g].on).length;
+    if(n>=lim){ toast(g==="et" ? "Only one Expert tip per sport per day. Untick the other one first." : "Maximum 5 Bets of the day per sport. Untick one first."); el.checked=false; return; }
+  }
+  f[g] = f[g] || {}; f[g][el.dataset.f] = val;
+  if(g==="bo" && el.dataset.f==="on" && val && !f.bo.st) f.bo.st="pending";
+  commit();
+});
+$("#vpBody").addEventListener("change", e => {
+  const el=e.target, tr=el.closest("tr"); if(!tr||!el.dataset.v) return;
+  const t=el.dataset.t==="bronze"?"bronze":"gold";
+  db.vip = db.vip||[]; let v=db.vip.find(x=>x.ymd===tr.dataset.ymd&&(t==="bronze"?x.tier==="bronze":x.tier!=="bronze"));
+  if(!v){ v={id:(t==="bronze"?"vip-bronze-":"vip-")+tr.dataset.ymd, kind:"vip", status:"vip", tier:t, ymd:tr.dataset.ymd, odds:"", st:""}; db.vip.push(v); }
+  v[el.dataset.v]=el.value.trim();
+  if(!v.odds && !v.st) db.vip = db.vip.filter(x=>x!==v);
+  Store.save(db); $("#stats").textContent = statsText();
+});
+
+function openTimeEdit(e){
+  const b=e.target.closest("[data-edtime]"); if(!b) return;
+  const tr=b.closest("tr"), f=db.fixtures.find(x=>x.id===tr.dataset.id); if(!f) return;
+  b.closest("td").innerHTML = `<input type="datetime-local" data-f="kickoff" value="${esc(f.kickoff)}" style="min-width:190px">`;
+  tr.querySelector('[data-f=kickoff]').focus();
+}
+$("#fbBody").addEventListener("click", openTimeEdit); $("#bbBody").addEventListener("click", openTimeEdit);
+
+/* ============ BASKETBALL PROPS ============ */
+const PROP_MARKETS = [
+  {k:"pts",   name:"Player Points (Over/Under)",                 type:"player"},
+  {k:"reb",   name:"Player Rebounds (Over/Under)",               type:"player"},
+  {k:"ast",   name:"Player Assists (Over/Under)",                type:"player"},
+  {k:"pra",   name:"Player Points + Rebounds + Assists (PRA) (Over/Under)", type:"player"},
+  {k:"3ps",   name:"Player 3PT Shots Scored",                    type:"player"},
+  {k:"3pa",   name:"Player 3PT Shots Attempted",                 type:"player"},
+  {k:"blk",   name:"Player Blocks",                              type:"player"},
+  {k:"stl",   name:"Player Steals",                              type:"player"},
+  {k:"tov",   name:"Player Turnovers",                           type:"player"},
+  {k:"t3pt",  name:"Team With Most 3PTs Scored",                 type:"teampick"},
+  {k:"treb",  name:"Team With Most Rebounds",                    type:"teampick"},
+  {k:"tast",  name:"Team With Most Assists",                     type:"teampick"},
+  {k:"t2fg",  name:"Team With Most 2PT Field Goals Scored",      type:"teampick"}
+];
+/* old keys saved by earlier builds */
+const PROP_KEY_MIGRATE = {"3pm":"3ps","most3":"t3pt"};
+db.props.forEach(p=>{ if(PROP_KEY_MIGRATE[p.market]) p.market = PROP_KEY_MIGRATE[p.market]; });
+const bbForm=$("#bbForm");
+$("#bbMarket").innerHTML = PROP_MARKETS.map(m=>`<option value="${m.k}">${esc(m.name)}</option>`).join("");
+const propType = () => (PROP_MARKETS.find(m=>m.k===bbForm.market.value)||{type:"player"}).type;
+function syncPropForm(){
+  const t=propType(), g=bbForm.fixtureId.value && db.fixtures.find(f=>f.id===bbForm.fixtureId.value);
+  $("#bbPlayerW").hidden = t!=="player";
+  $("#bbTeamW").hidden   = t==="player";
+  $("#bbLineW").hidden   = t==="teampick";
+  $("#bbSideW").hidden   = t==="teampick";
+  bbForm.team.innerHTML = g ? [g.home,g.away].map(n=>`<option>${esc(n)}</option>`).join("") : "";
+}
+function fillPropFixtures(){
+  const cur=bbForm.fixtureId.value;
+  const rows=db.fixtures.filter(f=>f.sport==="basketball"&&inView(f)).sort(lgSort);
+  bbForm.fixtureId.innerHTML = rows.length ? rows.map(f=>`<option value="${f.id}">${esc(f.competition)} · ${esc(f.home)} v ${esc(f.away)} · ${esc(fmt(f.kickoff))}</option>`).join("") : `<option value="">Add a basketball game in tab 1 first</option>`;
+  if(rows.some(f=>f.id===cur)) bbForm.fixtureId.value=cur;
+  syncPropForm();
+}
+bbForm.market.onchange = syncPropForm; bbForm.fixtureId.onchange = syncPropForm;
+const propPick = p => {
+  const m=PROP_MARKETS.find(x=>x.k===p.market)||{type:"player",name:p.market};
+  if(m.type==="teampick") return `${p.team}`;
+  return `${m.type==="player"?p.player+" · ":p.team+" · "}${p.side} ${p.line}`;
+};
+bbForm.onsubmit = e => {
+  e.preventDefault();
+  const f=Object.fromEntries(new FormData(bbForm)), t=propType();
+  if(!f.fixtureId) return toast("Add a basketball game first");
+  if(t==="player" && !f.player.trim()) return toast("Enter the player's name");
+  if(t!=="teampick" && f.line==="") return toast("Enter the line");
+  const rec = {fixtureId:f.fixtureId, market:f.market, player:t==="player"?f.player.trim():"", team:t==="player"?"":f.team,
+               line:t==="teampick"?"":f.line, side:t==="teampick"?"":f.side, odds:f.odds};
+  if(editingProp){
+    const x=db.props.find(q=>q.id===editingProp);
+    if(x) Object.assign(x, rec);
+    stopPropEdit(); commit(); toast("Prop updated"); return;
+  }
+  db.props.push({id:uid(), ...rec, live:false, createdAt:new Date().toISOString()});
+  bbForm.player.value=""; bbForm.line.value=""; bbForm.odds.value=""; commit(); toast("Prop added");
+};
+let editingProp = null;
+function stopPropEdit(){
+  editingProp = null; bbForm.player.value=""; bbForm.line.value=""; bbForm.odds.value="";
+  $("#propSubmit").textContent="Add prop"; $("#propCancel").hidden=true; $("#propEditing").hidden=true;
+}
+$("#propCancel").onclick = stopPropEdit;
+function editProp(id){
+  const p=db.props.find(x=>x.id===id); if(!p) return;
+  editingProp = id; bbForm.fixtureId.value=p.fixtureId; bbForm.market.value=p.market; syncPropForm();
+  bbForm.player.value=p.player||""; if(p.team) bbForm.team.value=p.team;
+  bbForm.line.value=p.line||""; if(p.side) bbForm.side.value=p.side; bbForm.odds.value=p.odds||"";
+  const f=db.fixtures.find(x=>x.id===p.fixtureId)||{home:"?",away:"?"};
+  $("#propSubmit").textContent="Save changes"; $("#propCancel").hidden=false;
+  const n=$("#propEditing"); n.hidden=false; n.innerHTML="Editing a prop for <b>"+esc(f.home)+" v "+esc(f.away)+"</b>. Change the game, prop type, player, line or odds, then press Save changes. Live stays as it is.";
+  showTab("bbprops"); window.scrollTo({top:0,behavior:"smooth"});
+}
+function renderProps(){
+  fillPropFixtures();
+  const fxOf = p => db.fixtures.find(x=>x.id===p.fixtureId)||{home:"?",away:"?",kickoff:""};
+  const lgKeyOf = f => (f.country||"")+"|"+(f.competition||"");
+  const rows=db.props.filter(p=>inView(fxOf(p))).sort((x,y)=>{ const fx=fxOf(x), fy=fxOf(y); return lgKeyOf(fx).localeCompare(lgKeyOf(fy)) || String(fx.kickoff).localeCompare(String(fy.kickoff)) || String(x.fixtureId).localeCompare(String(y.fixtureId)) || String(x.createdAt||"").localeCompare(String(y.createdAt||"")); });
+  $("#propsCount").textContent = rows.length?`(${rows.length})`:"";
+  const pcnt = {}, lcnt = {}; rows.forEach(p=>{ pcnt[p.fixtureId]=(pcnt[p.fixtureId]||0)+1; const k=lgKeyOf(fxOf(p)); lcnt[k]=(lcnt[k]||0)+1; });
+  let lastG = null, lastL = null;
+  $("#propsBody").innerHTML = rows.length ? rows.map(p=>{
+    const f=fxOf(p), m=PROP_MARKETS.find(x=>x.k===p.market);
+    let head=""; const lk=lgKeyOf(f);
+    if(lk!==lastL){ lastL=lk; head+=`<tr class="lghead"><td colspan="7">🏆 <b>${esc(compLabel(f)||"No league")}</b> <span class="muted">(${lcnt[lk]} prop${lcnt[lk]===1?"":"s"})</span></td></tr>`; }
+    if(p.fixtureId!==lastG){ lastG=p.fixtureId; head+=`<tr class="gmhead"><td colspan="7">🏀 <b>${esc(f.home)} v ${esc(f.away)}</b> <span class="muted">· ${esc(fmt(f.kickoff))} · ${pcnt[p.fixtureId]} prop${pcnt[p.fixtureId]===1?"":"s"}</span></td></tr>`; }
+    return head+`<tr data-id="${p.id}"><td><b>${esc(f.home)}</b> v <b>${esc(f.away)}</b><br><small class="muted">${esc(fmt(f.kickoff))}</small></td>
+      <td>${esc(m?m.name:p.market)}</td><td>${esc(propPick(p))}</td>
+      <td><input class="odd" type="number" step="0.01" min="1" data-f="odds" value="${esc(p.odds)}" placeholder="-"></td>
+      <td><select data-f="st" class="res ${p.st||"pending"}">${["pending","won","lost"].map(r=>`<option ${(p.st||"pending")===r?"selected":""}>${r}</option>`).join("")}</select></td>
+      <td><label class="sw"><input type="checkbox" data-f="live" ${p.live?"checked":""}><i></i></label></td>
+      <td class="row"><button class="btn ghost sm" data-edit="${p.id}">Edit</button><button class="btn danger sm" data-del="${p.id}">Delete</button></td></tr>`;
+  }).join("") : `<tr><td colspan="7" class="empty">No props yet.</td></tr>`;
+}
+$("#propsBody").addEventListener("change", e => {
+  const el=e.target, tr=el.closest("tr"); if(!tr||!el.dataset.f) return;
+  const p=db.props.find(x=>x.id===tr.dataset.id); if(!p) return;
+  p[el.dataset.f] = el.type==="checkbox" ? el.checked : el.value.trim(); if(el.dataset.f==="st") el.className="res "+el.value; Store.save(db);
+});
+$("#propsBody").addEventListener("click", e => {
+  if(e.target.dataset.edit) return editProp(e.target.dataset.edit);
+  const id=e.target.dataset.del; if(id && confirm("Delete this prop?")){ db.props=db.props.filter(p=>p.id!==id); if(editingProp===id) stopPropEdit(); commit(); }
+});
+
+/* ============ PICKS ============ */
+const pkForm = $("#pkForm");
+function fillMarkets(){
+  const fx = db.fixtures.find(f=>f.id===pkForm.fixtureId.value);
+  const list = CONFIG.MARKETS[fx?.sport] || [].concat(...Object.values(CONFIG.MARKETS));
+  const cur = pkForm.market.value;
+  pkForm.market.innerHTML = list.map(m=>`<option>${esc(m)}</option>`).join("");
+  if(list.includes(cur)) pkForm.market.value = cur;
+}
+pkForm.fixtureId.onchange = fillMarkets;
+function resetPick(fixtureId){
+  pkForm.reset(); pkForm.id.value="";
+  $("#pickTitle").textContent="New pick";
+  pkForm.fixtureId.innerHTML = db.fixtures.length
+    ? db.fixtures.slice().sort((a,b)=>a.kickoff.localeCompare(b.kickoff)).map(f=>`<option value="${f.id}">${esc(f.home)} v ${esc(f.away)} · ${esc(fmt(f.kickoff))}</option>`).join("")
+    : `<option value="">Add a fixture first</option>`;
+  if(fixtureId) pkForm.fixtureId.value = fixtureId;
+  fillMarkets();
+}
+function editPick(id){
+  const p = db.picks.find(x=>x.id===id); if(!p) return;
+  resetPick(p.fixtureId);
+  for(const k of ["id","market","selection","odds","confidence","access","analysis"]) pkForm[k].value = p[k] ?? "";
+  $("#pickTitle").textContent="Edit pick"; showTab("picks");
+}
+let submitStatus="draft";
+pkForm.querySelectorAll("button[type=submit]").forEach(b=>b.onclick=()=>submitStatus=b.dataset.status);
+pkForm.onsubmit = e => {
+  e.preventDefault();
+  if(!pkForm.fixtureId.value) return toast("Add a fixture first");
+  const f = Object.fromEntries(new FormData(pkForm));
+  const existing = db.picks.find(p=>p.id===f.id);
+  const rec = {...(existing||{result:"pending",createdAt:new Date().toISOString()}), ...f, id:f.id||uid(), status:submitStatus, updatedAt:new Date().toISOString()};
+  if(existing) Object.assign(existing, rec); else db.picks.push(rec);
+  commit(); toast(submitStatus==="published"?"Published":"Draft saved"); showTab("published");
+};
+$("#pkCancel").onclick = () => showTab("published");
+
+/* ============ PICKS TABLE ============ */
+function setResult(id,r){ const p=db.picks.find(x=>x.id===id); p.result=r; commit(); }
+function toggleStatus(id){ const p=db.picks.find(x=>x.id===id); p.status = p.status==="published"?"draft":"published"; commit(); }
+function delPick(id){ if(confirm("Delete this pick?")){ db.picks=db.picks.filter(p=>p.id!==id); commit(); } }
+$("#fStatus").onchange = render;
+
+/* ============ RESULTS (settle tips by day; matches stay here after they leave the other tabs) ============ */
+const hasTip = f => !!((f.fb&&f.fb.live)||(f.bb&&f.bb.live));
+const tipBox = f => f.sport==="basketball" ? bbOf(f) : fbOf(f);
+const dayOfF = f => String((f&&f.kickoff)||"").slice(0,10);
+const isDone = st => st==="won"||st==="lost";
+const resSel = (val,attrs) => `<select ${attrs}><option value="">pending</option><option value="won" ${val==="won"?"selected":""}>won</option><option value="lost" ${val==="lost"?"selected":""}>lost</option></select>`;
+const fxById = id => db.fixtures.find(x=>x.id===id);
+/* everything that can still be settled: played in the last 30 days and not yet won / lost */
+function unsettledCount(){
+  const now=Date.now(), from=now-30*864e5, played=f=>{ const t=new Date(f.kickoff).getTime(); return !isNaN(t)&&t<=now&&t>=from; };
+  let n=0;
+  db.fixtures.forEach(f=>{ if(!played(f)) return;
+    if(hasTip(f) && !isDone(tipBox(f).st)) n++;
+    if(f.et&&f.et.on && !isDone(f.et.st)) n++;
+    if(f.bo&&f.bo.on && !isDone(f.bo.st)) n++; });
+  (db.props||[]).forEach(p=>{ const f=fxById(p.fixtureId); if(p.live && f && played(f) && !isDone(p.st)) n++; });
+  return n;
+}
+function setResultsBtn(){ const n=unsettledCount(); $("#tabResultsBtn").textContent = "6. Results"+(n?` (${n} to settle)`:""); }
+function renderResults(){
+  const dEl=$("#rsDate"); if(!dEl.value) dEl.value = watDay(-1);
+  const day=dEl.value, onlyOpen=$("#rsOpen").checked;
+  const byKick=(a,b)=>String(a.kickoff).localeCompare(String(b.kickoff));
+  /* predictions */
+  const all=db.fixtures.filter(f=>hasTip(f)&&dayOfF(f)===day).sort(byKick);
+  const rows=all.filter(f=>!onlyOpen||!isDone(tipBox(f).st));
+  const done=all.filter(f=>isDone(tipBox(f).st)).length;
+  $("#rsCount").textContent = all.length ? `(${done} of ${all.length} settled)` : "";
+  $("#rsNote").textContent = "";
+  $("#rsBody").innerHTML = rows.length ? rows.map(f=>{
+    const v=tipBox(f), bb=f.sport==="basketball";
+    return `<tr data-id="${f.id}">
+      <td class="t">${esc(hhmm(f.kickoff))}</td>
+      <td>${bb?"🏀":"⚽"} ${esc(compLabel(f))}</td>
+      <td><b>${esc(f.home)}</b> v <b>${esc(f.away)}</b></td>
+      <td><b>${esc(v.tip||"-")}</b></td>
+      <td>${resSel(v.st,'data-f="st"')}</td>
+      <td><input class="cs" data-f="score" value="${esc(v.score)}" placeholder="${bb?"98-91":"2-1"}" maxlength="9"></td></tr>`;
+  }).join("") : `<tr><td colspan="6" class="empty">${all.length?"Everything on this day is settled.":"No published tips on this day."}</td></tr>`;
+  /* expert tip */
+  const et=db.fixtures.filter(f=>f.et&&f.et.on&&dayOfF(f)===day).sort(byKick), etShow=et.filter(f=>!onlyOpen||!isDone(f.et.st));
+  $("#rsEtCount").textContent = et.length ? `(${et.filter(f=>isDone(f.et.st)).length} of ${et.length} settled)` : "";
+  $("#rsEtBody").innerHTML = etShow.length ? etShow.map(f=>`<tr data-id="${f.id}"><td class="t">${esc(hhmm(f.kickoff))}</td>
+      <td>${f.sport==="basketball"?"🏀":"⚽"} <b>${esc(f.home)}</b> v <b>${esc(f.away)}</b></td><td>${esc(f.et.by||"PB Analyst")}</td>
+      <td>${resSel(f.et.st,'data-f="st"')}</td></tr>`).join("") : `<tr><td colspan="4" class="empty">${et.length?"Settled.":"No expert tip on this day."}</td></tr>`;
+  /* bets of the day */
+  const bo=db.fixtures.filter(f=>f.bo&&f.bo.on&&dayOfF(f)===day).sort(byKick), boShow=bo.filter(f=>!onlyOpen||!isDone(f.bo.st));
+  $("#rsBoCount").textContent = bo.length ? `(${bo.filter(f=>isDone(f.bo.st)).length} of ${bo.length} settled)` : "";
+  $("#rsBoBody").innerHTML = boShow.length ? boShow.map(f=>`<tr data-id="${f.id}"><td class="t">${esc(hhmm(f.kickoff))}</td>
+      <td>${f.sport==="basketball"?"🏀":"⚽"} <b>${esc(f.home)}</b> v <b>${esc(f.away)}</b></td><td><b>${esc(f.bo.pick||"-")}</b></td>
+      <td>${resSel(f.bo.st==="pending"?"":f.bo.st,'data-f="st"')}</td>
+      <td><input class="cs" data-f="score" value="${esc(f.bo.score||"")}" placeholder="2-1" maxlength="9"></td></tr>`).join("") : `<tr><td colspan="5" class="empty">${bo.length?"Settled.":"No bets of the day on this day."}</td></tr>`;
+  /* basketball props */
+  const pr=(db.props||[]).filter(p=>p.live&&dayOfF(fxById(p.fixtureId))===day), prShow=pr.filter(p=>!onlyOpen||!isDone(p.st));
+  $("#rsPrCount").textContent = pr.length ? `(${pr.filter(p=>isDone(p.st)).length} of ${pr.length} settled)` : "";
+  $("#rsPrBody").innerHTML = prShow.length ? prShow.map(p=>{ const f=fxById(p.fixtureId)||{home:"?",away:"?"}, m=PROP_MARKETS.find(x=>x.k===p.market);
+    return `<tr data-id="${p.id}"><td><b>${esc(f.home)}</b> v <b>${esc(f.away)}</b></td><td>${esc(m?m.name:p.market)}</td><td>${esc(propPick(p))}</td><td>${esc(p.odds||"-")}</td>
+      <td>${resSel(p.st==="pending"?"":p.st,'data-f="st"')}</td></tr>`; }).join("") : `<tr><td colspan="5" class="empty">${pr.length?"Settled.":"No live props on this day."}</td></tr>`;
+  setResultsBtn();
+}
+$("#rsBody").addEventListener("change", e => {
+  const el=e.target, tr=el.closest("tr"); if(!tr||!el.dataset.f) return;
+  const f=fxById(tr.dataset.id); if(!f) return;
+  const key=f.sport==="basketball"?"bb":"fb";
+  f[key] = key==="bb" ? bbOf(f) : fbOf(f);
+  f[key][el.dataset.f] = el.value.trim();
+  Store.save(db); $("#stats").textContent = statsText();
+  if(el.dataset.f==="st") renderResults(); else setResultsBtn();
+});
+$("#rsEtBody").addEventListener("change", e => {
+  const el=e.target, tr=el.closest("tr"); if(!tr||!el.dataset.f) return;
+  const f=fxById(tr.dataset.id); if(!f) return;
+  f.et = f.et||{}; f.et[el.dataset.f] = el.value.trim(); Store.save(db); renderResults();
+});
+$("#rsBoBody").addEventListener("change", e => {
+  const el=e.target, tr=el.closest("tr"); if(!tr||!el.dataset.f) return;
+  const f=fxById(tr.dataset.id); if(!f) return;
+  f.bo = f.bo||{}; f.bo[el.dataset.f] = el.value.trim(); if(el.dataset.f==="st" && !f.bo.st) f.bo.st="pending";
+  Store.save(db); if(el.dataset.f==="st") renderResults(); else setResultsBtn();
+});
+$("#rsPrBody").addEventListener("change", e => {
+  const el=e.target, tr=el.closest("tr"); if(!tr||!el.dataset.f) return;
+  const p=db.props.find(x=>x.id===tr.dataset.id); if(!p) return;
+  p.st = el.value.trim()||"pending"; Store.save(db); renderResults();
+});
+$("#rsDate").onchange = renderResults; $("#rsOpen").onchange = renderResults;
+document.querySelectorAll("[data-rsday]").forEach(b=>b.onclick=()=>{ $("#rsDate").value = watDay(+b.dataset.rsday); renderResults(); });
+
+/* ============ RENDER ============ */
+function render(){
+  applyKickoffDefault(); syncColor("h"); syncColor("a");
+  $("#stats").textContent = statsText(); renderFb(); renderBb(); renderProps(); renderHome(); renderResults();
+  const fxs = db.fixtures.filter(inView).sort((a,b)=>a.kickoff.localeCompare(b.kickoff));
+  $("#fxCount").textContent = fxs.length?`(${fxs.length})`:"";
+  { const q=$("#viewSearch").value.trim(); $("#viewNote").textContent = q ? `${fxs.length} match${fxs.length===1?"":"es"} found` : `${fxs.length} match${fxs.length===1?"":"es"} on this date`; $("#dLbl").textContent = fmtDay(viewDate); $("#viewDate").value = viewDate; }
+  const gk = f => (f.sport==="football"?"0":"1")+"|"+(f.country||"")+"|"+(f.competition||"");
+  fxs.sort((a,b)=>gk(a).localeCompare(gk(b)) || a.kickoff.localeCompare(b.kickoff));
+  const cnt = {}; fxs.forEach(f=>{ cnt[gk(f)] = (cnt[gk(f)]||0)+1; });
+  let last = null, fxh = "";
+  fxs.forEach(f=>{
+    if(gk(f)!==last){ last = gk(f); fxh += `<tr class="lghead"><td colspan="4">${f.sport==="football"?"⚽":"🏀"} <b>${esc(compLabel(f))}</b> <span class="muted">(${cnt[last]})</span></td></tr>`; }
+    fxh += `<tr>
+    <td>${esc(fmt(f.kickoff))}</td><td><b>${esc(f.home)}</b> v <b>${esc(f.away)}</b></td>
+    <td>${esc(compLabel(f))}</td>
+    <td class="row"><button class="btn ghost sm" onclick="editFixture('${f.id}')">Edit</button><button class="btn danger sm" onclick="delFixture('${f.id}')">Delete</button></td></tr>`;
+  });
+  $("#fxBody").innerHTML = fxs.length ? fxh : `<tr><td colspan="4" class="empty">No fixtures yet.</td></tr>`;
+
+  const flt = $("#fStatus").value;
+  const picks = db.picks.filter(p=>!flt||p.status===flt).slice().sort((a,b)=>b.updatedAt.localeCompare(a.updatedAt));
+  $("#pkBody").innerHTML = picks.length ? picks.map(p=>{
+    const f = db.fixtures.find(x=>x.id===p.fixtureId)||{home:"?",away:"?"};
+    return `<tr>
+      <td><b>${esc(f.home)}</b> v <b>${esc(f.away)}</b><br><span class="muted">${esc(compLabel(f))}</span></td>
+      <td>${esc(p.selection)}<br><span class="muted">${esc(p.market)}${p.odds?` @ ${esc(p.odds)}`:""} · ${esc(p.confidence)}</span> ${p.access==="premium"?'<span class="tag prem">Premium</span>':""}</td>
+      <td><span class="tag ${p.status==="published"?"live":"draft"}">${p.status==="published"?"Live":"Draft"}</span></td>
+      <td><select onchange="setResult('${p.id}',this.value)" style="width:auto">${["pending","won","lost","void"].map(r=>`<option ${p.result===r?"selected":""}>${r}</option>`).join("")}</select></td>
+      <td class="row"><button class="btn ghost sm" onclick="editPick('${p.id}')">Edit</button><button class="btn ghost sm" onclick="toggleStatus('${p.id}')">${p.status==="published"?"Unpublish":"Publish"}</button><button class="btn danger sm" onclick="delPick('${p.id}')">Delete</button></td></tr>`;
+  }).join("") : `<tr><td colspan="5" class="empty">No picks yet.</td></tr>`;
+}
+
+/* ============ DATA TAB ============ */
+$("#exp").onclick = () => {
+  const a=document.createElement("a");
+  a.href=URL.createObjectURL(new Blob([JSON.stringify(db,null,2)],{type:"application/json"}));
+  a.download=`picksbible-backup-${new Date().toISOString().slice(0,10)}.json`; a.click();
+};
+$("#imp").onchange = e => {
+  const file=e.target.files[0]; if(!file) return;
+  file.text().then(t=>{ try{ const d=JSON.parse(t); if(!Array.isArray(d.fixtures)||!Array.isArray(d.picks)) throw 0; d.props=d.props||[]; d.vip=d.vip||[]; db=d; commit(); toast("Imported"); }catch(_){ toast("Not a valid backup file"); } });
+};
+$("#wipe").onclick = () => { if(confirm("Erase ALL fixtures, props and picks from the database? This cannot be undone.")){ db={fixtures:[],picks:[],props:[],vip:[]}; commit(); } };
+
+resetPick();
+try{
+  if(typeof firebase === "undefined") throw new Error("Firebase library did not load (check your internet / ad-blocker).");
+  Store.init();
+  Store.auth.onAuthStateChanged(u => { if(u && !entered) onSignedIn(u); });
+}catch(e){ loginMsg(e.message); }
+</script>
+</body></html>

@@ -940,20 +940,47 @@ $$("[data-checkout]").forEach(function(root){
 }
 loadLive(main);
 
-/* ---------- Google Analytics 4 (switched on by site.ga in data.js) + the three events that matter ---------- */
+/* ---------- Google Analytics 4 events: the loader is in data.js (fires on every page) ---------- */
 (function(){
   var id=window.PB&&PB.site&&PB.site.ga; if(!id||!/^G-[A-Z0-9]+$/i.test(id))return;
-  if(!window.__gaLoaded){window.__gaLoaded=true; window.dataLayer=window.dataLayer||[]; window.gtag=function(){dataLayer.push(arguments)};
-  var sc=document.createElement("script"); sc.async=true; sc.src="https://www.googletagmanager.com/gtag/js?id="+encodeURIComponent(id); document.head.appendChild(sc);
-  gtag("js",new Date()); gtag("config",id,{anonymize_ip:true});}
+  
+  /* Ensure gtag is available (should be from data.js but fallback just in case) */
+  if(!window.gtag){
+    window.dataLayer=window.dataLayer||[]; 
+    window.gtag=function(){dataLayer.push(arguments)};
+  }
+  
   var q=new URLSearchParams(location.search);
-  if(/usdt-payment\.html$/.test(location.pathname))gtag("event","view_usdt_payment",{plan:q.get("plan")||""});
+  
+  /* Fire view_usdt_payment on the USDT payment page */
+  if(/usdt-payment\.html$/.test(location.pathname)){
+    setTimeout(function(){gtag("event","view_usdt_payment",{plan:q.get("plan")||""})},200);
+  }
+  
+  /* Fire events on plan clicks and checkout steps */
   document.addEventListener("click",function(e){
-    var t=e.target.closest&&e.target.closest("[data-ck-go],[data-up-wa],[data-plan-pick],a[href*='checkout.html']");if(!t)return;
+    var t=e.target.closest&&e.target.closest("[data-ck-go],[data-up-wa],[data-plan-pick],a[href*='checkout.html']");
+    if(!t)return;
     var plan=q.get("plan")||t.getAttribute("data-plan-pick")||"";
-    if(t.hasAttribute("data-ck-go"))gtag("event","continue_to_payment",{plan:plan});
-    else if(t.hasAttribute("data-up-wa"))gtag("event","whatsapp_proof_click",{plan:plan});
-    else gtag("event","choose_plan",{plan:plan});
+    if(t.hasAttribute("data-ck-go")){
+      setTimeout(function(){gtag("event","continue_to_payment",{plan:plan})},100);
+    }
+    else if(t.hasAttribute("data-up-wa")){
+      setTimeout(function(){gtag("event","whatsapp_proof_click",{plan:plan})},100);
+    }
+    else {
+      setTimeout(function(){gtag("event","choose_plan",{plan:plan})},100);
+    }
+  },true);
+})();
+      setTimeout(function(){gtag("event","continue_to_payment",{plan:plan})},50);
+    }
+    else if(t.hasAttribute("data-up-wa")){
+      setTimeout(function(){gtag("event","whatsapp_proof_click",{plan:plan})},50);
+    }
+    else {
+      setTimeout(function(){gtag("event","choose_plan",{plan:plan})},50);
+    }
   },true);
 })();
 
