@@ -949,6 +949,7 @@ loadLive(main);
   var q=new URLSearchParams(location.search);
   if(/usdt-payment\.html$/.test(location.pathname))gtag("event","view_usdt_payment",{plan:q.get("plan")||""});
   document.addEventListener("click",function(e){
+    if(typeof gtag!=="function")return;
     var t=e.target.closest&&e.target.closest("[data-ck-go],[data-up-wa],[data-plan-pick],a[href*='checkout.html']");if(!t)return;
     var plan=q.get("plan")||t.getAttribute("data-plan-pick")||"";
     if(t.hasAttribute("data-ck-go"))gtag("event","continue_to_payment",{plan:plan});
@@ -956,6 +957,16 @@ loadLive(main);
     else gtag("event","choose_plan",{plan:plan});
   },true);
 })();
+
+/* ---------- GA event listener that works even if GA hasn't loaded yet ---------- */
+document.addEventListener("click",function(e){
+  if(typeof gtag!=="function")return;
+  var t=e.target.closest&&e.target.closest("[data-ck-go],[data-up-wa],[data-plan-pick],a[href*='checkout.html']");if(!t)return;
+  var q=new URLSearchParams(location.search), plan=q.get("plan")||t.getAttribute("data-plan-pick")||"";
+  if(t.hasAttribute("data-ck-go"))gtag("event","continue_to_payment",{plan:plan});
+  else if(t.hasAttribute("data-up-wa"))gtag("event","whatsapp_proof_click",{plan:plan});
+  else gtag("event","choose_plan",{plan:plan});
+},true);
 
 /* ---------- flag emoji -> flag pictures (Windows desktop cannot draw emoji flags) ---------- */
 (function(){
