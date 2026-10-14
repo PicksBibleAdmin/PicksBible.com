@@ -36,5 +36,6 @@
 var addr=(D.pay&&D.pay.usdt&&D.pay.usdt.address)||"TXoTZTaddtj7JJNNiMict6nQsbWUquJ6nW",num=String(D.site.whatsapp).replace(/[^0-9]/g,""),amt=String(plan.price).replace("$","")+" USDT";
 var $=function(s){return document.querySelector(s)};$("[data-up-plan]").textContent=plan.name+" VIP, 1 month";$("[data-up-amt]").textContent=amt;$("[data-up-addr]").textContent=addr;$("[data-up-num]").textContent=D.site.whatsapp;
 var msg="Hi PicksBible, I have paid for "+plan.name+" ("+amt+") by USDT TRC-20. Here is my proof of payment."+(q.get("n")?"\nName: "+q.get("n"):"")+(q.get("e")?"\nEmail: "+q.get("e"):"");
-$("[data-up-wa]").href="https://api.whatsapp.com/send/?phone="+num+"&text="+encodeURIComponent(msg);
+var wa=$("[data-up-wa]");wa.href="https://api.whatsapp.com/send/?phone="+num+"&text="+encodeURIComponent(msg);
+wa.addEventListener("click",function(e){e.preventDefault();if(typeof gtag==="function")gtag("event","whatsapp_proof_click",{plan:plan.tier||""});setTimeout(function(){location.href=wa.href},200)});
 var b=$("[data-up-copy]");b.addEventListener("click",function(){function done(){b.textContent="Copied";setTimeout(function(){b.textContent="Copy"},2000)}if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(addr).then(done,done);else done()})})();</script><script src="leagues.js"></script><script src="app.js"></script></body></html>
