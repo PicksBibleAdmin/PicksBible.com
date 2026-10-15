@@ -23,7 +23,7 @@ function wat(dOffset){ /* yyyy-mm-dd in Nigerian time, shifted by dOffset days *
 }
 function flagOf(country){
   var c=(window.PB.countryFlags||{})[country];
-  if(!c||c.length!==2)return "";
+  if(!c||c.length!==2)return /\(|^international$|^world$/i.test(String(country||"").trim())?"\uD83C\uDF0D":"";   /* Europe (UEFA), Africa (CAF), International ... = globe */
   return c.toUpperCase().split("").map(function(x){return String.fromCodePoint(127397+x.charCodeAt(0))}).join("");
 }
 function lgKey(P,sport,comp,country){
@@ -72,9 +72,9 @@ function addFx(P,f,days){
     if(!((f.fb&&f.fb.live)||(f.bb&&f.bb.live)))return;
     if(f.sport==="basketball"){
       var bd=String(f.kickoff||"").slice(0,10), bday=days[bd]; if(!bd)return;
-      var b=f.bb||{};
+      var b=f.bb||{}, bt=(b.tip||"")+(b.tip&&String(b.spread||"").trim()?" "+String(b.spread).trim():"");   /* tip + handicap shown together, e.g. "1 -6.5" or "2 +10.5" */
       var bm={lg:lgKey(P,"basketball",f.competition,f.country),t:String(f.kickoff).slice(11,16),h:f.home,a:f.away,
-        o:[b.o1||"",b.o2||""],pk:b.tip||"",tip:b.tip||"-",to:b.tipOdds||"",conf:b.conf||"",spread:b.spread||"",ts:b.totalSide||"",tl:b.totalLine||"",ps:b.ps||"",sure:!!b.sure,xp:!!f.xp,st:b.st||"pending",score:b.score||""};
+        o:[b.o1||"",b.o2||""],pk:bt,tip:bt||"-",to:b.tipOdds||"",conf:b.conf||"",spread:b.spread||"",ts:b.totalSide||"",tl:b.totalLine||"",sure:!!b.sure,xp:!!f.xp,st:b.st||"pending",score:b.score||""};
       (P.byDate.basketball[bd]=P.byDate.basketball[bd]||[]).push(bm);
       if(bday){var bl=P.basketball[bday];bm.featured=bl.length<6;bl.push(bm)}
       return;
@@ -344,7 +344,8 @@ function oddCell(m,i,k){var v=m.o&&m.o[i]?m.o[i]:"-";return '<td class="od" data
 function tipOdd(m){
   var t=String(m.pk||m.tip||""); if(!t||t==="-")return "";
   if(m.to)return String(m.to);
-  var bb=m.o&&m.o.length===2, i=bb?{"1":0,"2":1}[t]:{"1":0,"X":1,"2":2}[t];
+  var bb=m.o&&m.o.length===2; if(bb&&/\s/.test(t))return "";   /* a handicap tip has no automatic price */
+  var i=bb?{"1":0,"2":1}[t]:{"1":0,"X":1,"2":2}[t];
   if(i!==undefined&&m.o[i])return String(m.o[i]);
   if(m.dc===t&&m.dco)return String(m.dco);
   return "";
@@ -364,14 +365,14 @@ function mConf(m){var n=parseFloat(String(m.conf).replace("%","")),lv=isNaN(n)?"
 function mOdd(m,i){return '<td class="o">'+esc(m.o&&m.o[i]?m.o[i]:"-")+'</td>'}
 function mX(label,odds){return label?'<td class="x">'+esc(label)+(odds?'<small>('+esc(odds)+')</small>':'')+'</td>':'<td class="x na">-</td>'}
 function mobileTable(list,sport){
-  var fb=sport==="football", labels=fb?["1","X","2","Tip","Conf","O/U 2.5","BTTS","CS"]:["1","2","Tip","Conf","Spread","Total","Proj."], last=null, out="";
+  var fb=sport==="football", labels=fb?["1","X","2","Tip","Conf","O/U 2.5","BTTS","CS"]:["1","2","Tip","Conf","Total"], last=null, out="";
   sortByLeague(list).forEach(function(m){
     var key=lgName(m.lg);
     if(key!==last){last=key;out+='<tr class="lgr"><td class="n">'+(lgFlag(m.lg)?'<span class="fl">'+lgFlag(m.lg)+'</span>':'')+esc(key)+'</td>'+labels.map(function(l){return '<td>'+l+'</td>'}).join("")+'</tr>'}
     if(fb)out+='<tr>'+mMatch(m)+mOdd(m,0)+mOdd(m,1)+mOdd(m,2)+'<td>'+pkBadge(m)+'</td>'+mConf(m)+mX(m.ou?(m.ou==="Over"?"Over 2.5":"Under 2.5"):"",m.ouo)+mX(m.gg,m.ggo)+mX(m.cs,"")+'</tr>';
-    else out+='<tr>'+mMatch(m)+mOdd(m,0)+mOdd(m,1)+'<td>'+pkBadge(m)+'</td>'+mConf(m)+mX(m.spread,"")+mX(m.ts?m.ts+(m.tl?" "+m.tl:""):"","")+mX(m.ps,"")+'</tr>';
+    else out+='<tr>'+mMatch(m)+mOdd(m,0)+mOdd(m,1)+'<td>'+pkBadge(m)+'</td>'+mConf(m)+mX(m.ts?m.ts+(m.tl?" "+m.tl:""):"","")+'</tr>';
   });
-  return '<div class="tscroll mtwrap"><table class="pt mt"><tbody>'+out+'</tbody></table></div><p class="mhint">&#8646; swipe the table for '+(fb?'Over/Under, BTTS and correct score':'spread, totals and projected score')+' &#8646;</p>';
+  return '<div class="tscroll mtwrap"><table class="pt mt"><tbody>'+out+'</tbody></table></div><p class="mhint">&#8646; swipe the table for '+(fb?'Over/Under, BTTS and correct score':'the point total tip')+' &#8646;</p>';
 }
 function dMatch(m){var p=String(m.score||'').split(/[-:]/),h=p[0]&&p[0].trim(),a=p[1]&&p[1].trim();return '<td class="l dm"><div class="dmi"><span class="t">'+esc(m.t)+'</span><span class="tn"><b>'+esc(m.h)+'</b>'+scoreBox(h)+'</span><span class="tn"><b>'+esc(m.a)+'</b>'+scoreBox(a)+'</span></div></td>'}
 function lgBar(name,labels,flag){return '<tr class="lgb"><td class="n">'+(flag?'<span class="fl">'+flag+'</span>':'')+esc(name)+'</td>'+labels.map(function(l){return '<td>'+esc(l)+'</td>'}).join("")+'</tr>'}
@@ -393,13 +394,13 @@ function bbOdd(m,i,k){var v=m.o&&m.o[i]?m.o[i]:"-";return '<td class="od"><span 
 function basketballTable(list){
   if(!list.length)return '<div class="empty">No basketball 🏀 predictions for this day yet.</div>';
   if(PHONE.matches)return mobileTable(list,"basketball");
-  var lbl=["Home Win (1)","Away Win (2)","Tip","Confidence","Projected Spread","Point Total Tip","Projected Score"], lastL=null;
+  var lbl=["Home Win (1)","Away Win (2)","Tip","Confidence","Point Total Tip"], lastL=null;
   return '<div class="tscroll bwwrap"><table class="pt bw bk lgbars"><tbody>'+
     sortByLeague(list).map(function(m){
       var bar="",k=lgName(m.lg); if(k!==lastL){lastL=k;bar=lgBar(k,lbl,lgFlag(m.lg))}
       var tot=m.ts?'<span class="xp"><b>'+esc(m.ts)+(m.tl?' '+esc(m.tl):'')+'</b></span>':'-';
       return bar+'<tr>'+dMatch(m)+''+
-        bbOdd(m,0,"1")+bbOdd(m,1,"2")+'<td>'+pkBadge(m)+'</td>'+confCell(m)+'<td class="cs">'+esc(m.spread||"-")+'</td><td>'+tot+'</td><td class="cs">'+esc(m.ps||"-")+'</td>'+'</tr>';
+        bbOdd(m,0,"1")+bbOdd(m,1,"2")+'<td>'+pkBadge(m)+'</td>'+confCell(m)+'<td>'+tot+'</td>'+'</tr>';
     }).join("")+
     '</tbody></table></div>';
 }

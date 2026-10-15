@@ -108,10 +108,17 @@
     const { db, uid, colorOf, leagues } = ctx;
     const rep = { added: 0, updated: 0, results: 0, problems: [], changed: false };
     const secs = sections(parseCSV(text));
+    if (opt.only && secs.length && !secs.some(x => x.sport === opt.only)) {
+      rep.problems.push("No " + opt.only + " table found in this file. Is this the right button?");
+    }
     if (!secs.length) { rep.problems.push("No header row found. The first row of each block must start with STARTING TIME and include HOME TEAM."); return rep; }
 
     secs.forEach(sec => {
       const { sport, idx } = sec;
+      if (opt.only && sport !== opt.only) {
+        rep.problems.push("A " + sport + " block was skipped: you used the " + opt.only + " upload button. Use the " + sport + " button for it.");
+        return;
+      }
       const get = (r, k) => (idx[k] === undefined ? "" : (r[idx[k]] || ""));
       let lastTime = "";
       sec.rows.forEach((r, n) => {
@@ -204,23 +211,35 @@
 
   /* ---- browser wiring ---- */
   const el = id => document.getElementById(id);
-  const fileEl = el("csvFile"); if (!fileEl) return;
-  try { if (typeof watDay === "function") el("csvDate").value = watDay(0); } catch (e) {}
-  fileEl.addEventListener("change", async () => {
-    const f = fileEl.files[0]; if (!f) return;
-    const out = el("csvOut");
+  const inputs = ["csvFileFb", "csvFileBb"].map(el).filter(Boolean);
+  if (!inputs.length) return;
+  const dateEl = el("csvDate"), out = el("csvOut");
+
+  // upload buttons stay locked until a match date is chosen
+  function syncLock() {
+    const ok = !!dateEl.value;
+    inputs.forEach(i => { i.disabled = !ok; i.parentNode.style.opacity = ok ? "" : ".4"; i.parentNode.style.pointerEvents = ok ? "" : "none"; });
+    if (!ok) { out.textContent = "Pick the match date first."; out.style.color = ""; }
+    else if (out.textContent === "Pick the match date first.") out.textContent = "";
+  }
+  dateEl.addEventListener("change", syncLock); dateEl.addEventListener("input", syncLock); syncLock();
+
+  inputs.forEach(inp => inp.addEventListener("change", async () => {
+    const f = inp.files[0]; if (!f) return;
+    const sport = inp.dataset.sport, mode = el("csvMode").value;
+    if (!dateEl.value) { out.textContent = "Pick the match date first."; inp.value = ""; return; }
     try {
       const rep = run(await f.text(),
-        { mode: el("csvMode").value, date: el("csvDate").value, live: el("csvLive").checked },
+        { mode, date: dateEl.value, live: el("csvLive").checked, only: sport },
         { db, uid, colorOf: typeof colorOf === "function" ? colorOf : () => "", leagues: window.PB_LEAGUES });
       if (rep.changed) commit();
-      const head = el("csvMode").value === "res"
-        ? "Results saved: " + rep.results + " match" + (rep.results === 1 ? "" : "es") + " marked won/lost."
-        : "Done: " + rep.added + " added, " + rep.updated + " updated.";
+      const head = (sport === "football" ? "Football" : "Basketball") + " " + dateEl.value + ": " + (mode === "res"
+        ? rep.results + " result" + (rep.results === 1 ? "" : "s") + " saved and marked won/lost."
+        : rep.added + " added, " + rep.updated + " updated.");
       out.textContent = head + (rep.problems.length ? "\n\nNeeds attention (" + rep.problems.length + "):\n- " + rep.problems.join("\n- ") : "");
       out.style.color = rep.problems.length ? "var(--lost)" : "";
       if (typeof toast === "function") toast(head);
     } catch (e) { out.textContent = "Import failed: " + e.message; console.error(e); }
-    fileEl.value = "";
-  });
+    inp.value = "";
+  }));
 })();
