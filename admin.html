@@ -186,6 +186,18 @@ tr.lghead td{background:#ffffff0d;padding:10px 8px;border-bottom:1px solid var(-
     <h2>Fixtures <span class="muted" id="fxCount"></span></h2>
     <div class="tbl"><table><thead><tr><th>Kick-off</th><th>Match</th><th>Competition</th><th></th></tr></thead><tbody id="fxBody"></tbody></table></div>
   </div>
+
+  <div class="card" id="csvCard">
+    <h2>Import from CSV</h2>
+    <p class="note">In Google Sheets: File &rarr; Download &rarr; Comma-separated values (.csv). Football and basketball blocks can be in the same file. League names must match the league list (for leagues that exist in several countries write <b>England: Premier League</b>).</p>
+    <div class="row">
+      <div><label>Match date (Nigeria time)</label><input type="date" id="csvDate"></div>
+      <div><label>What is in the file?</label><select id="csvMode"><option value="pre">Predictions (before the matches)</option><option value="res">Results (file has an FT SCORE column)</option></select></div>
+    </div>
+    <p><label style="text-transform:none;letter-spacing:0"><input type="checkbox" id="csvLive" checked> Show on the website immediately</label></p>
+    <label class="btn" style="margin:0;display:inline-block">Choose CSV file<input type="file" id="csvFile" accept=".csv,text/csv" hidden></label>
+    <pre id="csvOut" class="note" style="white-space:pre-wrap;margin-top:12px"></pre>
+  </div>
 </section>
 
 
@@ -1118,4 +1130,5 @@ try{
   Store.auth.onAuthStateChanged(u => { if(u && !entered) onSignedIn(u); });
 }catch(e){ loginMsg(e.message); }
 </script>
+<script src="admin-csv-import.js"></script>
 </body></html>
