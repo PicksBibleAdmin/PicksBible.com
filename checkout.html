@@ -36,4 +36,19 @@
 <div class="copy">Copyright © 2026 picksbible.com</div>
 </footer>
 <script>(function(){var S=window.PB&&PB.site;if(!S)return;document.querySelectorAll('[data-social]').forEach(function(a){var u=S.socials[a.dataset.social];if(u)a.href=u});document.querySelectorAll('[data-site=email]').forEach(function(a){a.textContent=S.email})})();</script>
+<!-- Cookie banner -->
+<div class="cookie-banner" id="cookieBanner">
+  <p>We use cookies to improve your experience. By using our site, you agree to our <a href="legal.html#privacy">privacy policy</a> and <a href="legal.html#terms">terms</a>.</p>
+  <button class="cookie-accept" type="button">Accept</button>
+</div>
+<script>
+(function(){
+  var cb=document.getElementById('cookieBanner');
+  if(localStorage.getItem('pb_cookies_accepted')){cb.classList.add('hidden');return}
+  document.querySelector('.cookie-accept').addEventListener('click',function(){
+    localStorage.setItem('pb_cookies_accepted','1');
+    cb.classList.add('hidden');
+  });
+})();
+</script>
 <script src="leagues.js"></script><script src="app.js"></script></body></html>

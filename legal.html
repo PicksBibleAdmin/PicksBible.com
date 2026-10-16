@@ -16,7 +16,9 @@
 <details><summary>Can I place bets on PicksBible?</summary><p>No. PicksBible publishes information only. Bets are placed with a licensed bookmaker of your choice.</p></details>
 <details><summary>Do you guarantee wins?</summary><p>No. No tipster can guarantee a result. We publish every result so you can judge our record yourself.</p></details>
 <h2 id="privacy">Privacy policy</h2>
-<p>We collect only the details you give us: your name and email when you contact us or subscribe, and payment confirmation from our payment provider. We never sell your data. We use analytics cookies to count visits. You can ask us to delete your data at any time by emailing us.</p>
+<p>We collect only the details you give us: your name and email when you contact us or subscribe, and payment confirmation from our payment provider. We never sell your data.</p>
+<p><b>Analytics & Cookies:</b> We use Google Analytics 4 to count visits and understand user behavior. GA stores cookies on your device and may collect your IP address (anonymized), device type, and pages visited. We do not track personally identifiable information. You can disable cookies in your browser settings. By using this site, you consent to our use of analytics cookies.</p>
+<p>You can ask us to delete your data at any time by emailing us.</p>
 <h2 id="terms">Terms of service</h2>
 <p>PicksBible content is for information and entertainment. You must be 18 or older and follow the gambling laws of your country. VIP memberships give access for the period paid and are non-refundable once tips for that period have been delivered.</p>
 <h2 id="responsible">Responsible gambling</h2>
@@ -142,4 +144,19 @@
 <div class="copy">Copyright © 2026 picksbible.com</div>
 </footer>
 <script>(function(){var S=window.PB&&PB.site;if(!S)return;document.querySelectorAll('[data-social]').forEach(function(a){var u=S.socials[a.dataset.social];if(u)a.href=u});document.querySelectorAll('[data-site=email]').forEach(function(a){a.textContent=S.email})})();</script>
+<!-- Cookie banner -->
+<div class="cookie-banner" id="cookieBanner">
+  <p>We use cookies to improve your experience. By using our site, you agree to our <a href="legal.html#privacy">privacy policy</a> and <a href="legal.html#terms">terms</a>.</p>
+  <button class="cookie-accept" type="button">Accept</button>
+</div>
+<script>
+(function(){
+  var cb=document.getElementById('cookieBanner');
+  if(localStorage.getItem('pb_cookies_accepted')){cb.classList.add('hidden');return}
+  document.querySelector('.cookie-accept').addEventListener('click',function(){
+    localStorage.setItem('pb_cookies_accepted','1');
+    cb.classList.add('hidden');
+  });
+})();
+</script>
 <script src="leagues.js"></script><script src="app.js"></script></body></html>

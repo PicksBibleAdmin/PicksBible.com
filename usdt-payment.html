@@ -38,4 +38,19 @@ var $=function(s){return document.querySelector(s)};$("[data-up-plan]").textCont
 var msg="Hi PicksBible, I have paid for "+plan.name+" ("+amt+") by USDT TRC-20. Here is my proof of payment."+(q.get("n")?"\nName: "+q.get("n"):"")+(q.get("e")?"\nEmail: "+q.get("e"):"");
 var wa=$("[data-up-wa]");wa.href="https://api.whatsapp.com/send/?phone="+num+"&text="+encodeURIComponent(msg);
 wa.addEventListener("click",function(e){e.preventDefault();if(typeof gtag==="function")gtag("event","whatsapp_proof_click",{plan:plan.tier||""});setTimeout(function(){location.href=wa.href},200)});
+<!-- Cookie banner -->
+<div class="cookie-banner" id="cookieBanner">
+  <p>We use cookies to improve your experience. By using our site, you agree to our <a href="legal.html#privacy">privacy policy</a> and <a href="legal.html#terms">terms</a>.</p>
+  <button class="cookie-accept" type="button">Accept</button>
+</div>
+<script>
+(function(){
+  var cb=document.getElementById('cookieBanner');
+  if(localStorage.getItem('pb_cookies_accepted')){cb.classList.add('hidden');return}
+  document.querySelector('.cookie-accept').addEventListener('click',function(){
+    localStorage.setItem('pb_cookies_accepted','1');
+    cb.classList.add('hidden');
+  });
+})();
+</script>
 var b=$("[data-up-copy]");b.addEventListener("click",function(){function done(){b.textContent="Copied";setTimeout(function(){b.textContent="Copy"},2000)}if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(addr).then(done,done);else done()})})();</script><script src="leagues.js"></script><script src="app.js"></script></body></html>
