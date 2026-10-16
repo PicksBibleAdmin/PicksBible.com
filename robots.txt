@@ -1,3 +1,11 @@
 User-agent: *
 Allow: /
+Disallow: /admin.html
+Disallow: /admin/
+Disallow: /admin-backend-mockup.html
+Disallow: /frontend-unchanged-mockup.html
+Disallow: /index.html.html
+Disallow: /checkout.html
+Disallow: /usdt-payment.html
+
 Sitemap: https://picksbible.com/sitemap.xml

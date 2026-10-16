@@ -4,5 +4,105 @@
   "installCommand": "echo 'No dependencies'",
   "env": {
     "NODE_ENV": "production"
-  }
+  },
+  "functions": {
+    "api/seo.js": {
+      "includeFiles": "{data,leagues}.js",
+      "maxDuration": 10
+    }
+  },
+  "rewrites": [
+    {
+      "source": "/sitemap-seo.xml",
+      "destination": "/api/seo?t=sitemap"
+    },
+    {
+      "source": "/predictions/:slug",
+      "destination": "/api/seo?t=match&slug=:slug"
+    },
+    {
+      "source": "/leagues/:slug",
+      "destination": "/api/seo?t=league&slug=:slug"
+    },
+    {
+      "source": "/football-predictions/:date",
+      "destination": "/api/seo?t=date&sport=football&date=:date"
+    },
+    {
+      "source": "/basketball-predictions/:date",
+      "destination": "/api/seo?t=date&sport=basketball&date=:date"
+    },
+    {
+      "source": "/blog/:slug",
+      "destination": "/api/seo?t=blog&slug=:slug"
+    },
+    {
+      "source": "/over-2-5-goals-predictions-today",
+      "destination": "/api/seo?t=hub&slug=over-2-5-goals-predictions-today"
+    },
+    {
+      "source": "/under-2-5-goals-predictions-today",
+      "destination": "/api/seo?t=hub&slug=under-2-5-goals-predictions-today"
+    },
+    {
+      "source": "/btts-predictions-today",
+      "destination": "/api/seo?t=hub&slug=btts-predictions-today"
+    },
+    {
+      "source": "/correct-score-predictions-today",
+      "destination": "/api/seo?t=hub&slug=correct-score-predictions-today"
+    },
+    {
+      "source": "/double-chance-predictions-today",
+      "destination": "/api/seo?t=hub&slug=double-chance-predictions-today"
+    },
+    {
+      "source": "/sure-predictions-today",
+      "destination": "/api/seo?t=hub&slug=sure-predictions-today"
+    },
+    {
+      "source": "/football-predictions-tomorrow",
+      "destination": "/api/seo?t=hub&slug=football-predictions-tomorrow"
+    },
+    {
+      "source": "/basketball-predictions-tomorrow",
+      "destination": "/api/seo?t=hub&slug=basketball-predictions-tomorrow"
+    },
+    {
+      "source": "/nba-predictions-today",
+      "destination": "/api/seo?t=hub&slug=nba-predictions-today"
+    },
+    {
+      "source": "/wnba-predictions-today",
+      "destination": "/api/seo?t=hub&slug=wnba-predictions-today"
+    },
+    {
+      "source": "/basketball-spread-predictions-today",
+      "destination": "/api/seo?t=hub&slug=basketball-spread-predictions-today"
+    },
+    {
+      "source": "/basketball-over-under-predictions-today",
+      "destination": "/api/seo?t=hub&slug=basketball-over-under-predictions-today"
+    },
+    {
+      "source": "/nba-player-props-today",
+      "destination": "/api/seo?t=hub&slug=nba-player-props-today"
+    },
+    {
+      "source": "/2-odds-predictions-today",
+      "destination": "/api/seo?t=hub&slug=2-odds-predictions-today"
+    },
+    {
+      "source": "/3-odds-predictions-today",
+      "destination": "/api/seo?t=hub&slug=3-odds-predictions-today"
+    },
+    {
+      "source": "/5-odds-predictions-today",
+      "destination": "/api/seo?t=hub&slug=5-odds-predictions-today"
+    },
+    {
+      "source": "/10-odds-predictions-today",
+      "destination": "/api/seo?t=hub&slug=10-odds-predictions-today"
+    }
+  ]
 }
