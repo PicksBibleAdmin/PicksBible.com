@@ -107,7 +107,7 @@
 
   function run(text, opt, ctx) {
     const { db, uid, colorOf, leagues } = ctx;
-    const rep = { added: 0, updated: 0, results: 0, waiting: 0, problems: [], changed: false };
+    const rep = { added: 0, updated: 0, results: 0, waiting: 0, rows: 0, cols: [], problems: [], changed: false };
     const secs = sections(parseCSV(text));
     if (opt.only && secs.length && !secs.some(x => x.sport === opt.only)) {
       rep.problems.push("No " + opt.only + " table found in this file. Is this the right button?");
@@ -134,9 +134,11 @@
         else { rep.problems.push("The " + sport + " table has no score column I can recognise. Columns found: " + (sec.heads || []).join(" | ") + ". Name the score column FT SCORE."); return; }
       }
       let lastTime = "";
+      if (opt.mode === "res") rep.cols.push(sport + " score column = " + (idx.ft === undefined ? "none" : '"' + ((sec.heads || [])[idx.ft] || "?") + '"'));
       sec.rows.forEach((r, n) => {
         const home = get(r, "home"), away = get(r, "away");
         if (!home || !away) return;
+        rep.rows++;
         const label = home + " vs " + away;
         const t = hhmm(get(r, "time")); if (t) lastTime = t;
 
@@ -249,7 +251,8 @@
       const head = (sport === "football" ? "Football" : "Basketball") + " " + dateEl.value + ": " + (mode === "res"
         ? rep.results + " result" + (rep.results === 1 ? "" : "s") + " saved and marked won/lost." + (rep.waiting ? " " + rep.waiting + " match" + (rep.waiting === 1 ? "" : "es") + " had no score yet (left pending)." : "")
         : rep.added + " added, " + rep.updated + " updated.");
-      out.textContent = head + (rep.problems.length ? "\n\nNeeds attention (" + rep.problems.length + "):\n- " + rep.problems.join("\n- ") : "");
+      const info = mode === "res" ? "\n[importer v2: read " + rep.rows + " match rows; " + rep.cols.join("; ") + "]" : "";
+      out.textContent = head + info + (rep.problems.length ? "\n\nNeeds attention (" + rep.problems.length + "):\n- " + rep.problems.join("\n- ") : "");
       out.style.color = rep.problems.length ? "var(--lost)" : "";
       if (typeof toast === "function") toast(head);
     } catch (e) { out.textContent = "Import failed: " + e.message; console.error(e); }
