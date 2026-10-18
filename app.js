@@ -21,10 +21,22 @@ function wat(dOffset){ /* yyyy-mm-dd in Nigerian time, shifted by dOffset days *
   var p=new Intl.DateTimeFormat("en-CA",{timeZone:"Africa/Lagos",year:"numeric",month:"2-digit",day:"2-digit"}).format(new Date());
   var t=new Date(p+"T12:00:00Z");t.setUTCDate(t.getUTCDate()+(dOffset||0));return t.toISOString().slice(0,10);
 }
+/* flag emoji from a 2-letter code; England, Scotland, Wales and Northern Ireland have their own flags (not the letters EN/SC/WA/NI, which are other countries) */
+var UK_TAGS={EN:"gbeng",SC:"gbsct",WA:"gbwls",NI:"gbnir"}, UK_NAMES={"england":"EN","scotland":"SC","wales":"WA","northern ireland":"NI"};
+function emojiFlag(code){
+  code=String(code||"").toUpperCase();
+  if(UK_TAGS[code])return "\uD83C\uDFF4"+UK_TAGS[code].split("").map(function(x){return String.fromCodePoint(0xE0000+x.charCodeAt(0))}).join("")+String.fromCodePoint(0xE007F);
+  if(code.length!==2)return "";
+  return code.split("").map(function(x){return String.fromCodePoint(127397+x.charCodeAt(0))}).join("");
+}
 function flagOf(country){
-  var c=(window.PB.countryFlags||{})[country];
-  if(!c||c.length!==2)return /\(|^international$|^world$/i.test(String(country||"").trim())?"\uD83C\uDF0D":"";   /* Europe (UEFA), Africa (CAF), International ... = globe */
-  return c.toUpperCase().split("").map(function(x){return String.fromCodePoint(127397+x.charCodeAt(0))}).join("");
+  var nm=String(country||"").trim(), c=UK_NAMES[nm.toLowerCase()]||(window.PB.countryFlags||{})[nm];
+  if(!c){   /* not in the short list: use the master league list (every country there has a code) */
+    var M=window.PB_LEAGUES||{};
+    ["football","basketball"].forEach(function(sp){if(c)return;(M[sp]||[]).forEach(function(g){if(!c&&String(g.c).toLowerCase()===nm.toLowerCase()&&g.code)c=g.code})});
+  }
+  if(!c||c.length!==2)return /\(|^international$|^world$/i.test(nm)?"\uD83C\uDF0D":"";   /* Europe (UEFA), Africa (CAF), International ... = globe */
+  return emojiFlag(c);
 }
 function lgKey(P,sport,comp,country){
   var nrm=function(x){return String(x||"").toLowerCase().replace(/[^a-z0-9]/g,"")};
@@ -181,8 +193,7 @@ if(!S.previewNotice){$$(".preview").forEach(function(p){p.remove()})}
 /* ---------- select-a-league data + accordion renderer: shared by the homepage
    directory AND every local "All Leagues" filter, so both work identically ---------- */
 function isoFlag(code){
-  if(!code||code.length!==2)return "🏳️";
-  return code.toUpperCase().split("").map(function(c){return String.fromCodePoint(127397+c.charCodeAt(0))}).join("");
+  return emojiFlag(code)||"🏳️";
 }
 function slug(s){return s.toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/(^-|-$)/g,"")}
 

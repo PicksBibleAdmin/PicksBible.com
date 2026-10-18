@@ -4,7 +4,8 @@
 (function () {
   "use strict";
 
-  const norm = s => String(s == null ? "" : s).toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
+  /* accents are ignored: "SUPER LIG" matches "Süper Lig", "DIVISION" matches "División" */
+  const norm = s => String(s == null ? "" : s).normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/ı/g, "i").replace(/ø/g, "o").replace(/đ/g, "d").replace(/ł/g, "l").replace(/ß/g, "ss").replace(/[^a-z0-9]+/g, " ").trim();
 
   function parseCSV(text) {
     text = String(text || "").replace(/^﻿/, "");
