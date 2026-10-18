@@ -51,7 +51,7 @@ function applyLive(P,live){
   fixtures.sort(function(a,b){return String(a.kickoff).localeCompare(String(b.kickoff))});
   P.byDate={football:{},basketball:{}};
   P.home={etl:{football:{},basketball:{}},et:{football:{},basketball:{}},bo:{football:{},basketball:{}},vip:{bronze:{},gold:{}}};
-  (live&&live.vip||[]).forEach(function(x){if(x&&x.ymd)P.home.vip[x.tier==="bronze"?"bronze":"gold"][x.ymd]={odds:x.odds||"",st:x.st||""}});
+  (live&&live.vip||[]).forEach(function(x){if(x&&x.ymd)P.home.vip[x.tier==="bronze"?"bronze":"gold"][x.ymd]={odds:x.odds||"",st:x.st||"",legs:x.legs||null}});
   fixtures.forEach(function(f){addFx(P,f,days)});
   props.sort(function(a,b){return String(a.kickoff).localeCompare(String(b.kickoff))});
   props.forEach(function(p){addProp(P,p)});
@@ -457,7 +457,7 @@ $$("[data-bigtable]").forEach(function(el){
     var lgBtn=$("[data-lgopen]",el);
     if(lgBtn)lgBtn.innerHTML="🌍 "+(league?esc((lgInfo(league)||{name:"League"}).name):"All Leagues")+" ▾";
     if(propsWrap)propsWrap.hidden=(sport!=="basketball");
-    if(title)title.textContent=expert?(sport==="football"?"⚽ Football":"🏀 Basketball")+" Expert Tips":(sport==="football"?"⚽ All Football":"🏀 All Basketball")+" Predictions & Tips";
+    if(title)title.textContent=expert?(sport==="football"?"⚽ Football":"🏀 Basketball")+" Banker Bet of the Day":(sport==="football"?"⚽ All Football":"🏀 All Basketball")+" Predictions & Tips";
     /* the shared date picker (same control as VIP Results): only holds a value while a custom date is chosen */
     var bc=$("[data-bcal]",el);
     if(bc)bc.value=customDate?(customDate.getFullYear()+"-"+("0"+(customDate.getMonth()+1)).slice(-2)+"-"+("0"+customDate.getDate()).slice(-2)):"";
@@ -469,11 +469,11 @@ $$("[data-bigtable]").forEach(function(el){
       var ymd=customDate.getFullYear()+"-"+("0"+(customDate.getMonth()+1)).slice(-2)+"-"+("0"+customDate.getDate()).slice(-2);
       var cl=((D.byDate&&D.byDate[sport]&&D.byDate[sport][ymd])||[]).filter(lgMatch).filter(function(m){return !expert||m.xp});
       if(cl.length){$("[data-slot=table]",el).innerHTML=sport==="football"?footballTable(cl):basketballTable(cl);return}
-      $("[data-slot=table]",el).innerHTML=expert?'<p class="note center" style="padding:28px 10px">No expert tips selected for this day yet. Try another date.</p>':'<p class="note center" style="padding:28px 10px">No published predictions for this date yet. Try Yesterday, Today or Tomorrow above, or pick another date.</p>';
+      $("[data-slot=table]",el).innerHTML=expert?'<p class="note center" style="padding:28px 10px">No Banker Bet of the Day selected for this day yet. Try another date.</p>':'<p class="note center" style="padding:28px 10px">No published predictions for this date yet. Try Yesterday, Today or Tomorrow above, or pick another date.</p>';
       return;
     }
     var list=D[sport][day].filter(lgMatch).filter(function(m){return !expert||m.xp});
-    if(expert&&!list.length){$("[data-slot=table]",el).innerHTML='<p class="note center" style="padding:28px 10px">No expert tips selected for this day yet. Try another date.</p>';return}
+    if(expert&&!list.length){$("[data-slot=table]",el).innerHTML='<p class="note center" style="padding:28px 10px">No Banker Bet of the Day selected for this day yet. Try another date.</p>';return}
     $("[data-slot=table]",el).innerHTML=sport==="football"?footballTable(list):basketballTable(list);
   }
   REDRAW.push(draw);
@@ -535,10 +535,37 @@ function getVIP(year,month,tier){ /* month is 0-11; one entry per calendar day *
   var n=new Date(year,month+1,0).getDate(), today=wat(0), out=[], V=((D.home&&D.home.vip)||{})[tier||"gold"]||{};
   for(var d=1;d<=n;d++){
     var ymd=year+"-"+("0"+(month+1)).slice(-2)+"-"+("0"+d).slice(-2), x=V[ymd];
-    if(x&&(x.st==="won"||x.st==="lost")){out.push({ymd:ymd,d:d,odds:x.odds||"",st:x.st});continue}
+    if(x&&(x.st==="won"||x.st==="lost")){out.push({ymd:ymd,d:d,odds:x.odds||"",st:x.st,legs:(x.legs&&x.legs.length)?x.legs:null});continue}
     out.push({ymd:ymd,d:d,odds:(x&&x.odds)||"",st:ymd>today?"soon":"none"});
   }
   return out;
+}
+
+/* VIP day detail: opens only for settled days (the admin publishes the picks to the public site only after the result upload settles the package) */
+function showVipDay(label,x){
+  if(!document.getElementById("pbVipCss")){var st=document.createElement("style");st.id="pbVipCss";st.textContent=
+    ".vcol.has{cursor:pointer}.vcol.has:hover{border-color:var(--cyan);background:#22d3ee14}"+
+    "#pbVipDay{position:fixed;inset:0;z-index:9000;background:rgba(5,3,20,.8);display:flex;align-items:center;justify-content:center;padding:14px}"+
+    "#pbVipDay .vd{position:relative;width:min(560px,100%);max-height:90vh;overflow:auto;background:var(--panel);color:var(--text);border:1px solid var(--line);border-radius:16px;padding:22px 18px}"+
+    "#pbVipDay .vx{position:absolute;right:12px;top:8px;background:none;border:0;color:var(--muted);font-size:28px;cursor:pointer;line-height:1}"+
+    "#pbVipDay h3{margin:0 0 4px;font-size:20px}#pbVipDay .vr{display:inline-block;padding:3px 12px;border-radius:99px;font-weight:700;font-size:13px;margin-bottom:10px}"+
+    "#pbVipDay .vr.won{background:var(--won);color:#fff}#pbVipDay .vr.lost{background:#555a7a;color:#fff}"+
+    "#pbVipDay table{width:100%;border-collapse:collapse;font-size:14px}#pbVipDay td,#pbVipDay th{padding:9px 5px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}#pbVipDay th{color:var(--muted);font-size:12px;text-transform:uppercase}"+
+    "#pbVipDay .vt{margin-top:12px;font-size:17px;font-weight:700}#pbVipDay small{color:var(--muted)}";document.head.appendChild(st)}
+  var old=document.getElementById("pbVipDay");if(old)old.remove();
+  var d=new Date(x.ymd+"T12:00:00").toLocaleDateString("en-GB",{weekday:"long",day:"numeric",month:"long",year:"numeric"});
+  var el=document.createElement("div");el.id="pbVipDay";
+  el.innerHTML='<div class="vd" role="dialog" aria-modal="true" aria-label="'+label+' VIP picks"><button class="vx" type="button" aria-label="Close">&times;</button>'+
+    '<h3>'+label+' VIP picks</h3><div class="vsub">'+esc(d)+'</div><div style="margin:8px 0"><span class="vr '+x.st+'">'+(x.st==="won"?"&#10003; Won":"Lost")+'</span></div>'+
+    '<table><thead><tr><th>Match</th><th>Market</th><th>Pick</th></tr></thead><tbody>'+x.legs.map(function(l){
+      return '<tr><td>'+esc(l.home)+' v '+esc(l.away)+'<br><small>'+esc(l.comp||"")+(l.ko?" &middot; "+esc(String(l.ko).slice(11,16)):"")+'</small></td><td>'+esc(l.market)+'</td><td><b>'+esc(l.sel)+'</b></td></tr>'}).join("")+
+    '</tbody></table><div class="vt">Total odds: '+esc(x.odds)+'</div></div>';
+  document.body.appendChild(el);
+  function close(){el.remove();document.removeEventListener("keydown",esc_)}
+  function esc_(e){if(e.key==="Escape")close()}
+  el.addEventListener("click",function(e){if(e.target===el||e.target.classList.contains("vx"))close()});
+  document.addEventListener("keydown",esc_);
+  try{if(window.gtag)gtag("event","view_vip_day",{tier:label,day:x.ymd})}catch(_){}
 }
 
 /* VIP results bar (one column per day, scrollable): used by the home page and by any other page that carries [data-vipbox] */
@@ -553,13 +580,20 @@ function makeVIP(vipbox,getSel){
       if(x.st==="won")won++; if(x.st==="lost")lost++;
       var mark=x.st==="won"?'<span class="vmark won" aria-label="Won">&#10003;</span>':x.st==="lost"?'<span class="vmark lost" aria-label="Lost">&#10005;</span>':'<span class="vmark none" aria-label="No result yet">&ndash;</span>';
       var dow=new Date(Y,M,x.d).toLocaleDateString("en-GB",{weekday:"short"});
-      return '<div class="vcol'+(x.ymd===sel?" sel":"")+(x.ymd===today?" today":"")+'" data-ymd="'+x.ymd+'"><span class="vdow">'+dow+'</span><b class="vday">'+x.d+'</b><span class="vodds">'+(x.odds?esc(x.odds):'&ndash;')+'</span><span class="voddsl">odds</span>'+mark+'</div>';
+      return '<div class="vcol'+(x.legs?" has":"")+(x.ymd===sel?" sel":"")+(x.ymd===today?" today":"")+'" data-ymd="'+x.ymd+'"'+(x.legs?' role="button" tabindex="0" title="See the picks for this day" aria-label="See the picks for '+x.d+' '+MON[M]+'"':'')+'><span class="vdow">'+dow+'</span><b class="vday">'+x.d+'</b><span class="vodds">'+(x.odds?esc(x.odds):'&ndash;')+'</span><span class="voddsl">odds</span>'+mark+'</div>';
     }).join("");
     $("[data-vipmonth]",vipbox).textContent=MON[M]+" "+Y;
     $("[data-vipstat]",vipbox).innerHTML='';
     var target=$(".vcol.sel",wrap)||$(".vcol.today",wrap);
     if(target)wrap.scrollLeft=Math.max(0,target.offsetLeft-wrap.clientWidth/2+target.offsetWidth/2);
   }
+  function openDay(el){
+    var col=el.closest(".vcol.has"); if(!col)return;
+    var x=getVIP(Y,M,tier).filter(function(v){return v.ymd===col.dataset.ymd})[0]; if(!x||!x.legs)return;
+    showVipDay(tier==="bronze"?"Gold":"Titanium",x);
+  }
+  $("[data-vipdays]",vipbox).addEventListener("click",function(e){openDay(e.target)});
+  $("[data-vipdays]",vipbox).addEventListener("keydown",function(e){if(e.key==="Enter"||e.key===" "){e.preventDefault();openDay(e.target)}});
   return {draw:draw,cal:$("[data-vipcal]",vipbox),
     to:function(d){Y=d.getFullYear();M=d.getMonth()},
     toYmd:function(y){var p=y.split("-");Y=+p[0];M=+p[1]-1}};
@@ -579,8 +613,8 @@ $$("[data-home]").forEach(function(hero){
     if(!v)return head+'<div class="empty">No matches available.</div></div>';
     return head+
       '<div class="vb-lg"><span class="fl">'+flagByLabel(v.lg)+'</span>'+esc(v.lg)+'</div><div class="vb-main"><div class="vb-t">'+teamCrest(v.h,v.hl,v.sp,v.hc)+'<div class="vb-team">'+esc(v.h)+'</div></div><div class="vb-mid"><strong>'+esc(v.t)+'</strong><span class="vs">VS</span></div><div class="vb-t">'+teamCrest(v.a,v.al,v.sp,v.ac)+'<div class="vb-team">'+esc(v.a)+'</div></div></div>'+
-      '<a class="etlock" href="expert-tips.html?s='+sp+'&d='+selYmd()+'" aria-label="Open the reasoning for this expert tip"><span class="lockico" aria-hidden="true">&#128274;</span><span class="locktxt">View expert tip</span></a>'+
-      '<div class="vb-by"><span>EXPERT TIP BY: <b>'+esc(v.by)+'</b></span>'+(v.st==="won"||v.st==="lost"?'<span class="etres '+v.st+'">'+(v.st==="won"?"&#10003; Won":"Lost")+'</span>':'')+'<span>'+(sp==="football"?"&#9917; Football":"&#127936; Basketball")+'</span></div>'+
+      '<a class="etlock" href="expert-tips.html?s='+sp+'&d='+selYmd()+'" aria-label="Open the reasoning for this Banker Bet of the Day"><span class="lockico" aria-hidden="true">&#128274;</span><span class="locktxt">View Banker Bet</span></a>'+
+      '<div class="vb-by"><span>BANKER BET OF THE DAY BY: <b>'+esc(v.by)+'</b></span>'+(v.st==="won"||v.st==="lost"?'<span class="etres '+v.st+'">'+(v.st==="won"?"&#10003; Won":"Lost")+'</span>':'')+'<span>'+(sp==="football"?"&#9917; Football":"&#127936; Basketball")+'</span></div>'+
       '</div>';
   }
   var etMode="both";
@@ -661,21 +695,21 @@ $$("[data-analysis]").forEach(function(el){
   $$("[data-tipslist]").forEach(function(x){x.hidden=true});
   var q=new URLSearchParams(location.search), sp=q.get("s")==="basketball"?"basketball":"football", ymd=q.get("d")||wat(0);
   var v=getET(sp,ymd);
-  if(!v){el.innerHTML='<div class="panel"><h2>Reasoning not available</h2><p>There is no published expert tip for this date yet.</p><a class="btn" href="index.html">Back to home</a></div>';return}
+  if(!v){el.innerHTML='<div class="panel"><h2>Reasoning not available</h2><p>There is no published Banker Bet of the Day for this date yet.</p><a class="btn" href="index.html">Back to home</a></div>';return}
   var paras=String(v.reasoning||"").split(/\n+/).map(function(t){return t.trim()}).filter(Boolean);
   var MEAN={"1":sp==="football"?"Home win":"Home team wins","2":sp==="football"?"Away win":"Away team wins","X":"Draw","1X":"Home win or draw","X2":"Away win or draw","12":"Either team wins (no draw)"};
   var cn=parseFloat(v.conf), clv=isNaN(cn)?"":cn<45?"Low":cn<=55?"Medium":"High", ccl=isNaN(cn)?"":cn<45?"lo":cn<=55?"mid":"hi";
   var done=v.st==="won"||v.st==="lost", ft=done&&v.score?esc(v.score):"";
   var tipTxt=v.tip?esc(v.tip):"";
   el.innerHTML=
-   '<div class="panel anhead"><div class="crumbs"><a href="index.html">Home</a> &rsaquo; <a href="expert-tips.html">Expert Tips</a> &rsaquo; '+esc(v.h)+' vs '+esc(v.a)+'</div>'+
+   '<div class="panel anhead"><div class="crumbs"><a href="index.html">Home</a> &rsaquo; <a href="expert-tips.html">Banker Bet of the Day</a> &rsaquo; '+esc(v.h)+' vs '+esc(v.a)+'</div>'+
    '<div class="vb-main anmatch"><div>'+teamCrest(v.h,v.hl,v.sp,v.hc)+'<div class="vb-team">'+esc(v.h)+'</div></div><div class="vb-mid">'+(ft?'<strong class="ftscore">'+ft+'</strong>FT':'<strong>'+esc(v.t)+'</strong>vs')+'<br>'+esc(v.lg)+'<br>'+esc(ymd)+'</div><div>'+teamCrest(v.a,v.al,v.sp,v.ac)+'<div class="vb-team">'+esc(v.a)+'</div></div></div>'+
    '<div class="etstats">'+
     '<div class="etstat"><span class="etk">Best bet</span>'+(tipTxt?'<b class="etbet">'+tipTxt+'</b><small>'+esc(MEAN[v.tip]||"")+(v.odd?' &middot; @ '+esc(v.odd):'')+'</small>':'<b class="etbet na">&ndash;</b><small>Not posted yet</small>')+'</div>'+
     '<div class="etstat"><span class="etk">Confidence</span>'+(clv?'<b class="etconf '+ccl+'">'+esc(String(Math.round(cn)))+'%</b><i class="etmeter"><u class="'+ccl+'" style="width:'+Math.max(4,Math.min(100,cn))+'%"></u></i><small>'+clv+'</small>':'<b class="etbet na">&ndash;</b><small>Not posted yet</small>')+'</div>'+
     '<div class="etstat"><span class="etk">Result</span><b class="etresbig '+(done?v.st:"pend")+'">'+(v.st==="won"?"&#10003; Won":v.st==="lost"?"Lost":"Pending")+'</b><small>'+(done?(v.score?"Full time "+esc(v.score):"Settled"):"Settled after the match")+'</small></div>'+
    '</div>'+
-   '<p class="note" style="margin-top:10px">Expert tip by <b>'+esc(v.by)+'</b> &middot; '+(sp==="football"?"&#9917; Football":"&#127936; Basketball")+'</p></div>'+
+   '<p class="note" style="margin-top:10px">Banker Bet of the Day by <b>'+esc(v.by)+'</b> &middot; '+(sp==="football"?"&#9917; Football":"&#127936; Basketball")+'</p></div>'+
    '<div class="panel"><h2>Expert reasoning</h2>'+(paras.length?paras.map(function(t){return '<p>'+esc(t)+'</p>'}).join(""):'<p>The reasoning for this tip has not been written yet.</p>')+'</div>'+
    '<p class="note center" style="margin-top:14px">'+(sp==="football"?"Football":"Basketball")+' predictions are based on statistical analysis and are not guaranteed. Please bet responsibly.</p>';
 });
