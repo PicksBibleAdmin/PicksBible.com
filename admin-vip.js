@@ -18,6 +18,17 @@
     "Handicap":        ["Home -1", "Home -1.5", "Home +1", "Away +1", "Away +1.5", "Away -1"]
   };
   const MAXLEGS = 8;
+  /* shared email helper (also used by the Customers tab): the server checks the admin login, then sends through Brevo */
+  window.PBMail = window.PBMail || {
+    async send(recipients, subject, text) {
+      if (!recipients.length) return { sent: 0, failed: [], note: "no recipients" };
+      const token = await Store.auth.currentUser.getIdToken();
+      const r = await fetch("/api/send-email", { method: "POST", headers: { "Content-Type": "application/json", Authorization: "Bearer " + token }, body: JSON.stringify({ subject, text, recipients }) });
+      let j = {}; try { j = await r.json(); } catch (_) {}
+      if (!r.ok && !j.sent) throw new Error(j.error || ("email service error " + r.status));
+      return j;
+    }
+  };
   const idOf = (pk, ymd) => (PK[pk].key === "bronze" ? "vip-bronze-" : "vip-") + ymd;
   const findEntry = (pk, ymd) => (db.vip || []).find(x => x.ymd === ymd && (PK[pk].key === "bronze" ? x.tier === "bronze" : x.tier !== "bronze"));
   const emptyLeg = () => ({ fid: "", market: "", sel: "" });
@@ -80,6 +91,7 @@
       <label>Message title</label><input id="vpMsgTitle" maxlength="120">
       <label style="margin-top:10px">Message body</label><textarea id="vpMsgBody" rows="6" maxlength="1000"></textarea>
       <p class="note" id="vpMsgAud" style="margin-top:10px"></p>
+      <label style="display:flex;gap:8px;align-items:center;text-transform:none;font-size:14px;color:var(--text)"><input type="checkbox" id="vpMsgMail" checked style="width:auto"> Also send this by email</label>
       <div class="acts"><button type="button" class="btn ghost" id="vpMsgCancel">Cancel</button><button type="button" class="btn" id="vpMsgSend">Publish</button></div>
     </div>
     <div id="vpMsgDone" hidden></div>
@@ -193,25 +205,37 @@
     const e = buildEntry(false);
     e.msgTitle = title; e.msgBody = body; e.pubAt = new Date().toISOString();
     const aud = state.pk === "gold" ? ["gold", "titanium"] : ["titanium"];
-    let n = 0, note = "";
+    let n = 0, note = "", mailTo = [];
     try {
       const today = todayStr();
       const snap = await Store.fs.collection("users").get();
       snap.forEach(d => {
         const u = d.data();
-        if (aud.includes(u.tier) && (!u.paidUntil || u.paidUntil >= today)) n++;
+        if (aud.includes(u.tier) && u.paidUntil && u.paidUntil >= today) { n++; if (u.email) mailTo.push({ email: u.email, name: (u.name || "").split(" ")[0] }); }
       });
     } catch (err) { note = "Could not read the members list (" + (err.code || err.message) + "). The package is published, but delivery could not be counted."; }
     e.delivered = n;
+    try {
+      /* the private copy members read (rules let only Gold/Titanium members with an active plan read it) */
+      await Store.fs.collection("vip_feed").doc(e.id).set({
+        pkg: state.pk, ymd: state.ymd, odds: e.odds, audience: aud, createdAt: e.pubAt, st: e.st || "",
+        legs: e.legs.map(l => ({ sport: l.sport, home: l.home, away: l.away, comp: l.comp, ko: l.ko, market: l.market, sel: l.sel }))
+      });
+    } catch (err) { note = "The picks could not be saved for members (" + (err.code || err.message) + "). Check the Firestore rules."; }
     try {
       await Store.fs.collection("broadcasts").doc(e.id + "-" + Date.now().toString(36)).set({
         kind: "vip", pkg: state.pk, ymd: state.ymd, audience: aud, title, body, odds: e.odds, delivered: n, createdAt: e.pubAt, emailDone: false
       });
     } catch (err) { note = note || "The message record could not be saved (" + (err.code || err.message) + ")."; }
+    let mailNote = "", mailFail = false;
+    if ($("#vpMsgMail").checked && n) {
+      try { const m = await PBMail.send(mailTo, title, body); mailNote = "Emailed " + m.sent + " of " + n + (m.failed && m.failed.length ? " (some failed: " + esc(m.failed[0].detail || m.failed[0].status || "") + ")" : "") + "."; }
+      catch (err) { mailNote = "Email not sent: " + (err.message || err); mailFail = true; }
+    }
     Store.save(db); $("#stats").textContent = statsText();
     $("#vpMsgForm").hidden = true;
     const d = $("#vpMsgDone"); d.hidden = false;
-    d.innerHTML = `<h2>Published</h2><div class="res ${note ? "bad" : ""}"><b>Delivered to ${n} VIP member${n === 1 ? "" : "s"}</b>${note ? "<br>" + esc(note) : "<br>" + (state.pk === "gold" ? "Gold and Titanium members" : "Titanium members") + " are eligible. The message is saved for platform and email delivery."}</div><div class="acts"><button type="button" class="btn" id="vpMsgClose">Done</button></div>`;
+    d.innerHTML = `<h2>Published</h2><div class="res ${(note || mailFail) ? "bad" : ""}"><b>Delivered to ${n} VIP member${n === 1 ? "" : "s"}</b><br>${note ? esc(note) : (state.pk === "gold" ? "Gold and Titanium members" : "Titanium members") + " can see the picks in their VIP dashboard, and the message is in their notifications."}${mailNote ? "<br>" + esc(mailNote) : ""}</div><div class="acts"><button type="button" class="btn" id="vpMsgClose">Done</button></div>`;
     $("#vpMsgClose").onclick = () => { $("#vipPop").hidden = true; $("#vpMsgSend").textContent = "Publish"; load(); };
   }
 
