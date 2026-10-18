@@ -210,7 +210,7 @@ tr.lghead td{background:#ffffff0d;padding:10px 8px;border-bottom:1px solid var(-
     <h2>Football table <span class="muted" id="fbCount"></span></h2>
     <p class="note">One row per football fixture (add fixtures in tab 1). Switch <b>Sure</b> on for the matches your analysts hand-pick for the home page "Sure predictions" box (max 10 per day). Enter the odds for 1, X and 2, choose your <b>Tip</b> (1, X, 2, 1X, X2 or 12; for 1X, X2 and 12 type the bookmaker price in the small box that appears under the Tip, for 1, X and 2 the price fills itself in), then your <b>GG/NG</b> and <b>Over/Under 2.5</b> picks with their odds, add a correct-score tip, and switch the match <b>Live</b>. Changes save automatically.</p>
     <div class="tbl"><table class="ft">
-      <thead><tr><th>Time</th><th>Competition</th><th>Home</th><th>Away</th><th>1</th><th>X</th><th>2</th><th>Tip</th><th>Confidence %</th><th>Over / Under 2.5</th><th>BTTS</th><th>CS tip</th><th>Result</th><th>Sure</th><th>⭐ Expert tip</th><th>Live</th></tr></thead>
+      <thead><tr><th>Time</th><th>Competition</th><th>Home</th><th>Away</th><th>1</th><th>X</th><th>2</th><th>Tip</th><th>Confidence %</th><th>Over / Under 2.5</th><th>BTTS</th><th>CS tip</th><th>Result</th><th>Sure</th><th>⭐ Banker Bet</th><th>Live</th></tr></thead>
       <tbody id="fbBody"></tbody>
     </table></div>
   </div>
@@ -222,7 +222,7 @@ tr.lghead td{background:#ffffff0d;padding:10px 8px;border-bottom:1px solid var(-
     <h2>Basketball table <span class="muted" id="bbCount"></span></h2>
     <p class="note">One row per basketball fixture (add fixtures in tab 1, choose Basketball). Switch <b>Sure</b> on for the games your analysts hand-pick for the home page "Sure predictions" box (max 10 per day). Enter the odds for Home and Away, choose your <b>Tip</b> (1 or 2) with an optional spread under it (e.g. <b>-6.5</b> or <b>+10.5</b>, so the tip reads "1 -6.5" or "2 +10.5"; leave the spread empty for a straight win) and its odds, then the <b>point total tip</b> (Over/Under and the line), and switch the game <b>Live</b>. Changes save automatically.</p>
     <div class="tbl"><table class="ft">
-      <thead><tr><th>Time</th><th>Competition</th><th>Home</th><th>Away</th><th>Home win (1)</th><th>Away win (2)</th><th>Tip</th><th>Confidence %</th><th>Point total tip</th><th>Result</th><th>Sure</th><th>⭐ Expert tip</th><th>Live</th></tr></thead>
+      <thead><tr><th>Time</th><th>Competition</th><th>Home</th><th>Away</th><th>Home win (1)</th><th>Away win (2)</th><th>Tip</th><th>Confidence %</th><th>Point total tip</th><th>Result</th><th>Sure</th><th>⭐ Banker Bet</th><th>Live</th></tr></thead>
       <tbody id="bbBody"></tbody>
     </table></div>
   </div>
@@ -232,14 +232,14 @@ tr.lghead td{background:#ffffff0d;padding:10px 8px;border-bottom:1px solid var(-
 <section id="tab-home" hidden>
   <div class="card">
     <h2>Home page boxes</h2>
-    <p class="note">Pick a date and a sport, switch Football or Basketball, open the match list (or type a team), then add it as the <b>Expert tip</b> (ONE per sport per day) or as a <b>Bet of the day</b> (up to FIVE per sport per day). Only the matches you choose appear in the table below, so busy days never clog the page. Write the reasoning or pick, and after the game set the result and score. Switch a box off to remove the match from the home page. Matches come from tab 1. Changes save automatically.</p>
+    <p class="note">Pick a date and a sport, switch Football or Basketball, open the match list (or type a team), then add it as the <b>Banker Bet of the Day</b> (ONE per sport per day) or as a <b>Bet of the day</b> (up to FIVE per sport per day). Only the matches you choose appear in the table below, so busy days never clog the page. Write the reasoning or pick, and after the game set the result and score. Switch a box off to remove the match from the home page. Matches come from tab 1. Changes save automatically.</p>
     <div class="row" style="margin-bottom:10px"><div><label>Date</label><input type="date" id="hbDate"></div>
       <div><label>Sport</label><div class="hbseg" id="hbSeg" role="group" aria-label="Sport"><button type="button" data-hs="football" aria-pressed="true">⚽ Football</button><button type="button" class="bb" data-hs="basketball" aria-pressed="false">🏀 Basketball</button></div><input type="hidden" id="hbSport" value="football"></div>
       <div style="flex:1;min-width:260px;position:relative"><label>Matches on this date</label><input id="hbSearch" autocomplete="off" placeholder="Click to open the list, or type a team ▾" style="width:100%"><div class="inv" id="hbInv" hidden></div></div></div>
     <p class="note" id="hbNote" style="margin-top:0"></p>
     <div class="inv" id="hbInv"></div>
     <div class="tbl"><table class="ft">
-      <thead><tr><th>Time</th><th>Match</th><th>Expert tip</th><th>Reasoning &amp; By</th><th>Bet of the day</th><th>Pick</th><th>Result</th><th>Score</th></tr></thead>
+      <thead><tr><th>Time</th><th>Match</th><th>Banker Bet of the Day</th><th>Reasoning &amp; By</th><th>Bet of the day</th><th>Pick</th><th>Result</th><th>Score</th></tr></thead>
       <tbody id="hbBody"></tbody>
     </table></div>
   </div>
@@ -267,8 +267,8 @@ tr.lghead td{background:#ffffff0d;padding:10px 8px;border-bottom:1px solid var(-
     <p class="note" style="margin-top:12px">The <b>Sure predictions</b> box on the home page is taken from this table (the picks your analysts switch on as <b>Sure</b> in the Football and Basketball table tabs, up to 10 per sport per day), so settling a tip here updates it too.</p>
   </div>
   <div class="card">
-    <h2>Expert tip <span class="muted" id="rsEtCount"></span></h2>
-    <div class="tbl"><table class="ft"><thead><tr><th>Time</th><th>Match</th><th>Expert</th><th>Result</th></tr></thead><tbody id="rsEtBody"></tbody></table></div>
+    <h2>Banker Bet of the Day <span class="muted" id="rsEtCount"></span></h2>
+    <div class="tbl"><table class="ft"><thead><tr><th>Time</th><th>Match</th><th>Banker Bet</th><th>Result</th></tr></thead><tbody id="rsEtBody"></tbody></table></div>
   </div>
   <div class="card">
     <h2>Bets of the day <span class="muted" id="rsBoCount"></span></h2>
@@ -437,7 +437,7 @@ const Store = {
       const recent = r => { const k=String(r.kickoff||"").slice(0,10); return k >= cutoff && k <= farOut; };
       const snap = {
         fixtures: db.fixtures.filter(f=>liveOf("fixtures",f) && (recent(f) || homeBox(f))).map(f=>this.docOf("fixtures",f)),
-        vip:      (db.vip||[]).filter(v=>v.ymd>=cut120).map(v=>({ymd:v.ymd,tier:v.tier==="bronze"?"bronze":"gold",odds:v.odds||"",st:v.st||""})),
+        vip:      (db.vip||[]).filter(v=>v.ymd>=cut120).map(v=>{ const o={ymd:v.ymd,tier:v.tier==="bronze"?"bronze":"gold",odds:v.draft?"":(v.odds||""),st:v.st||""}; if((v.st==="won"||v.st==="lost")&&!v.draft&&v.legs&&v.legs.length) o.legs=v.legs.map(l=>({sport:l.sport,home:l.home,away:l.away,comp:l.comp,ko:l.ko,market:l.market,sel:l.sel})); return o; }),
         props:    db.props.filter(r=>liveOf("props",r)).map(r=>this.docOf("props",r)).filter(recent)
       };
       const sj = JSON.stringify(snap);
@@ -531,7 +531,7 @@ async function onSignedIn(user){
 /* ============ TABS ============ */
 function showTab(name){
   document.querySelectorAll("nav.tabs button").forEach(b=>b.setAttribute("aria-selected", b.dataset.tab===name));
-  ["fixtures","fbtable","bbtable","bbprops","home","results","picks","published","data"].forEach(t=>$("#tab-"+t).hidden = t!==name);
+  ["fixtures","fbtable","bbtable","bbprops","home","results","vip","picks","published","data"].forEach(t=>{ const el=$("#tab-"+t); if(el) el.hidden = t!==name; });
   { const vb=document.querySelector(".viewbar"); if(vb) vb.style.display = ["fixtures","fbtable","bbtable","bbprops"].includes(name) ? "" : "none"; }   /* the Showing / search bar does not apply to the Results tab */
 }
 document.querySelectorAll("nav.tabs button").forEach(b=>b.onclick=()=>{ if(b.dataset.tab==="picks") resetPick(); showTab(b.dataset.tab); });
@@ -722,7 +722,7 @@ $("#bbBody").addEventListener("change", e => {
     const day=String(f.kickoff).slice(0,10), box=x=>x.sport==="basketball"?(x.bb||{}):(x.fb||{});
     if(db.fixtures.filter(x=>x.id!==f.id && x.sport===f.sport && String(x.kickoff).slice(0,10)===day && box(x).sure).length>=10){ toast("Maximum 10 Sure predictions per sport per day. Untick one first."); el.checked=false; return; }
   }
-  if(el.dataset.f==="xp"){ f.xp = el.checked; Store.save(db); $("#stats").textContent = statsText(); toast(el.checked?"Added to Expert Tips":"Removed from Expert Tips"); return; }
+  if(el.dataset.f==="xp"){ f.xp = el.checked; Store.save(db); $("#stats").textContent = statsText(); toast(el.checked?"Added to Banker Bet of the Day":"Removed from Banker Bet of the Day"); return; }
   f.bb = bbOf(f);
   f.bb[el.dataset.f] = el.type==="checkbox" ? el.checked : el.value.trim();
   Store.save(db); $("#stats").textContent = statsText();
@@ -735,7 +735,7 @@ $("#fbBody").addEventListener("change", e => {
     const day=String(f.kickoff).slice(0,10), box=x=>x.sport==="basketball"?(x.bb||{}):(x.fb||{});
     if(db.fixtures.filter(x=>x.id!==f.id && x.sport===f.sport && String(x.kickoff).slice(0,10)===day && box(x).sure).length>=10){ toast("Maximum 10 Sure predictions per sport per day. Untick one first."); el.checked=false; return; }
   }
-  if(el.dataset.f==="xp"){ f.xp = el.checked; Store.save(db); $("#stats").textContent = statsText(); toast(el.checked?"Added to Expert Tips":"Removed from Expert Tips"); return; }
+  if(el.dataset.f==="xp"){ f.xp = el.checked; Store.save(db); $("#stats").textContent = statsText(); toast(el.checked?"Added to Banker Bet of the Day":"Removed from Banker Bet of the Day"); return; }
   f.fb = fbOf(f);
   f.fb[el.dataset.f] = el.type==="checkbox" ? el.checked : el.value.trim();
   if(el.dataset.f==="tip"){ f.fb.tipOdds=""; Store.save(db); $("#stats").textContent = statsText(); renderFb(); return; }
@@ -743,7 +743,7 @@ $("#fbBody").addEventListener("change", e => {
 });
 
 
-/* ============ HOME BOXES (Expert tip, Bets of the day, VIP results) ============ */
+/* ============ HOME BOXES (Banker Bet of the Day, Bets of the day, VIP results) ============ */
 const todayStr = () => new Intl.DateTimeFormat("en-CA",{timeZone:"Africa/Lagos"}).format(new Date());
 $("#hbDate").value = todayStr(); $("#vpMonth").value = todayStr().slice(0,7);
 function renderHome(){
@@ -757,7 +757,7 @@ function renderHome(){
   shown.forEach(f=>{ const k=lgOf(f); if(k!==last){ last=k; ih+=`<div class="ih">${esc(k)}</div>`; }
     const e=f.et&&f.et.on, b=f.bo&&f.bo.on;
     ih+=`<div class="ir ${e||b?"done":""}" data-id="${f.id}"><span class="t">${esc(hhmm(f.kickoff))}</span><span class="m"><b>${esc(f.home)}</b> v <b>${esc(f.away)}</b></span>`+
-      (e?`<span class="muted">Expert tip ✓</span>`:`<button type="button" class="btn ghost sm" data-add="et">Expert tip</button>`)+
+      (e?`<span class="muted">Banker Bet ✓</span>`:`<button type="button" class="btn ghost sm" data-add="et">Banker Bet of the Day</button>`)+
       (b?`<span class="muted">Bet of the day ✓</span>`:`<button type="button" class="btn ghost sm" data-add="bo">Bet of the day</button>`)+`</div>`; });
   if(cand.length>CAP) ih+=`<div class="em">Showing ${CAP} of ${cand.length}. Type a team or choose a league to narrow the list.</div>`;
   $("#hbInv").innerHTML = cand.length ? ih : `<div class="em">No matches available.</div>`;
@@ -794,14 +794,14 @@ $("#hbDate").onchange = renderHome; $("#vpMonth").onchange = renderHome;
 function hbLimitOk(f,g){
   const day=String(f.kickoff).slice(0,10), lim = g==="et"?1:5;
   const n = db.fixtures.filter(x=>x.id!==f.id && x.sport===f.sport && String(x.kickoff).slice(0,10)===day && x[g] && x[g].on).length;
-  if(n>=lim){ toast(g==="et" ? "Only one Expert tip per sport per day. Switch the other one off first." : "Maximum 5 Bets of the day per sport. Switch one off first."); return false; }
+  if(n>=lim){ toast(g==="et" ? "Only one Banker Bet of the Day per sport per day. Switch the other one off first." : "Maximum 5 Bets of the day per sport. Switch one off first."); return false; }
   return true;
 }
 function hbAdd(id,g){
   const f=db.fixtures.find(x=>x.id===id); if(!f) return;
   if(!hbLimitOk(f,g)) return;
   f[g]=f[g]||{}; f[g].on=true; if(g==="bo" && !f.bo.st) f.bo.st="pending";
-  commit(); toast(g==="et"?"Added as Expert tip":"Added as Bet of the day");
+  commit(); toast(g==="et"?"Added as Banker Bet of the Day":"Added as Bet of the day");
 }
 $("#hbInv").addEventListener("click", e => { const b=e.target.closest("[data-add]"); if(!b) return; hbAdd(b.closest(".ir").dataset.id,b.dataset.add); hbOpen(false); $("#hbSearch").value=""; });
 const hbOpen = o => { $("#hbInv").hidden = !o; };
@@ -817,7 +817,7 @@ $("#hbBody").addEventListener("change", e => {
   if(el.dataset.f==="on" && val){
     const day=String(f.kickoff).slice(0,10), lim = g==="et"?1:5;
     const n = db.fixtures.filter(x=>x.id!==f.id && x.sport===f.sport && String(x.kickoff).slice(0,10)===day && x[g] && x[g].on).length;
-    if(n>=lim){ toast(g==="et" ? "Only one Expert tip per sport per day. Untick the other one first." : "Maximum 5 Bets of the day per sport. Untick one first."); el.checked=false; return; }
+    if(n>=lim){ toast(g==="et" ? "Only one Banker Bet of the Day per sport per day. Untick the other one first." : "Maximum 5 Bets of the day per sport. Untick one first."); el.checked=false; return; }
   }
   f[g] = f[g] || {}; f[g][el.dataset.f] = val;
   if(g==="bo" && el.dataset.f==="on" && val && !f.bo.st) f.bo.st="pending";
@@ -1035,7 +1035,7 @@ function renderResults(){
   $("#rsEtCount").textContent = et.length ? `(${et.filter(f=>isDone(f.et.st)).length} of ${et.length} settled)` : "";
   $("#rsEtBody").innerHTML = etShow.length ? etShow.map(f=>`<tr data-id="${f.id}"><td class="t">${esc(hhmm(f.kickoff))}</td>
       <td>${f.sport==="basketball"?"🏀":"⚽"} <b>${esc(f.home)}</b> v <b>${esc(f.away)}</b></td><td>${esc(f.et.by||"PB Analyst")}</td>
-      <td>${resSel(f.et.st,'data-f="st"')}</td></tr>`).join("") : `<tr><td colspan="4" class="empty">${et.length?"Settled.":"No expert tip on this day."}</td></tr>`;
+      <td>${resSel(f.et.st,'data-f="st"')}</td></tr>`).join("") : `<tr><td colspan="4" class="empty">${et.length?"Settled.":"No Banker Bet of the Day on this day."}</td></tr>`;
   /* bets of the day */
   const bo=db.fixtures.filter(f=>f.bo&&f.bo.on&&dayOfF(f)===day).sort(byKick), boShow=bo.filter(f=>!onlyOpen||!isDone(f.bo.st));
   $("#rsBoCount").textContent = bo.length ? `(${bo.filter(f=>isDone(f.bo.st)).length} of ${bo.length} settled)` : "";
@@ -1132,4 +1132,5 @@ try{
 }catch(e){ loginMsg(e.message); }
 </script>
 <script src="admin-csv-import.js"></script>
+<script src="admin-vip.js"></script>
 </body></html>
