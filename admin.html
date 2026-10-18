@@ -437,7 +437,7 @@ const Store = {
       const recent = r => { const k=String(r.kickoff||"").slice(0,10); return k >= cutoff && k <= farOut; };
       const snap = {
         fixtures: db.fixtures.filter(f=>liveOf("fixtures",f) && (recent(f) || homeBox(f))).map(f=>this.docOf("fixtures",f)),
-        vip:      (db.vip||[]).filter(v=>v.ymd>=cut120).map(v=>{ const o={ymd:v.ymd,tier:v.tier==="bronze"?"bronze":"gold",odds:v.draft?"":(v.odds||""),st:v.st||""}; if((v.st==="won"||v.st==="lost")&&!v.draft&&v.legs&&v.legs.length) o.legs=v.legs.map(l=>({sport:l.sport,home:l.home,away:l.away,comp:l.comp,ko:l.ko,market:l.market,sel:l.sel})); return o; }),
+        vip:      (db.vip||[]).filter(v=>v.ymd>=cut120).map(v=>{ const o={ymd:v.ymd,tier:v.tier==="bronze"?"bronze":"gold",odds:v.draft?"":(v.odds||""),st:v.st||""}; if((v.st==="won"||v.st==="lost")&&!v.draft&&v.legs&&v.legs.length) o.legs=v.legs.map(l=>({sport:l.sport,home:l.home,away:l.away,comp:l.comp,ko:l.ko,market:l.market,sel:l.sel,res:l.res||""})); return o; }),
         props:    db.props.filter(r=>liveOf("props",r)).map(r=>this.docOf("props",r)).filter(recent)
       };
       const sj = JSON.stringify(snap);
@@ -531,7 +531,7 @@ async function onSignedIn(user){
 /* ============ TABS ============ */
 function showTab(name){
   document.querySelectorAll("nav.tabs button").forEach(b=>b.setAttribute("aria-selected", b.dataset.tab===name));
-  ["fixtures","fbtable","bbtable","bbprops","home","results","vip","picks","published","data"].forEach(t=>{ const el=$("#tab-"+t); if(el) el.hidden = t!==name; });
+  ["fixtures","fbtable","bbtable","bbprops","home","results","vip","hub","picks","published","data"].forEach(t=>{ const el=$("#tab-"+t); if(el) el.hidden = t!==name; });
   { const vb=document.querySelector(".viewbar"); if(vb) vb.style.display = ["fixtures","fbtable","bbtable","bbprops"].includes(name) ? "" : "none"; }   /* the Showing / search bar does not apply to the Results tab */
 }
 document.querySelectorAll("nav.tabs button").forEach(b=>b.onclick=()=>{ if(b.dataset.tab==="picks") resetPick(); showTab(b.dataset.tab); });
@@ -1133,4 +1133,6 @@ try{
 </script>
 <script src="admin-csv-import.js"></script>
 <script src="admin-vip.js"></script>
+<script src="admin-hub.js"></script>
+<script src="admin-settle.js"></script>
 </body></html>

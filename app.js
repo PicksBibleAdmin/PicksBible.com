@@ -558,7 +558,7 @@ function showVipDay(label,x){
   el.innerHTML='<div class="vd" role="dialog" aria-modal="true" aria-label="'+label+' VIP picks"><button class="vx" type="button" aria-label="Close">&times;</button>'+
     '<h3>'+label+' VIP picks</h3><div class="vsub">'+esc(d)+'</div><div style="margin:8px 0"><span class="vr '+x.st+'">'+(x.st==="won"?"&#10003; Won":"Lost")+'</span></div>'+
     '<table><thead><tr><th>Match</th><th>Market</th><th>Pick</th></tr></thead><tbody>'+x.legs.map(function(l){
-      return '<tr><td>'+esc(l.home)+' v '+esc(l.away)+'<br><small>'+esc(l.comp||"")+(l.ko?" &middot; "+esc(String(l.ko).slice(11,16)):"")+'</small></td><td>'+esc(l.market)+'</td><td><b>'+esc(l.sel)+'</b></td></tr>'}).join("")+
+      return '<tr><td>'+esc(l.home)+' v '+esc(l.away)+'<br><small>'+esc(l.comp||"")+(l.ko?" &middot; "+esc(String(l.ko).slice(11,16)):"")+'</small></td><td>'+esc(l.market)+'</td><td><b>'+esc(l.sel)+'</b> '+(l.res==="won"?'<span style="color:var(--won)">&#10003;</span>':l.res==="lost"?'<span style="color:var(--lost)">&#10005;</span>':l.res==="push"?'<small>(void)</small>':'')+'</td></tr>'}).join("")+
     '</tbody></table><div class="vt">Total odds: '+esc(x.odds)+'</div></div>';
   document.body.appendChild(el);
   function close(){el.remove();document.removeEventListener("keydown",esc_)}

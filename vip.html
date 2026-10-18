@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>VIP Login | PicksBible</title><meta name="description" content="Log in to your PicksBible Gold or Titanium VIP dashboard."><meta name="robots" content="noindex,follow"><link rel="canonical" href="https://picksbible.com/vip.html"><meta property="og:title" content="VIP Login | PicksBible"><meta property="og:image" content="https://picksbible.com/img/pb-logo.png"><meta name="theme-color" content="#0b0820"><link rel="icon" href="img/pb-logo.png"><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700;800&family=Saira+Condensed:wght@600;700&display=swap"><link rel="stylesheet" href="style.css">
+<script src="data.js"></script></head><body>
+<header class="top"><div class="wrap">
+<button class="iconbtn menu-toggle" type="button" data-open="drawer" aria-label="Open menu"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+<a class="brand" href="index.html" aria-label="PicksBible home"><img src="img/pb-logo.png" alt="PicksBible logo" width="61" height="44"><span>Picks<b>Bible</b></span></a>
+<nav class="desk-nav" aria-label="Main"><a href="index.html">Home</a><a href="predictions.html">Predictions</a><a href="expert-tips.html">Banker Bet of the Day</a><a href="https://t.me/picksbibleforum" rel="noopener">Bet Forum</a><a href="blog.html">Blog</a><a href="premium.html" aria-current="page">VIP</a><a href="about.html">About Us</a><a href="contact.html">Contact Us</a></nav>
+</div>
+</header>
+<div class="drawer" id="drawer" hidden><nav aria-label="Menu"><button class="iconbtn close" type="button" aria-label="Close menu"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button><a href="index.html">Home</a><a href="predictions.html">Predictions</a><a class="sub" href="football-predictions.html">Football predictions ⚽</a><a class="sub" href="basketball-predictions.html">Basketball predictions 🏀</a><a href="expert-tips.html">Banker Bet of the Day</a><a href="https://t.me/picksbibleforum" rel="noopener">Bet Forum</a><a href="blog.html">Blog</a><a href="premium.html">VIP</a><a href="about.html">About Us</a><a href="contact.html">Contact Us</a><a href="results.html">VIP room results</a><a href="legal.html#faq">FAQ</a></nav></div><main class="wrap"><div class="hero-in"><div class="crumbs"><a href="index.html">Home</a> › VIP</div><h1>VIP <span>Membership</span></h1><p>Free daily predictions, plus Gold (2–3 odds tips) and Titanium (2–3 odds tips and 4–10 odds selections) for members.</p></div>
+<style>
+.mb{max-width:760px;margin:18px auto;padding:0 16px}
+.mb .card{background:var(--panel,#fff);border:1px solid var(--line,#e3e3ea);border-radius:14px;padding:18px;margin-bottom:16px}
+.mb h1{margin:0 0 6px;font-size:26px}.mb h2{margin:0 0 10px;font-size:19px}
+.mb label{display:block;font-size:13px;margin:10px 0 4px;font-weight:600}
+.mb input{width:100%;padding:11px;border:1px solid var(--line,#ccd);border-radius:8px;font:inherit}
+.mb .tabs2{display:flex;gap:8px;margin-bottom:10px}.mb .tabs2 button{flex:1}
+.mb .btn[disabled]{opacity:.6}
+.mb .msg{margin:10px 0 0;font-size:14px}.mb .msg.err{color:#c0392b}.mb .msg.ok{color:#1e8e3e}
+.mb .badge{display:inline-block;padding:3px 10px;border-radius:99px;font-weight:700;font-size:13px;background:#eee}
+.mb .badge.gold{background:#fde9a8;color:#6b4e00}.mb .badge.titanium{background:#d6e4ee;color:#1e3a52}
+.mb .pk{border:1px solid var(--line,#e3e3ea);border-radius:12px;padding:14px;margin-bottom:12px}
+.mb .pk h3{margin:0 0 4px;font-size:16px}.mb .pk table{width:100%;border-collapse:collapse;margin-top:8px;font-size:14px}
+.mb .pk td,.mb .pk th{padding:6px 4px;border-bottom:1px solid var(--line,#eee);text-align:left;vertical-align:top}
+.mb .pk .tot{margin-top:8px;font-weight:700}
+.mb .nt{border-bottom:1px solid var(--line,#eee);padding:10px 0}.mb .nt:last-child{border:0}.mb .nt small{color:#777}
+.mb .dot{display:inline-block;background:#e11d48;color:#fff;border-radius:99px;font-size:12px;padding:1px 8px;margin-left:6px}
+.mb .row{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+</style>
+<main class="mb">
+<div id="mAuth" class="card" hidden>
+  <h1>VIP Login</h1>
+  <p class="note">Sign in to see your Gold or Titanium picks and your notifications. New here? Create a free account first, then pick a plan.</p>
+  <div class="tabs2"><button class="btn" type="button" id="mTabIn">Log in</button><button class="btn ghost" type="button" id="mTabUp">Create account</button></div>
+  <form id="mForm" novalidate>
+    <div id="mNameRow" hidden><label for="mName">Your name</label><input id="mName" autocomplete="name"></div>
+    <label for="mEmail">Email</label><input id="mEmail" type="email" autocomplete="email" required>
+    <label for="mPass">Password</label><input id="mPass" type="password" autocomplete="current-password" minlength="6" required>
+    <p class="msg" id="mMsg" hidden></p>
+    <button class="btn" type="submit" id="mGo" style="margin-top:12px">Log in</button>
+    <p class="note" style="margin-top:10px"><a href="#" id="mForgot">Forgot password?</a></p>
+  </form>
+</div>
+<div id="mHome" hidden>
+  <div class="card">
+    <div class="row"><div><h1 id="mHi">Welcome</h1><div id="mPlan"></div></div><button class="btn ghost" id="mOut" type="button">Log out</button></div>
+    <p class="note" id="mPlanNote" style="margin-top:10px"></p>
+  </div>
+  <div class="card" id="mNotes"><h2>Notifications <span class="dot" id="mDot" hidden></span></h2><div id="mNoteList"><p class="note">No messages yet.</p></div></div>
+  <div class="card" id="mPicks"><h2>Your VIP picks</h2><div id="mPickList"><p class="note">Loading...</p></div></div>
+</div>
+</main>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+<script>
+(function(){
+  var $=function(s){return document.querySelector(s)};
+  var esc=function(s){return String(s==null?"":s).replace(/[&<>"']/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]})};
+  firebase.initializeApp({apiKey:"AIzaSyBBnSFHx_z1YWwOXz6sdKOSzelTIuvusa8",authDomain:"picksbible-7fa7f.firebaseapp.com",projectId:"picksbible-7fa7f",appId:"1:670341631512:web:7478818fbb53b5cec6fd6d"});
+  var auth=firebase.auth(), fs=firebase.firestore(), mode="in", unsubs=[];
+  var ERR={"auth/invalid-credential":"Wrong email or password.","auth/wrong-password":"Wrong email or password.","auth/user-not-found":"Wrong email or password.","auth/email-already-in-use":"This email already has an account. Log in instead.","auth/weak-password":"Password must be at least 6 characters.","auth/invalid-email":"That email address is not valid.","auth/too-many-requests":"Too many attempts. Wait a few minutes.","auth/network-request-failed":"No connection. Try again."};
+  function msg(t,ok){var e=$("#mMsg");e.textContent=t||"";e.hidden=!t;e.className="msg "+(ok?"ok":"err")}
+  function setMode(m){mode=m;$("#mNameRow").hidden=m!=="up";$("#mGo").textContent=m==="up"?"Create account":"Log in";$("#mTabIn").className="btn"+(m==="in"?"":" ghost");$("#mTabUp").className="btn"+(m==="up"?"":" ghost");$("#mPass").autocomplete=m==="up"?"new-password":"current-password";msg("")}
+  $("#mTabIn").onclick=function(){setMode("in")};$("#mTabUp").onclick=function(){setMode("up")};
+  if(location.hash==="#signup")setMode("up");
+  $("#mForgot").onclick=function(e){e.preventDefault();var em=$("#mEmail").value.trim();if(!em)return msg("Type your email above first.");auth.sendPasswordResetEmail(em).then(function(){msg("Password reset email sent. Check your inbox and spam folder.",true)},function(x){msg(ERR[x.code]||"Could not send the email.")})};
+  $("#mForm").onsubmit=function(e){
+    e.preventDefault();var em=$("#mEmail").value.trim().toLowerCase(),pw=$("#mPass").value;if(!em||!pw)return msg("Enter your email and password.");
+    $("#mGo").disabled=true;msg("");
+    var p=mode==="up"?auth.createUserWithEmailAndPassword(em,pw).then(function(c){
+      return fs.collection("users").doc(c.user.uid).set({email:em,name:$("#mName").value.trim().slice(0,80),tier:"free",createdAt:new Date().toISOString(),source:"signup"});
+    }):auth.signInWithEmailAndPassword(em,pw);
+    p.catch(function(x){msg(ERR[x.code]||("Something went wrong ("+(x.code||x.message)+")"))}).then(function(){$("#mGo").disabled=false});
+  };
+  $("#mOut").onclick=function(){auth.signOut()};
+  function stop(){unsubs.forEach(function(u){u()});unsubs=[]}
+  function active(u){return u&&(u.tier==="gold"||u.tier==="titanium")&&u.paidUntil&&u.paidUntil>=new Date().toISOString().slice(0,10)}
+  auth.onAuthStateChanged(function(user){
+    stop();
+    if(!user){$("#mHome").hidden=true;$("#mAuth").hidden=false;return}
+    $("#mAuth").hidden=true;$("#mHome").hidden=false;
+    unsubs.push(fs.collection("users").doc(user.uid).onSnapshot(function(d){
+      var u=d.exists?d.data():{tier:"free"};
+      $("#mHi").textContent="Hi"+(u.name?", "+u.name.split(" ")[0]:"");
+      var on=active(u),t=on?u.tier:"free";
+      $("#mPlan").innerHTML='<span class="badge '+t+'">'+(on?(t==="gold"?"Gold":"Titanium")+" VIP":"Free member")+'</span>'+(on?' <small>active until '+esc(u.paidUntil)+'</small>':"");
+      $("#mPlanNote").innerHTML=on?"Your picks appear below as soon as we publish them, and we notify you by message and email.":(u.tier==="gold"||u.tier==="titanium"?"Your VIP plan has expired. <a href=\"premium.html\">Renew your plan</a>.":"You are on the free plan. <a href=\"premium.html\">Join Gold or Titanium</a> to receive our VIP picks here and by email.");
+      listen(user,on,t);
+    },function(){$("#mPlanNote").textContent="Could not load your account. Refresh the page."}));
+  });
+  var feedUn=[];
+  function listen(user,on,tier){
+    feedUn.forEach(function(u){u()});feedUn=[];
+    var seen=0;try{seen=+localStorage.getItem("pb.noteSeen")||0}catch(_){}
+    feedUn.push(fs.collection("broadcasts").where("audience","array-contains",tier).onSnapshot(function(s){
+      var a=[];s.forEach(function(d){a.push(d.data())});a.sort(function(x,y){return String(y.createdAt).localeCompare(String(x.createdAt))});a=a.slice(0,30);
+      $("#mNoteList").innerHTML=a.length?a.map(function(n){return '<div class="nt"><b>'+esc(n.title)+'</b><br>'+esc(n.body)+'<br><small>'+esc(String(n.createdAt).slice(0,16).replace("T"," "))+' UTC</small></div>'}).join(""):'<p class="note">No messages yet.</p>';
+      var fresh=a.filter(function(n){return Date.parse(n.createdAt)>seen}).length;$("#mDot").hidden=!fresh;$("#mDot").textContent=fresh+" new";
+      try{if(a.length)localStorage.setItem("pb.noteSeen",String(Date.parse(a[0].createdAt)))}catch(_){}
+    },function(){}));
+    if(!on){$("#mPickList").innerHTML='<p class="note">VIP picks are for Gold and Titanium members.</p>';return}
+    feedUn.push(fs.collection("vip_feed").where("audience","array-contains",tier).onSnapshot(function(s){
+      var a=[];s.forEach(function(d){a.push(d.data())});a.sort(function(x,y){return String(y.createdAt).localeCompare(String(x.createdAt))});a=a.slice(0,30);
+      $("#mPickList").innerHTML=a.length?a.map(function(p){
+        return '<div class="pk"><h3><span class="badge '+(p.pkg==="gold"?"gold":"titanium")+'">'+(p.pkg==="gold"?"Gold":"Titanium")+'</span> '+esc(p.ymd)+(p.st?' &middot; '+esc(p.st):'')+'</h3><table><tr><th>Match</th><th>Market</th><th>Pick</th></tr>'+
+          (p.legs||[]).map(function(l){return '<tr><td>'+esc(l.home)+' v '+esc(l.away)+'<br><small>'+esc(l.comp)+' '+esc(String(l.ko).slice(11,16))+'</small></td><td>'+esc(l.market)+'</td><td><b>'+esc(l.sel)+'</b> '+(l.res==='won'?'&#10003;':l.res==='lost'?'&#10005;':'')+'</td></tr>'}).join("")+
+          '</table><div class="tot">Total odds: '+esc(p.odds)+'</div></div>'}).join(""):'<p class="note">No picks published yet. We will notify you.</p>';
+    },function(){$("#mPickList").innerHTML='<p class="note">Could not load picks. Refresh the page.</p>'}));
+  }
+})();
+</script>
+
+<footer><div class="wrap"><div class="ftop"><div class="about"><img src="img/pb-logo.png" alt="PicksBible" width="85" height="64"><p>PicksBible provides football and basketball tips based on statistical analysis of past events, current form and the latest team news available at the time of prediction. No prediction is guaranteed.</p></div><div><h4>Social Links</h4><ul><li class="soc"><a href="https://t.me/" rel="noopener" data-social="telegram"><svg viewBox="0 0 24 24"><path d="M21.5 3.6L2.9 10.8c-1.3.5-1.2 1.2-.2 1.5l4.8 1.5 1.8 5.6c.2.6.1.9.8.9.5 0 .7-.2 1-.5l2.4-2.3 4.9 3.6c.9.5 1.6.2 1.8-.8l3.2-15.1c.3-1.3-.5-1.9-1.4-1.6zM8.6 13.4l9.9-6.3c.5-.3.9-.1.5.2l-8.4 7.6-.3 3.6-1.7-5.1z"/></svg>Telegram</a></li><li class="soc"><a href="https://youtube.com/" rel="noopener" data-social="youtube"><svg viewBox="0 0 24 24"><path d="M23 7.2a3 3 0 0 0-2.1-2.1C19 4.6 12 4.6 12 4.6s-7 0-8.9.5A3 3 0 0 0 1 7.2 31 31 0 0 0 .5 12 31 31 0 0 0 1 16.8a3 3 0 0 0 2.1 2.1c1.9.5 8.9.5 8.9.5s7 0 8.9-.5a3 3 0 0 0 2.1-2.1c.4-1.6.5-3.2.5-4.8s-.1-3.2-.5-4.8zM9.7 15.1V8.9l5.8 3.1-5.8 3.1z"/></svg>YouTube</a></li><li class="soc"><a href="https://instagram.com/" rel="noopener" data-social="instagram"><svg viewBox="0 0 24 24"><path d="M12 7.3a4.7 4.7 0 1 0 0 9.4 4.7 4.7 0 0 0 0-9.4zm0 7.7a3 3 0 1 1 0-6 3 3 0 0 1 0 6zm6-7.9a1.1 1.1 0 1 1-2.2 0 1.1 1.1 0 0 1 2.2 0zM17 2H7a5 5 0 0 0-5 5v10a5 5 0 0 0 5 5h10a5 5 0 0 0 5-5V7a5 5 0 0 0-5-5zm3.2 15A3.2 3.2 0 0 1 17 20.2H7A3.2 3.2 0 0 1 3.8 17V7A3.2 3.2 0 0 1 7 3.8h10A3.2 3.2 0 0 1 20.2 7z"/></svg>Instagram</a></li><li class="soc"><a href="https://x.com/" rel="noopener" data-social="x"><svg viewBox="0 0 24 24"><path d="M17.8 3h3.1l-6.8 7.7L22 21h-6.2l-4.9-6.4L5.3 21H2.2l7.2-8.3L1.8 3h6.4l4.4 5.8zm-1.1 16.2h1.7L7.4 4.7H5.5z"/></svg>Twitter</a></li><li class="soc"><a href="https://facebook.com/" rel="noopener" data-social="facebook"><svg viewBox="0 0 24 24"><path d="M14 8.5V6.6c0-.9.6-1.1 1-1.1h2.6V1.6L14 1.5c-4 0-4.9 3-4.9 4.9v2.1H6.5v4h2.6V22.5H14V12.5h3.3l.4-4z"/></svg>Facebook</a></li></ul></div></div><div class="flinks">
+<div><h4>Quick Links</h4><ul><li><a href="premium.html">VIP Login</a></li><li><a href="predictions.html">All Predictions Today</a></li><li><a href="expert-tips.html">Banker Bet of the Day</a></li><li><a href="https://t.me/picksbibleforum" rel="noopener">Free Forum</a></li><li><a href="results.html">VIP room results</a></li></ul></div>
+<div><h4>Football</h4><ul><li><a href="football-predictions.html">Today's Predictions</a></li><li><a href="expert-tips.html?s=football">Football Banker Bet of the Day</a></li><li><a href="football-predictions.html">Over/Under &amp; BTTS Tips</a></li><li><a href="results.html">Football Results</a></li><li><a href="blog.html">Football Blog</a></li></ul></div>
+<div><h4>Basketball</h4><ul><li><a href="basketball-predictions.html">Today's Predictions</a></li><li><a href="expert-tips.html?s=basketball">Basketball Banker Bet of the Day</a></li><li><a href="basketball-predictions.html">Spread &amp; Totals Tips</a></li><li><a href="basketball-predictions.html">Best Player Props</a></li><li><a href="blog.html">Basketball Blog</a></li></ul></div>
+<div><h4>PicksBible</h4><ul><li><a href="about.html">About Us</a></li><li><a href="premium.html">VIP</a></li><li><a href="premium.html#how">How to Subscribe</a></li><li><a href="blog.html">News &amp; Insights</a></li><li><a href="contact.html">Advertise With Us</a></li></ul></div>
+<div><h4>Important</h4><ul><li><a href="legal.html#terms">Terms of Service</a></li><li><a href="legal.html#privacy">Privacy Policy</a></li><li><a href="https://www.begambleaware.org" rel="noopener">Responsible Gambling</a></li><li><a href="legal.html#faq">FAQ</a></li><li><a href="contact.html">Contact Us</a></li></ul></div>
+</div></div>
+<div class="aware">Be gamble aware. Please bear in mind that you cannot play or bet on this site. The site is created only and solely for information purposes. We advise that you follow the gambling laws in your country.<br><a class="badge" href="https://www.begambleaware.org" rel="noopener" style="color:var(--text);text-decoration:none"><i>18+</i>BeGambleAware.org</a></div>
+<div class="copy">Copyright © 2026 picksbible.com</div>
+</footer>
+<script>(function(){var S=window.PB&&PB.site;if(!S)return;document.querySelectorAll('[data-social]').forEach(function(a){var u=S.socials[a.dataset.social];if(u)a.href=u});document.querySelectorAll('[data-site=email]').forEach(function(a){a.textContent=S.email})})();</script>
+<!-- Cookie banner -->
+<div class="cookie-banner" id="cookieBanner">
+  <p>We use cookies to improve your experience. By using our site, you agree to our <a href="legal.html#privacy">privacy policy</a> and <a href="legal.html#terms">terms</a>.</p>
+  <button class="cookie-accept" type="button">Accept</button>
+</div>
+<script>
+(function(){
+  var cb=document.getElementById('cookieBanner');
+  if(localStorage.getItem('pb_cookies_accepted')){cb.classList.add('hidden');return}
+  document.querySelector('.cookie-accept').addEventListener('click',function(){
+    localStorage.setItem('pb_cookies_accepted','1');
+    cb.classList.add('hidden');
+  });
+})();
+</script>
+<script src="leagues.js"></script><script src="app.js"></script></body></html>
