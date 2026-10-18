@@ -47,10 +47,10 @@
           else if (h === "btts") idx.btts = i;
           else if (h === "cs tips" || h === "cs tip") idx.cs = i;
           else if (h.startsWith("point totals")) idx.pts = i;
-          else if (h.startsWith("ft")) idx.ft = i;
+          else if (idx.ft === undefined && (h.startsWith("ft") || /^(final|full time|score|result|results|fulltime)\b/.test(h))) idx.ft = i;
         });
         const fb = idx.oX !== undefined || idx.btts !== undefined || idx.cs !== undefined;
-        cur = { sport: fb ? "football" : "basketball", idx, rows: [] };
+        cur = { sport: fb ? "football" : "basketball", idx, rows: [], heads: r };
         out.push(cur);
       } else if (cur) cur.rows.push(r);
     });
@@ -84,7 +84,8 @@
     t = String(t || "").toUpperCase().replace(/\s+/g, "");
     return ({ "X1": "1X", "2X": "X2", "21": "12" })[t] || t;
   };
-  const parseScore = s => { const m = String(s || "").match(/^\s*(\d+)\s*[-–:]\s*(\d+)\s*$/); return m ? [+m[1], +m[2]] : null; };
+  /* accepts 2-1, 2 - 1, 2:1, "FT 2-1", "2-1 (1-0)", "2-1 HT 1-0" (the first score is the full-time one) */
+  const parseScore = s => { const m = String(s || "").match(/^\D{0,8}?(\d{1,3})\s*[-–—:]\s*(\d{1,3})(?!\d)/); return m ? [+m[1], +m[2]] : null; };
 
   /* ---- win / lost ---- */
   function footballStatus(tip, ft) {
@@ -106,7 +107,7 @@
 
   function run(text, opt, ctx) {
     const { db, uid, colorOf, leagues } = ctx;
-    const rep = { added: 0, updated: 0, results: 0, problems: [], changed: false };
+    const rep = { added: 0, updated: 0, results: 0, waiting: 0, problems: [], changed: false };
     const secs = sections(parseCSV(text));
     if (opt.only && secs.length && !secs.some(x => x.sport === opt.only)) {
       rep.problems.push("No " + opt.only + " table found in this file. Is this the right button?");
@@ -120,6 +121,18 @@
         return;
       }
       const get = (r, k) => (idx[k] === undefined ? "" : (r[idx[k]] || ""));
+      if (opt.mode === "res" && idx.ft === undefined) {
+        /* no recognised score heading: use a spare column whose filled cells look like scores (never the CS TIPS column) */
+        const used = new Set(Object.values(idx));
+        let best = -1, bestN = 0;
+        (sec.heads || []).forEach((_, ci) => {
+          if (used.has(ci)) return;
+          const cells = sec.rows.map(r => r[ci] || "").filter(Boolean), n = cells.filter(c => parseScore(c)).length;
+          if (n >= 1 && n >= cells.length * 0.6 && n > bestN) { best = ci; bestN = n; }
+        });
+        if (best >= 0) idx.ft = best;
+        else { rep.problems.push("The " + sport + " table has no score column I can recognise. Columns found: " + (sec.heads || []).join(" | ") + ". Name the score column FT SCORE."); return; }
+      }
       let lastTime = "";
       sec.rows.forEach((r, n) => {
         const home = get(r, "home"), away = get(r, "away");
@@ -137,7 +150,7 @@
         /* ---------- RESULTS ---------- */
         if (opt.mode === "res") {
           const ft = get(r, "ft");
-          if (!ft) return;
+          if (!ft) { rep.waiting++; return; }
           if (!parseScore(ft)) { rep.problems.push(label + ": FT SCORE '" + ft + "' is not like 2-1"); return; }
           const f = findFx();
           if (!f) { rep.problems.push(label + ": not found on " + opt.date + ". Spelling must match the predictions upload"); return; }
@@ -234,7 +247,7 @@
         { db, uid, colorOf: typeof colorOf === "function" ? colorOf : () => "", leagues: window.PB_LEAGUES });
       if (rep.changed) commit();
       const head = (sport === "football" ? "Football" : "Basketball") + " " + dateEl.value + ": " + (mode === "res"
-        ? rep.results + " result" + (rep.results === 1 ? "" : "s") + " saved and marked won/lost."
+        ? rep.results + " result" + (rep.results === 1 ? "" : "s") + " saved and marked won/lost." + (rep.waiting ? " " + rep.waiting + " match" + (rep.waiting === 1 ? "" : "es") + " had no score yet (left pending)." : "")
         : rep.added + " added, " + rep.updated + " updated.");
       out.textContent = head + (rep.problems.length ? "\n\nNeeds attention (" + rep.problems.length + "):\n- " + rep.problems.join("\n- ") : "");
       out.style.color = rep.problems.length ? "var(--lost)" : "";
