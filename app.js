@@ -805,7 +805,7 @@ $$("[data-toppicks]").forEach(function(el){
         '<div class="vb-mid"><strong>'+esc(x.t)+'</strong>vs<br>'+esc(x.sub)+'</div>'+
         '<div>'+crestDiv(x.right.name,x.right.color)+'<div class="vb-team">'+esc(x.right.name)+'</div></div></div>'+
       '<div class="odds">'+x.odds.map(function(o){return '<span>'+esc(o[0])+' &nbsp;'+esc(o[1])+'</span>'}).join("")+'<span class="pick">'+esc(x.pick)+' @ '+esc(x.pickOdds)+'</span></div>'+
-      '<div class="vb-by"><span>EXPERT TIPS BY: <b>'+esc(x.tipster)+'</b></span><span>'+esc(x.tag)+'</span></div>'+
+      '<div class="vb-by"><span>BANKER BETS BY: <b>'+esc(x.tipster)+'</b></span><span>'+esc(x.tag)+'</span></div>'+
       '<div class="vb-foot"><button type="button" class="btn ghost" data-reasontoggle="'+i+'" aria-expanded="false">View Reasoning</button>'+
       '<p class="pc-reason" data-reason="'+i+'" hidden style="margin-top:10px;text-align:left">'+esc(x.reason)+'</p></div>'+
     '</div>';
