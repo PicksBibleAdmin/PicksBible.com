@@ -47,6 +47,7 @@
     <div class="row"><div><h1 id="mHi">Welcome</h1><div id="mPlan"></div></div><button class="btn ghost" id="mOut" type="button">Log out</button></div>
     <p class="note" id="mPlanNote" style="margin-top:10px"></p>
   </div>
+  <div class="card" id="mWarn" style="background:#fff3cd;color:#5c4400;border-color:#f5c542" hidden></div>
   <div class="card" id="mNotes"><h2>Notifications <span class="dot" id="mDot" hidden></span></h2><div id="mNoteList"><p class="note">No messages yet.</p></div></div>
   <div class="card" id="mPicks"><h2>Your VIP picks</h2><div id="mPickList"><p class="note">Loading...</p></div></div>
 </div>
@@ -74,19 +75,22 @@
     }):auth.signInWithEmailAndPassword(em,pw);
     p.catch(function(x){msg(ERR[x.code]||("Something went wrong ("+(x.code||x.message)+")"))}).then(function(){$("#mGo").disabled=false});
   };
-  $("#mOut").onclick=function(){auth.signOut()};
+  $("#mOut").onclick=function(){try{localStorage.removeItem("pb.member")}catch(_){}auth.signOut()};
   function stop(){unsubs.forEach(function(u){u()});unsubs=[]}
   function active(u){return u&&(u.tier==="gold"||u.tier==="titanium")&&u.paidUntil&&u.paidUntil>=new Date().toISOString().slice(0,10)}
   auth.onAuthStateChanged(function(user){
     stop();
-    if(!user){$("#mHome").hidden=true;$("#mAuth").hidden=false;return}
+    if(!user){try{localStorage.removeItem("pb.member")}catch(_){}$("#mHome").hidden=true;$("#mAuth").hidden=false;return}
+    try{localStorage.setItem("pb.member","1")}catch(_){}
     $("#mAuth").hidden=true;$("#mHome").hidden=false;
     unsubs.push(fs.collection("users").doc(user.uid).onSnapshot(function(d){
       var u=d.exists?d.data():{tier:"free"};
       $("#mHi").textContent="Hi"+(u.name?", "+u.name.split(" ")[0]:"");
       var on=active(u),t=on?u.tier:"free";
       $("#mPlan").innerHTML='<span class="badge '+t+'">'+(on?(t==="gold"?"Gold":"Titanium")+" VIP":"Free member")+'</span>'+(on?' <small>active until '+esc(u.paidUntil)+'</small>':"");
-      $("#mPlanNote").innerHTML=on?"Your picks appear below as soon as we publish them, and we notify you by message and email.":(u.tier==="gold"||u.tier==="titanium"?"Your VIP plan has expired. <a href=\"premium.html\">Renew your plan</a>.":"You are on the free plan. <a href=\"premium.html\">Join Gold or Titanium</a> to receive our VIP picks here and by email.");
+      var left=on?Math.round((Date.parse(u.paidUntil+"T12:00:00Z")-Date.parse(new Date().toISOString().slice(0,10)+"T12:00:00Z"))/864e5):0;
+      $("#mWarn").hidden=!(on&&left<=7);if(on&&left<=7)$("#mWarn").innerHTML="Your "+(t==="gold"?"Gold":"Titanium")+" plan ends "+(left<=0?"today":"in "+left+" day"+(left===1?"":"s"))+" ("+esc(u.paidUntil)+"). <a href=\"premium.html\">Renew now</a> so you do not miss any picks.";
+      $("#mPlanNote").innerHTML=on?"Days left on your plan: <b>"+left+"</b>. Your picks appear below as soon as we publish them, and we notify you by message and email.":(u.tier==="gold"||u.tier==="titanium"?"Your VIP plan has expired. <a href=\"premium.html\">Renew your plan</a>.":"You are on the free plan. <a href=\"premium.html\">Join Gold or Titanium</a> to receive our VIP picks here and by email.");
       listen(user,on,t);
     },function(){$("#mPlanNote").textContent="Could not load your account. Refresh the page."}));
   });
@@ -94,12 +98,15 @@
   function listen(user,on,tier){
     feedUn.forEach(function(u){u()});feedUn=[];
     var seen=0;try{seen=+localStorage.getItem("pb.noteSeen")||0}catch(_){}
-    feedUn.push(fs.collection("broadcasts").where("audience","array-contains",tier).onSnapshot(function(s){
-      var a=[];s.forEach(function(d){a.push(d.data())});a.sort(function(x,y){return String(y.createdAt).localeCompare(String(x.createdAt))});a=a.slice(0,30);
+    var bcList=[],ntList=[];
+    function drawNotes(){
+      var a=bcList.concat(ntList);a.sort(function(x,y){return String(y.createdAt).localeCompare(String(x.createdAt))});a=a.slice(0,30);
       $("#mNoteList").innerHTML=a.length?a.map(function(n){return '<div class="nt"><b>'+esc(n.title)+'</b><br>'+esc(n.body)+'<br><small>'+esc(String(n.createdAt).slice(0,16).replace("T"," "))+' UTC</small></div>'}).join(""):'<p class="note">No messages yet.</p>';
       var fresh=a.filter(function(n){return Date.parse(n.createdAt)>seen}).length;$("#mDot").hidden=!fresh;$("#mDot").textContent=fresh+" new";
       try{if(a.length)localStorage.setItem("pb.noteSeen",String(Date.parse(a[0].createdAt)))}catch(_){}
-    },function(){}));
+    }
+    feedUn.push(fs.collection("broadcasts").where("audience","array-contains",tier).onSnapshot(function(s){bcList=[];s.forEach(function(d){bcList.push(d.data())});drawNotes()},function(){}));
+    feedUn.push(fs.collection("notes").where("to","==",user.uid).onSnapshot(function(s){ntList=[];s.forEach(function(d){ntList.push(d.data())});drawNotes()},function(){}));
     if(!on){$("#mPickList").innerHTML='<p class="note">VIP picks are for Gold and Titanium members.</p>';return}
     feedUn.push(fs.collection("vip_feed").where("audience","array-contains",tier).onSnapshot(function(s){
       var a=[];s.forEach(function(d){a.push(d.data())});a.sort(function(x,y){return String(y.createdAt).localeCompare(String(x.createdAt))});a=a.slice(0,30);

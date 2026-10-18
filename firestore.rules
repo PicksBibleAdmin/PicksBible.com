@@ -1,0 +1,73 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isAdmin() {
+      return request.auth != null
+        && request.auth.token.email in [
+          "p.ejigabusiness@gmail.com"
+        ];
+    }
+    function me() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+    }
+    /* signed-in member who is free, or a paid member whose plan has not expired */
+    function memberOk() {
+      return request.auth != null
+        && exists(/databases/$(database)/documents/users/$(request.auth.uid))
+        && (me().tier == 'free' || me().paidUntilTs > request.time);
+    }
+
+    /* ---- existing (unchanged) ---- */
+    match /public/{id}   { allow read: if true; allow write: if isAdmin(); }
+    match /fixtures/{id} { allow read, write: if isAdmin(); }
+    match /props/{id}    { allow read, write: if isAdmin(); }
+    match /picks/{id}    { allow read, write: if isAdmin(); }
+
+    /* ---- members ---- */
+    match /users/{uid} {
+      allow read: if isAdmin() || (request.auth != null && request.auth.uid == uid);
+      /* a new member can only create their OWN record, always as a free member */
+      allow create: if request.auth != null && request.auth.uid == uid
+        && request.resource.data.tier == 'free'
+        && request.resource.data.keys().hasOnly(['email','name','tier','createdAt','source']);
+      allow update: if isAdmin()
+        /* unsubscribe link: anyone holding the member's private key can switch emails off, and nothing else */
+        || (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['unsub','proof'])
+            && resource.data.keys().hasAny(['unsubToken'])
+            && request.resource.data.proof == resource.data.unsubToken);
+      allow delete: if isAdmin();
+    }
+
+    /* ---- email capture: anyone can add an email, only the admin can read the list ---- */
+    match /leads/{id} {
+      allow create: if request.resource.data.keys().hasOnly(['email','firstName','lastName','whatsapp','interest','page','source','createdAt','plan'])
+        && request.resource.data.email is string
+        && request.resource.data.email.size() < 120
+        && request.resource.data.email.matches('.+@.+[.].+');
+      allow read, delete: if isAdmin();
+      allow update: if isAdmin()
+        || (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['unsub','proof'])
+            && resource.data.keys().hasAny(['unsubToken'])
+            && request.resource.data.proof == resource.data.unsubToken);
+    }
+
+    /* ---- one-to-one notifications (e.g. plan ending soon) ---- */
+    match /notes/{id} {
+      allow read: if isAdmin() || (request.auth != null && resource.data.to == request.auth.uid);
+      allow write: if isAdmin();
+    }
+
+    /* ---- VIP picks and messages: members read only what their plan allows ---- */
+    match /vip_feed/{id} {
+      allow read: if isAdmin() || (memberOk() && me().tier in resource.data.audience);
+      allow write: if isAdmin();
+    }
+    match /broadcasts/{id} {
+      allow read: if isAdmin() || (memberOk() && me().tier in resource.data.audience);
+      allow write: if isAdmin();
+    }
+
+    match /{document=**} { allow read, write: if false; }
+  }
+}

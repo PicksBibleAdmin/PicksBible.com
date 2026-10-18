@@ -27,6 +27,14 @@
       let j = {}; try { j = await r.json(); } catch (_) {}
       if (!r.ok && !j.sent) throw new Error(j.error || ("email service error " + r.status));
       return j;
+    },
+    /* the free daily email: picks = [{match, pick, meta}], recipients = [{email, name, unsub}] */
+    async sendFree(recipients, subject, picks) {
+      const token = await Store.auth.currentUser.getIdToken();
+      const r = await fetch("/api/send-email", { method: "POST", headers: { "Content-Type": "application/json", Authorization: "Bearer " + token }, body: JSON.stringify({ mode: "free", subject, picks, recipients }) });
+      let j = {}; try { j = await r.json(); } catch (_) {}
+      if (!r.ok && !j.sent) throw new Error(j.error || ("email service error " + r.status));
+      return j;
     }
   };
   const idOf = (pk, ymd) => (PK[pk].key === "bronze" ? "vip-bronze-" : "vip-") + ymd;
@@ -82,6 +90,7 @@
   <div class="acts">
     <button type="button" class="btn ghost" id="vpkDraft">Save draft</button>
     <button type="button" class="btn" id="vpkPub">Publish to VIP members</button>
+    <button type="button" class="btn danger" id="vpkDel" hidden>Delete this package</button>
   </div>
 </div>
 <div id="vipPop" hidden>
@@ -112,6 +121,20 @@
     paint();
   }
   const fx = id => db.fixtures.find(f => f.id === id);
+  async function delPackage() {
+    const e = findEntry(state.pk, state.ymd); if (!e) return;
+    if (!confirm("Delete the " + PK[state.pk].label + " package for " + state.ymd + "? It disappears for members and from the site. This cannot be undone.")) return;
+    db.vip = (db.vip || []).filter(x => x !== e);
+    let note = "";
+    try {
+      await Store.fs.collection("vip_feed").doc(e.id).delete();
+      const q = await Store.fs.collection("broadcasts").where("ymd", "==", state.ymd).get();
+      const jobs = []; q.forEach(d => { const b = d.data(); if (b.kind === "vip" && b.pkg === state.pk) jobs.push(d.ref.delete()); });
+      await Promise.all(jobs);
+    } catch (err) { note = " (members' copy could not be removed: " + (err.code || err.message) + ")"; }
+    Store.save(db); $("#stats").textContent = statsText();
+    toast("Package deleted" + note); state.odds = ""; state.legs = [emptyLeg()]; load();
+  }
   function statusText() {
     const e = findEntry(state.pk, state.ymd);
     if (!e || !(e.legs && e.legs.length)) return "New package. Not saved yet.";
@@ -123,6 +146,7 @@
   /* ---------- painting ---------- */
   function paint() {
     $("#vpkStatus").textContent = statusText();
+    $("#vpkDel").hidden = !findEntry(state.pk, state.ymd);
     $("#vpkLegs").innerHTML = state.legs.map((l, i) => {
       const f = l.fid && fx(l.fid);
       const shown = f ? `${f.home} v ${f.away}` : "";
@@ -247,6 +271,7 @@
     $("#vpkAdd").onclick = () => { if (state.legs.length < MAXLEGS) { state.legs.push(emptyLeg()); paint(); } };
     $("#vpkDraft").onclick = saveDraft;
     $("#vpkPub").onclick = openPublish;
+    $("#vpkDel").onclick = delPackage;
     $("#vpMsgCancel").onclick = () => { $("#vipPop").hidden = true; };
     $("#vpMsgSend").onclick = publish;
     const legs = $("#vpkLegs");

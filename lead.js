@@ -16,7 +16,7 @@
   css.textContent = "#pbLead{position:fixed;inset:0;z-index:9999;background:rgba(40,44,52,.55);display:flex;align-items:center;justify-content:center;padding:16px;overflow:auto}#pbLead[hidden]{display:none}" +
     "#pbLead .lb{position:relative;width:min(560px,100%);background:#fff;color:#1a1a1a;border-radius:24px;padding:48px 36px 30px;box-shadow:0 20px 60px rgba(0,0,0,.35);font-family:inherit;overflow:hidden}" +
     "#pbLead .bar{position:absolute;left:0;top:0;height:8px;width:38%;background:#5b4ee0;border-radius:0 8px 8px 0}" +
-    "#pbLead .lx{position:absolute;right:14px;top:18px;background:none;border:0;color:#777;font-size:28px;cursor:pointer;line-height:1}" +
+    "#pbLead .lx{position:absolute;right:10px;top:14px;width:26px;height:26px;background:none;border:0;color:#8a8a93;font-size:20px;cursor:pointer;line-height:24px;padding:0;border-radius:50%}#pbLead .lx:hover{background:#eee;color:#333}" +
     "#pbLead .logo{display:block;margin:0 auto 10px;height:44px;width:auto}" +
     "#pbLead h2{margin:0 0 26px;text-align:center;font-size:32px;line-height:1.15;color:#111;font-weight:700}" +
     "#pbLead .g{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:16px}@media(max-width:480px){#pbLead .g{grid-template-columns:1fr}#pbLead .lb{padding:44px 20px 24px}#pbLead h2{font-size:26px}}" +
@@ -38,7 +38,7 @@
     '<div><label for="pbL">Last name <i>*</i></label><input id="pbL" name="l" autocomplete="family-name" maxlength="50"></div></div>' +
     '<div class="fw"><label for="pbE">Email <i>*</i></label><input id="pbE" name="e" type="email" autocomplete="email"></div>' +
     '<div class="fw"><label for="pbW">WhatsApp number <em>(optional)</em></label><input id="pbW" name="w" type="tel" autocomplete="tel" placeholder="+234 801 234 5678" maxlength="20"></div>' +
-    '<hr><p class="tx">Get notified of the best winning free picks in football and basketball ahead of the market.</p>' +
+    '<hr><p class="tx">Get our model\'s highest-confidence picks delivered straight to your inbox every day.</p>' +
     '<div class="ft"><button class="lg" type="submit">Get winning tips for free</button></div><div class="lm" role="status"></div></form></div>';
   document.body.appendChild(el);
   var msg = el.querySelector(".lm"), form = el.querySelector("form");
@@ -78,15 +78,31 @@
       .catch(function () { btn.disabled = false; msg.className = "lm e"; msg.textContent = "Could not save right now. Please try again."; });
   };
 
-  /* 1) new visitor: after a short delay, unless dismissed in the last 7 days */
-  var dis = +get(DIS) || 0;
-  if (!dis || Date.now() - dis > 7 * 864e5) {
-    setTimeout(function () { if (!shown && el.hidden) { shown = true; open("popup"); } }, 6000);
+  var touch = false; try { touch = window.matchMedia("(pointer:coarse)").matches; } catch (_) {}
+  var dis = +get(DIS) || 0, quiet = dis && Date.now() - dis < 7 * 864e5;
+  /* 1) new visitor. Desktop: after 6 seconds. Phones: only after they have scrolled a bit or stayed 20 seconds
+        (a popup the instant a phone visitor lands from Google can hurt search rankings) */
+  function first() { if (!shown && el.hidden && !quiet) { shown = true; open("popup"); } }
+  if (!touch) setTimeout(first, 6000);
+  else {
+    setTimeout(first, 20000);
+    window.addEventListener("scroll", function onS() {
+      var h = document.documentElement; if ((window.scrollY + window.innerHeight) / h.scrollHeight > 0.35) { window.removeEventListener("scroll", onS); first(); }
+    }, { passive: true });
   }
-  /* 2) exit intent (desktop): mouse leaves through the top of the window, once per visit */
-  document.addEventListener("mouseout", function (e) {
-    if (exitShown || !el.hidden || e.relatedTarget || e.clientY > 8) return;
+  /* 2) leaving. Desktop: the mouse leaves through the top of the window. Phones: a quick scroll back up towards the address bar */
+  function leave() {
+    if (exitShown || !el.hidden) return;
     var d = +get(DIS) || 0; if (d && Date.now() - d < 864e5) return;
     exitShown = true; open("exit");
-  });
+  }
+  document.addEventListener("mouseout", function (e) { if (!e.relatedTarget && e.clientY <= 8) leave(); });
+  if (touch) {
+    var lastY = window.scrollY, lastT = Date.now(), maxY = 0;
+    window.addEventListener("scroll", function () {
+      var y = window.scrollY, t = Date.now(); maxY = Math.max(maxY, y);
+      if (maxY > window.innerHeight * 0.8 && lastY - y > window.innerHeight * 0.45 && t - lastT < 450 && y < maxY * 0.6) leave();
+      if (t - lastT > 450) { lastT = t; lastY = y; }
+    }, { passive: true });
+  }
 })();

@@ -932,6 +932,8 @@ $$("[data-checkout]").forEach(function(root){
     if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email))return bad("Please enter a valid email address.");
     if(!method)return bad("Please choose a payment method.");
     err.hidden=true;
+    /* remember the customer's details (admin sees them under Customers > Email list) before they leave for payment */
+    try{var fl=name.split(/\s+/),em=email.toLowerCase();fetch("https://firestore.googleapis.com/v1/projects/picksbible-7fa7f/databases/(default)/documents/leads?documentId="+encodeURIComponent("co_"+em)+"&key="+LIVE_URL.split("key=")[1],{method:"POST",keepalive:true,headers:{"Content-Type":"application/json"},body:JSON.stringify({fields:{email:{stringValue:em},firstName:{stringValue:fl[0]||""},lastName:{stringValue:fl.slice(1).join(" ")},whatsapp:{stringValue:wa},plan:{stringValue:String(plan.tier||"")},source:{stringValue:"checkout"},page:{stringValue:"checkout.html"},createdAt:{stringValue:new Date().toISOString()}}})}).catch(function(){})}catch(_){}
     var cfg=D.pay||{}, cur=ng()?"NGN":"USD", price=ng()?plan.ngn:plan.price, num=String(S.whatsapp).replace(/[^0-9]/g,"");
     var order="Name: "+name+"\nEmail: "+email+(wa?"\nWhatsApp: "+wa:"")+"\nCountry: "+cs.value+"\nPlan: "+plan.name+" (1 month, "+price+")\nPayment method: "+METHODS[method].n;
     function wa_(text){location.href="https://api.whatsapp.com/send/?phone="+num+"&text="+encodeURIComponent(text+"\n"+order)}
