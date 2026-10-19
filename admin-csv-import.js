@@ -64,10 +64,16 @@
     let want = norm(name), c0 = null;
     const ci = name.indexOf(":");
     if (ci > 0) { c0 = norm(name.slice(0, ci)); want = norm(name.slice(ci + 1)); }
+    /* other spellings people use in sheets */
+    const ALIAS = { "uefa champions league": "champions league", "uefa europa league": "europa league", "uefa europa conference league": "conference league", "uefa conference league": "conference league", "saudi professional league": "saudi pro league", "saudi league": "saudi pro league", "spl": "saudi pro league", "la liga": "laliga", "serie a tim": "serie a" };
+    want = ALIAS[want] || want;
+    if (c0 === "uefa" || c0 === "international" || c0 === "europe") c0 = "europe uefa";
+    if (c0 === "caf" || c0 === "africa") { c0 = "africa caf"; if (want === "champions league" || want === "confederation cup") want = "caf " + want; }  if (c0 === "afc") c0 = "asia afc"; if (c0 === "concacaf") c0 = "north central america concacaf";
     const hits = [];
     ((leagues || {})[sport] || []).forEach(g => (g.l || []).forEach(l => {
       const nl = norm(l), nc = norm(g.c);
-      if (c0 ? (nc === c0 && nl === want) : (nl === want || norm(g.c + " " + l) === want)) hits.push({ country: g.c, competition: l });
+      /* "Europe" matches "Europe (UEFA)", "Asia" matches "Asia (AFC)" */
+      if (c0 ? ((nc === c0 || nc.startsWith(c0 + " ")) && nl === want) : (nl === want || norm(g.c + " " + l) === want)) hits.push({ country: g.c, competition: l });
     }));
     if (!hits.length) {
       (((leagues || {}).top || {})[sport] || []).forEach(t => {
