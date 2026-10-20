@@ -1049,7 +1049,70 @@ table.pt.bw.lgbars.bk tr.lgb td:nth-child(2),table.pt.bw.lgbars.bk tr.lgb td:nth
 table.pt.bw.lgbars.bk tr.lgb td:nth-child(4){width:12%}
 table.pt.bw.lgbars.bk tr.lgb td:nth-child(5){width:12%}
 table.pt.bw.lgbars.bk tr.lgb td:nth-child(6){width:22%}
-/* green Chat now button (homepage date row) */
-.hdates .hchat{flex:0 0 auto;display:inline-flex;align-items:center;justify-content:center;gap:7px;padding:12px 18px;border-radius:8px;background:linear-gradient(180deg,#34d77a,#16a34a);color:#04220f;font:800 15px var(--body);text-decoration:none;box-shadow:0 4px 14px #16a34a44}
-.hdates .hchat:hover{background:linear-gradient(180deg,#4ee38b,#1db954);transform:translateY(-1px)}
-@media(max-width:700px){.hdates .hchat{order:7;flex:1 1 auto;font-size:13px;padding:12px 8px}}
+/* header Login / Sign Up */
+.authbtns{display:flex;align-items:center;gap:8px;justify-self:end}
+.authbtns a{font:700 14px var(--body);padding:9px 16px;border-radius:8px;text-decoration:none;white-space:nowrap}
+.authbtns .lgn{color:var(--text);border:1px solid #4b43a8;background:transparent}
+.authbtns .lgn:hover{background:#ffffff14}
+.authbtns .sgn{background:var(--cyan);color:var(--cyan-ink)}
+.authbtns .sgn:hover{filter:brightness(1.08)}
+@media(max-width:859px){.top .wrap{grid-template-columns:48px 1fr auto;gap:6px}.brand span{font-size:19px}.authbtns{gap:6px}.authbtns a{font-size:12.5px;padding:7px 10px}}
+@media(max-width:380px){.authbtns .lgn{display:none}}
+/* green Chat now pill, centred in the Gold VIP Results bar */
+.vchat{flex:0 0 auto;display:inline-flex;align-items:center;gap:6px;margin:0 auto;padding:8px 18px;border-radius:999px;background:linear-gradient(180deg,#34d77a,#16a34a);color:#04220f;font:800 13.5px var(--body);text-decoration:none;box-shadow:0 3px 12px #16a34a44}
+.vchat:hover{background:linear-gradient(180deg,#4ee38b,#1db954)}
+@media(max-width:700px){.vchat{padding:6px 10px;font-size:11.5px;gap:4px}.vchat svg{width:13px;height:13px}}
+@media(max-width:700px){.viphead .hcal.vcal.datebtn small{display:none}.viphead .vh-l{flex:0 1 auto}.vchat{margin:0 auto;padding:6px 9px}}
+@media(max-width:700px){.viphead .vh-l .vsub{display:none}.viphead h3 .vtier{display:table;margin:5px 0 0}.viphead h3{line-height:1.05}}
+
+/* ---- phone comfort: roomier table and VIP results (renovation 1d) ---- */
+@media(max-width:700px){
+  table.pt.bw.lgbars{font-size:clamp(9.5px,2.6vw,12px)}
+  table.pt.bw.lgbars td{padding:.8em .05em}
+  table.pt.bw.lgbars tr.lgb td{padding:.8em .05em;font-size:.72em}
+  table.pt.bw.lgbars tr.lgb td.n{font-size:1.05em}
+  table.pt.bw.lgbars td.dm{padding-left:.45em}
+  .pt.bw .dmi{grid-template-columns:minmax(0,1fr);row-gap:.3em}
+  .pt.bw .dmi .t{grid-row:auto;font-size:.9em;font-weight:700;color:#5b6577}
+  .pt.bw .dmi .tn b{font-size:1em}
+  .pt.bw .dmi .bx{width:1.9em;min-width:1.9em;height:1.9em}
+  table.pt.bw.lgbars .xp b{padding:.35em .25em;border-radius:.6em}
+  table.pt.bw.lgbars .tip{padding:.4em .4em;font-size:1em}
+  table.pt.bw.lgbars .conf{padding:.3em .2em}
+  table.pt.bw.lgbars .odd.pk{padding:.15em .1em}
+  table.pt.bw.lgbars:not(.bk) tr.lgb td:nth-child(1){width:27%}
+  table.pt.bw.lgbars:not(.bk) tr.lgb td:nth-child(2),table.pt.bw.lgbars:not(.bk) tr.lgb td:nth-child(3),table.pt.bw.lgbars:not(.bk) tr.lgb td:nth-child(4){width:8.3%}
+  table.pt.bw.lgbars:not(.bk) tr.lgb td:nth-child(5){width:11%}
+  table.pt.bw.lgbars:not(.bk) tr.lgb td:nth-child(6){width:9.5%}
+  table.pt.bw.lgbars:not(.bk) tr.lgb td:nth-child(7){width:10.5%}
+  table.pt.bw.lgbars:not(.bk) tr.lgb td:nth-child(8){width:8.5%}
+  table.pt.bw.lgbars:not(.bk) tr.lgb td:nth-child(9){width:8.5%}
+  .vipbox .viphead{padding:10px 12px}
+  .vcol{flex:0 0 58px;grid-template-rows:14px 26px 18px 28px;row-gap:3px;padding:8px 0}
+  .vday{font-size:21px}.vodds{font-size:12.5px}.vdow{font-size:10px}
+  .vmark{width:25px;height:25px;font-size:13px}
+}
+@media(max-width:700px){table.pt.bw.lgbars .tip{padding:.4em .15em;max-width:100%;box-sizing:border-box}table.pt.bw.lgbars .tip i{font-size:.72em}}
+/* ---- purple winner score boxes (chosen design B) ---- */
+.pt.bw .dmi .bx{width:2.1em;min-width:2.1em;height:2.1em;border:1.5px dashed #c4b5fd;background:#faf8ff;color:#4c1d95;box-shadow:none;font-weight:800}
+.pt.bw .dmi .bx.f{background:#6d28d9;border:1.5px solid #6d28d9;color:#fff;box-shadow:none}
+.pt.bw .dmi .bx.f.l{background:#ede9fe;border-color:#c4b5fd;color:#4c1d95}
+/* ---- phone layout v2: Conf moves under Tip so every column gets more room ---- */
+.pt.bw .tcf{margin-top:.35em}
+@media(max-width:700px){
+  table.pt.bw.lgbars.ph{font-size:clamp(10px,2.95vw,12.5px)}
+  table.pt.bw.lgbars.ph:not(.bk) tr.lgb td:nth-child(1){width:27%}
+  table.pt.bw.lgbars.ph:not(.bk) tr.lgb td:nth-child(2),table.pt.bw.lgbars.ph:not(.bk) tr.lgb td:nth-child(3),table.pt.bw.lgbars.ph:not(.bk) tr.lgb td:nth-child(4){width:9%}
+  table.pt.bw.lgbars.ph:not(.bk) tr.lgb td:nth-child(5){width:17%}
+  table.pt.bw.lgbars.ph:not(.bk) tr.lgb td:nth-child(6){width:13%}
+  table.pt.bw.lgbars.ph:not(.bk) tr.lgb td:nth-child(7){width:8%}
+  table.pt.bw.lgbars.ph:not(.bk) tr.lgb td:nth-child(8){width:8%}
+  table.pt.bw.lgbars.ph:not(.bk) tr.lgb td:nth-child(9){width:0}
+  table.pt.bw.lgbars.ph.bk tr.lgb td:nth-child(1){width:34%}
+  table.pt.bw.lgbars.ph.bk tr.lgb td:nth-child(2),table.pt.bw.lgbars.ph.bk tr.lgb td:nth-child(3){width:11%}
+  table.pt.bw.lgbars.ph.bk tr.lgb td:nth-child(4){width:22%}
+  table.pt.bw.lgbars.ph.bk tr.lgb td:nth-child(5){width:22%}
+  table.pt.bw.lgbars.ph .tip{padding:.4em .5em}
+  table.pt.bw.lgbars.ph td{padding:.9em .05em}
+}
+@media(max-width:700px){table.pt.bw.lgbars.ph .xp b{font-size:.92em;padding:.35em .2em}}

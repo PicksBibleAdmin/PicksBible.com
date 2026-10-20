@@ -646,7 +646,7 @@ function pickFor(id){ resetPick(id); showTab("picks"); }
 
 
 /* ============ FOOTBALL TABLE ============ */
-const fbDefaults = () => ({tip:"",tipOdds:"",o1:"",oX:"",o2:"",btts:"",bttsOdds:"",ou:"",ouOdds:"",conf:"",cs:"",st:"",score:"",sure:false,live:false});
+const fbDefaults = () => ({tip:"",tipOdds:"",o1:"",oX:"",o2:"",btts:"",ou:"",conf:"",cs:"",st:"",score:"",sure:false,live:false});
 const fbOf = f => { const v = Object.assign(fbDefaults(), f.fb||{}); if(!v.tip && v.pick) v.tip = v.pick; return v; };
 const hhmm = iso => { const d=new Date(iso); return isNaN(d)?"":d.toLocaleTimeString([], {hour:"2-digit",minute:"2-digit",hour12:false}); };
 const dmon = iso => { const d=new Date(iso); return isNaN(d)?"":d.toLocaleDateString([], {day:"2-digit",month:"short"}); };
@@ -676,10 +676,8 @@ function renderFb(){
       ${oddIn("o1",v)}${oddIn("oX",v)}${oddIn("o2",v)}
       <td><select data-f="tip" class="tipsel"><option value="">-</option>${["1","X","2","1X","X2","12"].map(k=>`<option ${v.tip===k?"selected":""}>${k}</option>`).join("")}</select>${["1X","X2","12"].includes(v.tip)?`<br><input class="odd" data-f="tipOdds" value="${esc(v.tipOdds||"")}" placeholder="odds" title="Bookmaker price for ${esc(v.tip)}" style="margin-top:4px">`:`<br><small class="muted">odds auto</small>`}</td>
       <td><input class="odd" type="number" step="1" min="0" max="100" data-f="conf" value="${esc(String(v.conf||"").replace("%",""))}" placeholder="%"></td>
-      <td><select data-f="ou"><option value="">-</option><option value="Over" ${v.ou==="Over"?"selected":""}>Over 2.5</option><option value="Under" ${v.ou==="Under"?"selected":""}>Under 2.5</option></select>
-          <input class="odd" type="number" step="0.01" min="1" data-f="ouOdds" value="${esc(v.ouOdds)}" placeholder="odds"></td>
-      <td><select data-f="btts"><option value="">-</option><option ${v.btts==="GG"?"selected":""}>GG</option><option ${v.btts==="NG"?"selected":""}>NG</option></select>
-          <input class="odd" type="number" step="0.01" min="1" data-f="bttsOdds" value="${esc(v.bttsOdds)}" placeholder="odds"></td>
+      <td><select data-f="ou"><option value="">-</option><option value="Over" ${v.ou==="Over"?"selected":""}>Over 2.5</option><option value="Under" ${v.ou==="Under"?"selected":""}>Under 2.5</option></select></td>
+      <td><select data-f="btts"><option value="">-</option><option ${v.btts==="GG"?"selected":""}>GG</option><option ${v.btts==="NG"?"selected":""}>NG</option></select></td>
       <td><input class="cs" data-f="cs" value="${esc(v.cs)}" placeholder="2-1" maxlength="7"></td>
       <td><select data-f="st"><option value="">pending</option><option value="won" ${v.st==="won"?"selected":""}>won</option><option value="lost" ${v.st==="lost"?"selected":""}>lost</option></select>
           <input class="cs" data-f="score" value="${esc(v.score)}" placeholder="2-1" maxlength="9"></td>

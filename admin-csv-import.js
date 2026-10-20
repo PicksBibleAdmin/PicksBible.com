@@ -193,8 +193,8 @@
           const ou = splitBracket(get(r, "ou")), bt = splitBracket(get(r, "btts"));
           fields = {
             tip, tipOdds: tp.o, o1: get(r, "o1"), oX: get(r, "oX"), o2: get(r, "o2"),
-            btts: /^(GG|NG)$/i.test(bt.v) ? bt.v.toUpperCase() : "", bttsOdds: bt.o,
-            ou: /under/i.test(ou.v) ? "Under" : /over/i.test(ou.v) ? "Over" : "", ouOdds: ou.o,
+            btts: /^(GG|NG)$/i.test(bt.v) ? bt.v.toUpperCase() : "",
+            ou: /under/i.test(ou.v) ? "Under" : /over/i.test(ou.v) ? "Over" : "",
             conf, cs: get(r, "cs")   // CS tip never carries odds
           };
         } else {

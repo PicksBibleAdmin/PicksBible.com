@@ -95,7 +95,7 @@ function addFx(P,f,days){
     var date=String(f.kickoff||"").slice(0,10), day=days[date]; if(!date)return;
     var v=f.fb||{};
     var m={lg:lgKey(P,"football",f.competition,f.country),t:String(f.kickoff).slice(11,16),h:f.home,a:f.away,
-      o:[v.o1||"",v.oX||"",v.o2||""],pk:v.tip||"",tip:v.tip||"-",gg:v.btts||"",ggo:v.bttsOdds||"",ou:v.ou||"",ouo:v.ouOdds||"",conf:v.conf||"",to:v.tipOdds||"",dc:v.dc||"",dco:v.dcOdds||"",cs:v.cs||"",sure:!!v.sure,xp:!!f.xp,
+      o:[v.o1||"",v.oX||"",v.o2||""],pk:v.tip||"",tip:v.tip||"-",gg:v.btts||"",ou:v.ou||"",conf:v.conf||"",to:v.tipOdds||"",dc:v.dc||"",dco:v.dcOdds||"",cs:v.cs||"",sure:!!v.sure,xp:!!f.xp,
       st:v.st||"pending",score:v.score||""};
     (P.byDate.football[date]=P.byDate.football[date]||[]).push(m);   /* any date: used by the calendar picker */
     if(day){var list=P.football[day];m.featured=list.length<6;list.push(m)}
@@ -365,39 +365,40 @@ function pkBadge(m){var c=m.st==="won"?"won":m.st==="lost"?"lost":"",o=tipOdd(m)
   return '<span class="tip'+(o?' tp2':'')+' '+c+'" title="'+esc(m.st)+'">'+(o?'<b>'+t+'</b><i>'+esc(o)+'</i>':t)+'</span>'}
 function dcCell(m){return m.dc?'<td class="kv" data-l="Double Chance"><span class="xp"><b>'+esc(m.dc)+'</b>'+(m.dco?'<i>('+esc(m.dco)+')</i>':'')+'</span></td>':'<td class="kv na" data-l="Double Chance">-</td>'}
 function confCell(m){var n=parseFloat(String(m.conf).replace("%","")),lv=isNaN(n)?"":n<45?" lo":n<=55?" mid":" hi";return m.conf?'<td class="kv" data-l="Confidence"><span class="conf'+lv+'">'+esc(String(m.conf).replace("%",""))+'%</span></td>':'<td class="kv na" data-l="Confidence">-</td>'}
+function confSpan(m){var n=parseFloat(String(m.conf).replace("%","")),lv=isNaN(n)?"":n<45?" lo":n<=55?" mid":" hi";return m.conf?'<div class="tcf"><span class="conf'+lv+'">'+esc(String(m.conf).replace("%",""))+'%</span></div>':''}
 function extraPick(label,odds,name){return '<td class="kv'+(label?'':' na')+'" data-l="'+esc(name||"")+'">'+(label?'<span class="xp"><b>'+esc(label)+'</b>'+(odds?'<i>('+esc(odds)+')</i>':'')+'</span>':'-')+'</td>'}
 var PHONE=window.matchMedia("(max-width:700px)"), REDRAW=[];
 if(PHONE.addEventListener)PHONE.addEventListener("change",function(){REDRAW.forEach(function(f){f()})});
 /* phone layout: same data, same A-Z league order, but league = header bar, one pinned Match column (time + two team lines + score boxes), extras swipe sideways */
-function scoreBox(v){return '<span class="s"><i class="bx'+(v?' f':'')+'">'+(v?esc(v):'')+'</i></span>'}
+function scoreBox(v,lose){return '<span class="s"><i class="bx'+(v?' f':'')+(lose?' l':'')+'">'+(v?esc(v):'')+'</i></span>'}
 function mMatch(m){var p=String(m.score||"").split(/[-:]/), h=p[0]&&p[0].trim(), a=p[1]&&p[1].trim();
   return '<td class="m"><div><span class="t">'+esc(m.t)+'</span><b>'+esc(m.h)+'</b>'+scoreBox(h)+'<b>'+esc(m.a)+'</b>'+scoreBox(a)+'</div></td>'}
 function mConf(m){var n=parseFloat(String(m.conf).replace("%","")),lv=isNaN(n)?"":n<45?" lo":n<=55?" mid":" hi";return m.conf?'<td><span class="conf'+lv+'">'+esc(String(m.conf).replace("%",""))+'%</span></td>':'<td class="x na">-</td>'}
 function mOdd(m,i){return '<td class="o">'+esc(m.o&&m.o[i]?m.o[i]:"-")+'</td>'}
 function mX(label,odds){return label?'<td class="x">'+esc(label)+(odds?'<small>('+esc(odds)+')</small>':'')+'</td>':'<td class="x na">-</td>'}
 /* ---------- prediction tables: traditional table, flat (no sideways scroll), same on every screen ---------- */
-function dMatch(m){var p=String(m.score||'').split(/[-:]/),h=p[0]&&p[0].trim(),a=p[1]&&p[1].trim();return '<td class="l dm"><div class="dmi"><span class="t">'+esc(m.t)+'</span><span class="tn"><b>'+esc(m.h)+'</b>'+scoreBox(h)+'</span><span class="tn"><b>'+esc(m.a)+'</b>'+scoreBox(a)+'</span></div></td>'}
+function dMatch(m){var p=String(m.score||'').split(/[-:]/),h=p[0]&&p[0].trim(),a=p[1]&&p[1].trim(),hl=h&&a&&+h<+a,al=h&&a&&+a<+h;return '<td class="l dm"><div class="dmi"><span class="t">'+esc(m.t)+'</span><span class="tn"><b>'+esc(m.h)+'</b>'+scoreBox(h,hl)+'</span><span class="tn"><b>'+esc(m.a)+'</b>'+scoreBox(a,al)+'</span></div></td>'}
 function lgBar(name,labels,flag){return '<tr class="lgb"><td class="n">'+(flag?'<span class="fl">'+flag+'</span>':'')+esc(name)+'</td>'+labels.map(function(l){return '<td>'+esc(l)+'</td>'}).join("")+'</tr>'}
 function footballTable(list){
   if(!list.length)return '<div class="empty">No football \u26bd predictions for this day yet.</div>';
-  var lbl=["1","X","2","Tip","Conf","O/U 2.5","BTTS","CS"], lastL=null;
-  return '<div class="tscroll bwwrap"><table class="pt bw lgbars"><tbody>'+
+  var ph=PHONE.matches, lbl=ph?["1","X","2","Tip / Conf","O/U 2.5","BTTS","CS"]:["1","X","2","Tip","Conf","O/U 2.5","BTTS","CS"], lastL=null;
+  return '<div class="tscroll bwwrap"><table class="pt bw lgbars'+(ph?' ph':'')+'"><tbody>'+
     sortByLeague(list).map(function(m){
       var bar="",k=lgName(m.lg); if(k!==lastL){lastL=k;bar=lgBar(k,lbl,lgFlag(m.lg))}
-      return bar+'<tr>'+dMatch(m)+oddCell(m,0,"1")+oddCell(m,1,"X")+oddCell(m,2,"2")+'<td class="kv" data-l="Tip">'+pkBadge(m)+'</td>'+confCell(m)+
-        extraPick(m.ou?(m.ou==="Over"?"Over 2.5":"Under 2.5"):"",m.ouo,"Over/Under 2.5")+extraPick(m.gg,m.ggo,"BTTS")+
+      return bar+'<tr>'+dMatch(m)+oddCell(m,0,"1")+oddCell(m,1,"X")+oddCell(m,2,"2")+'<td class="kv" data-l="Tip">'+pkBadge(m)+(ph?confSpan(m):'')+'</td>'+(ph?'':confCell(m))+
+        extraPick(m.ou?(m.ou==="Over"?"Over 2.5":"Under 2.5"):"","","Over/Under 2.5")+extraPick(m.gg,"","BTTS")+
         '<td class="cs kv'+(m.cs?'':' na')+'" data-l="CS Tip">'+esc(m.cs||"-")+'</td></tr>';
     }).join("")+'</tbody></table></div>';
 }
 function bbOdd(m,i,k){var v=m.o&&m.o[i]?m.o[i]:"-";return '<td class="od"><span class="odd'+(m.pk===k?" pk":"")+'">'+esc(v)+'</span></td>'}
 function basketballTable(list){
   if(!list.length)return '<div class="empty">No basketball \ud83c\udfc0 predictions for this day yet.</div>';
-  var lbl=["1","2","Tip","Conf","Point Total"], lastL=null;
-  return '<div class="tscroll bwwrap"><table class="pt bw bk lgbars"><tbody>'+
+  var ph=PHONE.matches, lbl=ph?["1","2","Tip / Conf","Point Total"]:["1","2","Tip","Conf","Point Total"], lastL=null;
+  return '<div class="tscroll bwwrap"><table class="pt bw bk lgbars'+(ph?' ph':'')+'"><tbody>'+
     sortByLeague(list).map(function(m){
       var bar="",k=lgName(m.lg); if(k!==lastL){lastL=k;bar=lgBar(k,lbl,lgFlag(m.lg))}
       var tot=m.ts?'<span class="xp"><b>'+esc(m.ts)+(m.tl?' '+esc(m.tl):'')+'</b></span>':'-';
-      return bar+'<tr>'+dMatch(m)+bbOdd(m,0,"1")+bbOdd(m,1,"2")+'<td>'+pkBadge(m)+'</td>'+confCell(m)+'<td>'+tot+'</td></tr>';
+      return bar+'<tr>'+dMatch(m)+bbOdd(m,0,"1")+bbOdd(m,1,"2")+'<td>'+pkBadge(m)+(ph?confSpan(m):'')+'</td>'+(ph?'':confCell(m))+'<td>'+tot+'</td></tr>';
     }).join("")+'</tbody></table></div>';
 }
 function compactTable(list,sport){
