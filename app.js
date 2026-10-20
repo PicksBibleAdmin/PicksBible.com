@@ -375,45 +375,36 @@ function mMatch(m){var p=String(m.score||"").split(/[-:]/), h=p[0]&&p[0].trim(),
 function mConf(m){var n=parseFloat(String(m.conf).replace("%","")),lv=isNaN(n)?"":n<45?" lo":n<=55?" mid":" hi";return m.conf?'<td><span class="conf'+lv+'">'+esc(String(m.conf).replace("%",""))+'%</span></td>':'<td class="x na">-</td>'}
 function mOdd(m,i){return '<td class="o">'+esc(m.o&&m.o[i]?m.o[i]:"-")+'</td>'}
 function mX(label,odds){return label?'<td class="x">'+esc(label)+(odds?'<small>('+esc(odds)+')</small>':'')+'</td>':'<td class="x na">-</td>'}
-function mobileTable(list,sport){
-  var fb=sport==="football", labels=fb?["1","X","2","Tip","Conf","O/U 2.5","BTTS","CS"]:["1","2","Tip","Conf","Total"], last=null, out="";
+/* ---------- prediction tables: one dark, colourful grid for every screen size (no sideways scrolling) ---------- */
+function ouLabel(m){return m.ou?(m.ou==="Over"?"Over 2.5":"Under 2.5"):""}
+function pbtX(label,odds,name){return label?'<span class="x" data-l="'+esc(name)+'">'+esc(label)+(odds?'<small>('+esc(odds)+')</small>':'')+'</span>':'<span class="x na" data-l="'+esc(name)+'">-</span>'}
+function pbtConf(m){var n=parseFloat(String(m.conf).replace("%","")),lv=isNaN(n)?"":n<45?" lo":n<=55?" mid":" hi";return m.conf?'<span class="cf'+lv+'" data-l="Conf">'+esc(String(m.conf).replace("%",""))+'%</span>':'<span class="cf na" data-l="Conf">-</span>'}
+function pbtRow(m,fb){
+  var p=String(m.score||"").split(/[-:]/), h=p[0]&&p[0].trim(), a=p[1]&&p[1].trim();
+  var keys=fb?["1","X","2"]:["1","2"], o=tipOdd(m), c=m.st==="won"?" won":m.st==="lost"?" lost":"";
+  var odds=keys.map(function(k,i){return '<span class="o'+(m.pk===k?" pk":"")+'" data-l="'+k+'">'+esc(m.o&&m.o[i]?m.o[i]:"-")+'</span>'}).join("");
+  var tip='<span class="tp'+c+'" data-l="Tip"><b>'+esc(m.pk||m.tip||"-")+'</b>'+(o?'<i>'+esc(o)+'</i>':'')+'</span>';
+  var extra=fb?pbtX(ouLabel(m),m.ouo,"O/U")+pbtX(m.gg,m.ggo,"BTTS")+'<span class="x cs'+(m.cs?'':' na')+'" data-l="CS">'+esc(m.cs||"-")+'</span>'
+              :pbtX(m.ts?m.ts+(m.tl?" "+m.tl:""):"","","Total");
+  return '<div class="r"><span class="t">'+esc(m.t)+'</span><div class="tm"><div class="tn"><b>'+esc(m.h)+'</b>'+scoreBox(h)+'</div><div class="tn"><b>'+esc(m.a)+'</b>'+scoreBox(a)+'</div></div>'+
+    '<span class="oo">'+odds+'</span>'+tip+pbtConf(m)+'<i class="br"></i><i class="ind"></i><span class="ex">'+extra+'</span></div>';
+}
+function predTable(list,fb){
+  var labels=fb?["1","X","2","Tip","Conf","O/U 2.5","BTTS","CS"]:["1","2","Tip","Conf","Total"], last=null, out="";
   sortByLeague(list).forEach(function(m){
     var key=lgName(m.lg);
-    if(key!==last){last=key;out+='<tr class="lgr"><td class="n">'+(lgFlag(m.lg)?'<span class="fl">'+lgFlag(m.lg)+'</span>':'')+esc(key)+'</td>'+labels.map(function(l){return '<td>'+l+'</td>'}).join("")+'</tr>'}
-    if(fb)out+='<tr>'+mMatch(m)+mOdd(m,0)+mOdd(m,1)+mOdd(m,2)+'<td>'+pkBadge(m)+'</td>'+mConf(m)+mX(m.ou?(m.ou==="Over"?"Over 2.5":"Under 2.5"):"",m.ouo)+mX(m.gg,m.ggo)+mX(m.cs,"")+'</tr>';
-    else out+='<tr>'+mMatch(m)+mOdd(m,0)+mOdd(m,1)+'<td>'+pkBadge(m)+'</td>'+mConf(m)+mX(m.ts?m.ts+(m.tl?" "+m.tl:""):"","")+'</tr>';
+    if(key!==last){last=key;out+='<div class="lgh"><span class="lgn"><span class="fl">'+lgFlag(m.lg)+'</span>'+esc(key)+'</span><span class="cols">'+labels.map(function(l){return '<i>'+esc(l)+'</i>'}).join("")+'</span></div>'}
+    out+=pbtRow(m,fb);
   });
-  return '<div class="tscroll mtwrap"><table class="pt mt"><tbody>'+out+'</tbody></table></div><p class="mhint">&#8646; swipe the table for '+(fb?'Over/Under, BTTS and correct score':'the point total tip')+' &#8646;</p>';
+  return '<div class="pbt '+(fb?'fb':'bk')+'">'+out+'</div>';
 }
-function dMatch(m){var p=String(m.score||'').split(/[-:]/),h=p[0]&&p[0].trim(),a=p[1]&&p[1].trim();return '<td class="l dm"><div class="dmi"><span class="t">'+esc(m.t)+'</span><span class="tn"><b>'+esc(m.h)+'</b>'+scoreBox(h)+'</span><span class="tn"><b>'+esc(m.a)+'</b>'+scoreBox(a)+'</span></div></td>'}
-function lgBar(name,labels,flag){return '<tr class="lgb"><td class="n">'+(flag?'<span class="fl">'+flag+'</span>':'')+esc(name)+'</td>'+labels.map(function(l){return '<td>'+esc(l)+'</td>'}).join("")+'</tr>'}
 function footballTable(list){
   if(!list.length)return '<div class="empty">No football ⚽ predictions for this day yet.</div>';
-  if(PHONE.matches)return mobileTable(list,"football");
-  var lbl=["Home Win (1)","Draw (X)","Away Win (2)","Tip","Confidence","Over/Under 2.5","BTTS","CS Tip"], lastL=null;
-  return '<div class="tscroll bwwrap"><table class="pt bw lgbars"><tbody>'+
-    sortByLeague(list).map(function(m){
-      var bar="",k=lgName(m.lg); if(k!==lastL){lastL=k;bar=lgBar(k,lbl,lgFlag(m.lg))}
-      return bar+'<tr>'+dMatch(m)+''+
-        oddCell(m,0,"1")+oddCell(m,1,"X")+oddCell(m,2,"2")+'<td class="kv" data-l="Tip">'+pkBadge(m)+'</td>'+confCell(m)+
-        extraPick(m.ou?(m.ou==="Over"?"Over 2.5":"Under 2.5"):"",m.ouo,"Over/Under 2.5")+extraPick(m.gg,m.ggo,"BTTS")+
-        '<td class="cs kv'+(m.cs?'':' na')+'" data-l="CS Tip">'+esc(m.cs||"-")+'</td>'+'</tr>';
-    }).join("")+
-    '</tbody></table></div>';
+  return predTable(list,true);
 }
-function bbOdd(m,i,k){var v=m.o&&m.o[i]?m.o[i]:"-";return '<td class="od"><span class="odd'+(m.pk===k?" pk":"")+'">'+esc(v)+'</span></td>'}
 function basketballTable(list){
   if(!list.length)return '<div class="empty">No basketball 🏀 predictions for this day yet.</div>';
-  if(PHONE.matches)return mobileTable(list,"basketball");
-  var lbl=["Home Win (1)","Away Win (2)","Tip","Confidence","Point Total Tip"], lastL=null;
-  return '<div class="tscroll bwwrap"><table class="pt bw bk lgbars"><tbody>'+
-    sortByLeague(list).map(function(m){
-      var bar="",k=lgName(m.lg); if(k!==lastL){lastL=k;bar=lgBar(k,lbl,lgFlag(m.lg))}
-      var tot=m.ts?'<span class="xp"><b>'+esc(m.ts)+(m.tl?' '+esc(m.tl):'')+'</b></span>':'-';
-      return bar+'<tr>'+dMatch(m)+''+
-        bbOdd(m,0,"1")+bbOdd(m,1,"2")+'<td>'+pkBadge(m)+'</td>'+confCell(m)+'<td>'+tot+'</td>'+'</tr>';
-    }).join("")+
-    '</tbody></table></div>';
+  return predTable(list,false);
 }
 function compactTable(list,sport){
   if(!list.length)return '<div class="empty">Picks for this day are coming soon.</div>';
@@ -624,8 +615,8 @@ $$("[data-home]").forEach(function(hero){
     if(!v)return head+'<div class="empty">No matches available.</div></div>';
     return head+
       '<div class="vb-lg"><span class="fl">'+flagByLabel(v.lg)+'</span>'+esc(v.lg)+'</div><div class="vb-main"><div class="vb-t">'+teamCrest(v.h,v.hl,v.sp,v.hc)+'<div class="vb-team">'+esc(v.h)+'</div></div><div class="vb-mid"><strong>'+esc(v.t)+'</strong><span class="vs">VS</span></div><div class="vb-t">'+teamCrest(v.a,v.al,v.sp,v.ac)+'<div class="vb-team">'+esc(v.a)+'</div></div></div>'+
-      '<a class="etlock" href="expert-tips.html?s='+sp+'&d='+selYmd()+'" aria-label="Open the reasoning for this Banker Bet of the Day"><span class="lockico" aria-hidden="true">&#128274;</span><span class="locktxt">View Banker Bet</span></a>'+
-      '<div class="vb-by"><span>BANKER BET OF THE DAY BY: <b>'+esc(v.by)+'</b></span>'+(v.st==="won"||v.st==="lost"?'<span class="etres '+v.st+'">'+(v.st==="won"?"&#10003; Won":"Lost")+'</span>':'')+'<span>'+(sp==="football"?"&#9917; Football":"&#127936; Basketball")+'</span></div>'+
+      '<a class="etlock'+(v.st==="won"?" won":v.st==="lost"?" lost":"")+'" href="expert-tips.html?s='+sp+'&d='+selYmd()+'" aria-label="Open the reasoning for this Banker Bet of the Day"><span class="lockico" aria-hidden="true">'+(v.st==="won"?"&#10003;":"&#128274;")+'</span><span class="locktxt">View Banker Bet</span></a>'+
+      '<div class="vb-by"><span>BANKER BET OF THE DAY BY: <b>'+esc(v.by)+'</b></span><span>'+(sp==="football"?"&#9917; Football":"&#127936; Basketball")+'</span></div>'+
       '</div>';
   }
   var etMode="both";
