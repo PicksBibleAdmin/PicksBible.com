@@ -689,7 +689,7 @@ if(!$("[data-home]")){
 /* ---------- MATCH ANALYSIS page (the reasoning behind an Expert Tip, written in the admin page) ---------- */
 $$("[data-analysis]").forEach(function(el){
   if(!new URLSearchParams(location.search).get("s"))return;
-  $$("[data-tipslist]").forEach(function(x){x.hidden=true});
+  $$("[data-tipslist],[data-hub]").forEach(function(x){x.hidden=true});
   var q=new URLSearchParams(location.search), sp=q.get("s")==="basketball"?"basketball":"football", ymd=q.get("d")||wat(0);
   var v=getET(sp,ymd);
   if(!v){el.innerHTML='<div class="panel"><h2>Reasoning not available</h2><p>There is no published Banker Bet of the Day for this date yet.</p><a class="btn" href="index.html">Back to home</a></div>';return}
@@ -699,7 +699,7 @@ $$("[data-analysis]").forEach(function(el){
   var done=v.st==="won"||v.st==="lost", ft=done&&v.score?esc(v.score):"";
   var tipTxt=v.tip?esc(v.tip):"";
   el.innerHTML=
-   '<div class="panel anhead"><div class="crumbs"><a href="index.html">Home</a> &rsaquo; <a href="expert-tips.html">Banker Bet of the Day</a> &rsaquo; '+esc(v.h)+' vs '+esc(v.a)+'</div>'+
+   '<div class="panel anhead"><div class="crumbs"><a href="index.html">Home</a> &rsaquo; <a href="index.html">Banker Bet of the Day</a> &rsaquo; '+esc(v.h)+' vs '+esc(v.a)+'</div>'+
    '<div class="vb-main anmatch"><div>'+teamCrest(v.h,v.hl,v.sp,v.hc)+'<div class="vb-team">'+esc(v.h)+'</div></div><div class="vb-mid">'+(ft?'<strong class="ftscore">'+ft+'</strong>FT':'<strong>'+esc(v.t)+'</strong>vs')+'<br>'+esc(v.lg)+'<br>'+esc(ymd)+'</div><div>'+teamCrest(v.a,v.al,v.sp,v.ac)+'<div class="vb-team">'+esc(v.a)+'</div></div></div>'+
    '<div class="etstats">'+
     '<div class="etstat"><span class="etk">Best bet</span>'+(tipTxt?'<b class="etbet">'+tipTxt+'</b><small>'+esc(MEAN[v.tip]||"")+(v.odd?' &middot; @ '+esc(v.odd):'')+'</small>':'<b class="etbet na">&ndash;</b><small>Not posted yet</small>')+'</div>'+
@@ -710,6 +710,40 @@ $$("[data-analysis]").forEach(function(el){
    '<div class="panel"><h2>Expert reasoning</h2>'+(paras.length?paras.map(function(t){return '<p>'+esc(t)+'</p>'}).join(""):'<p>The reasoning for this tip has not been written yet.</p>')+'</div>'+
    '<p class="note center" style="margin-top:14px">'+(sp==="football"?"Football":"Basketball")+' predictions are based on statistical analysis and are not guaranteed. Please bet responsibly.</p>';
 });
+
+/* ---------- Expert Tips category pages (best 1X2 today, best NBA ATS picks today, ...): our own selections, filtered from the day's table ---------- */
+$$("[data-cat]").forEach(function(el){
+  var sp=el.dataset.cat.split(":"), sport=sp[0], cat=sp[1];
+  var q=new URLSearchParams(location.search), d0=q.get("day");
+  var day=(d0==="yesterday"||d0==="tomorrow")?d0:"today";
+  var isTip=function(m,re){var t=String(m.pk||m.tip||"");return re.test(t)};
+  var CATS={
+    "1x2":{h:["1","X","2","Tip","Conf"],ok:function(m){return isTip(m,/^[1X2]$/)},row:function(m){return oddCell(m,0,"1")+oddCell(m,1,"X")+oddCell(m,2,"2")+'<td class="kv">'+pkBadge(m)+'</td>'+confCell(m)}},
+    "btts":{h:["BTTS Tip","Conf"],ok:function(m){return !!m.gg},row:function(m){return extraPick(m.gg,"","BTTS")+confCell(m)}},
+    "ou25":{h:["Over/Under 2.5","Conf"],ok:function(m){return !!m.ou},row:function(m){return extraPick(ouLabel2(m),"","O/U")+confCell(m)}},
+    "dc":{h:["Double Chance","Conf"],ok:function(m){return !!m.dc},row:function(m){return extraPick(m.dc,m.dco,"DC")+confCell(m)}},
+    "cs":{h:["Correct Score","Conf"],ok:function(m){return !!m.cs},row:function(m){return '<td class="cs kv">'+esc(m.cs)+'</td>'+confCell(m)}},
+    "ats":{h:["Spread Pick","Conf"],ok:function(m){return isTip(m,/\s/)},row:function(m){return '<td class="kv">'+pkBadge(m)+'</td>'+confCell(m)}},
+    "totals":{h:["Point Total","Conf"],ok:function(m){return !!m.ts},row:function(m){return '<td class="kv"><span class="xp"><b>'+esc(m.ts+(m.tl?" "+m.tl:""))+'</b></span></td>'+confCell(m)}}
+  };
+  function ouLabel2(m){return m.ou?(m.ou==="Over"?"Over 2.5":"Under 2.5"):""}
+  var C=CATS[cat];
+  function draw(){
+    window.__pbDay=wat({yesterday:-1,today:0,tomorrow:1}[day]);document.dispatchEvent(new CustomEvent("pb:day",{detail:window.__pbDay}));
+    $$(".tabs button",el).forEach(function(b){b.setAttribute("aria-pressed",String(b.dataset.day===day))});
+    var box=$("[data-slot=table]",el);
+    if(!C){return}
+    var list=((D[sport]&&D[sport][day])||[]).filter(C.ok);
+    if(!list.length){box.innerHTML='<p class="note center" style="padding:28px 10px">Our selections for this day are not posted yet. Check back soon or try another day.</p>';return}
+    var last=null;
+    box.innerHTML='<div class="tscroll bwwrap"><table class="pt bw lgbars cat"><tbody>'+sortByLeague(list).map(function(m){
+      var bar="",k=lgName(m.lg);if(k!==last){last=k;bar=lgBar(k,C.h,lgFlag(m.lg))}
+      return bar+'<tr>'+dMatch(m)+C.row(m)+'</tr>'}).join("")+'</tbody></table></div>';
+  }
+  $$(".tabs button",el).forEach(function(b){b.addEventListener("click",function(){day=b.dataset.day;draw()})});
+  REDRAW.push(draw);draw();
+});
+
 
 /* ---------- best player props of the day (basketball) with prop-type dropdown; follows the day shown in the table above ---------- */
 $$("[data-props]").forEach(function(el){
@@ -830,7 +864,9 @@ $$("[data-results]").forEach(function(el){
 
 /* ---------- plans ---------- */
 var TIER_ICON={free:"🎯",gold:"🥇",titanium:"🔩"};
-function isNG(){return store("premCountry")==="Nigeria"}
+(function(){D.plans.forEach(function(p){if(p.tier==="gold"){p.price="$19.99";p.ngn="\u20a619,999"}if(p.tier==="titanium"){p.price="$39.99";p.ngn="\u20a639,999"}})})();
+function detectCountry(){try{var tz=Intl.DateTimeFormat().resolvedOptions().timeZone||"",l=navigator.language||"";if(tz==="Africa/Lagos"||/-NG$/i.test(l))return "Nigeria"}catch(e){}return ""}
+function isNG(){var c=store("premCountry");return c?c==="Nigeria":detectCountry()==="Nigeria"}
 $$("[data-plans]").forEach(function(el){
   function drawPlans(){el.innerHTML=D.plans.map(function(p,i){var price=isNG()&&p.ngn?p.ngn:p.price;
     return '<div class="pcard tier-'+esc(p.tier)+'"><div class="pc-head"><span class="pc-chip">'+(TIER_ICON[p.tier]||"")+' '+esc(p.name)+'</span><span class="pc-sub">'+(p.tier==="free"?"Basic member":"VIP membership")+'</span></div>'+
@@ -851,7 +887,7 @@ $$("[data-plans]").forEach(function(el){
   var list=Object.keys(names).sort(function(a,b){return a.localeCompare(b)});
   sel.insertAdjacentHTML("beforeend",list.map(function(n){return '<option value="'+esc(n)+'">'+esc(n)+'</option>'}).join(""));
   var stored=store("premCountry");
-  if(stored&&names[stored])sel.value=stored;
+  if(stored&&names[stored])sel.value=stored;else if(detectCountry()&&names[detectCountry()])sel.value=detectCountry();
   btn.addEventListener("click",function(){
     if(!sel.value){sel.focus();return}
     store("premCountry",sel.value);
@@ -901,7 +937,7 @@ $$("[data-checkout]").forEach(function(root){
   Object.keys(D.leagues).forEach(function(c){var l=D.leagues[c];if(l.country)names[l.country]=1});
   Object.keys(D.countryFlags||{}).forEach(function(n){names[n]=1});
   cs.innerHTML=Object.keys(names).sort(function(x,y){return x.localeCompare(y)}).map(function(n){return '<option>'+esc(n)+'</option>'}).join("");
-  var start=store("premCountry");cs.value=(start&&names[start])?start:"Nigeria";
+  names["United States"]=1;cs.innerHTML=Object.keys(names).sort(function(x,y){return x.localeCompare(y)}).map(function(n){return '<option>'+esc(n)+'</option>'}).join("");var start=store("premCountry");cs.value=(start&&names[start])?start:(detectCountry()==="Nigeria"?"Nigeria":"United States");
   var METHODS={bank:{i:"&#127974;",n:"Bank Transfer",s:"Pay from your bank app"},card:{i:"&#128179;",n:"Card",s:"Visa, Mastercard, Verve"},whop:{i:"&#128142;",n:"Whop",s:"Pay on Whop checkout"},usdt:{i:"&#8366;",n:"USDT (TRC20)",s:"Crypto transfer on the TRON network"},momo:{i:"&#128241;",n:"Mobile Money",s:"Pay from your mobile wallet"},stripe:{i:"&#128179;",n:"Stripe",s:"Pay by card with Stripe"}};
   var LIVE=(D.pay&&D.pay.live)||{usdt:true};
   function isLive(k){return !!LIVE[k]}
@@ -1025,5 +1061,39 @@ document.addEventListener("click",function(e){
   if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",start);else start();
 })();
 
+})();
+
+/* ---------- floating "Chat Us" (every page, collapsible) + Telegram bar (home page) ---------- */
+(function(){
+  if(document.querySelector(".chatus"))return;
+  var WA="https://wa.me/2349129823308", TG="https://t.me/picksbibleforum";
+  var WAI='<svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" fill="currentColor"><path d="M12 2a10 10 0 00-8.6 15.1L2 22l5-1.3A10 10 0 1012 2zm5.2 13.9c-.2.6-1.3 1.2-1.8 1.2-.5.1-1 .2-3.3-.7-2.8-1.2-4.6-4-4.7-4.2-.1-.2-1.1-1.5-1.1-2.8s.7-2 1-2.3c.2-.3.5-.3.7-.3h.5c.2 0 .4 0 .6.5l.8 2c.1.2.1.3 0 .5l-.3.5-.4.4c-.1.2-.3.3-.1.6.2.3.8 1.3 1.7 2.1 1.1 1 2 1.3 2.3 1.4.3.1.4.1.6-.1l.8-1c.2-.3.4-.2.6-.1l2 1c.3.1.5.2.5.3.1.2.1.8-.1 1.4z"/></svg>';
+  var open=true; try{open=localStorage.getItem("pb.chatClosed")!=="1"}catch(e){}
+  var c=document.createElement("div");c.className="chatus";
+  c.innerHTML='<a class="cu-main" href="'+WA+'" target="_blank" rel="noopener" aria-label="Chat with us on WhatsApp">'+WAI+'<b>Chat Us</b></a><button class="cu-x" type="button" aria-label="Hide chat button">&times;</button>';
+  document.body.appendChild(c);
+  function paint(){c.classList.toggle("min",!open);c.querySelector(".cu-x").innerHTML=open?"&times;":"";c.querySelector(".cu-x").setAttribute("aria-label",open?"Hide chat button":"Show chat button")}
+  c.querySelector(".cu-x").addEventListener("click",function(){open=!open;try{localStorage.setItem("pb.chatClosed",open?"0":"1")}catch(e){}paint()});
+  c.querySelector(".cu-main").addEventListener("click",function(e){if(!open){e.preventDefault();open=true;try{localStorage.setItem("pb.chatClosed","0")}catch(x){}paint()}});
+  paint();
+  var tg=null;
+  if(document.querySelector("[data-home]")){
+    var hid=false;try{hid=+localStorage.getItem("pb.tgHide")>Date.now()}catch(e){}
+    if(!hid){
+      tg=document.createElement("div");tg.className="tgbar";
+      tg.innerHTML='<div class="tg-t"><b>Join our Telegram</b><small>Free picks, VIP updates &amp; results.</small></div><a class="tg-b" href="'+TG+'" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" fill="currentColor"><path d="M21.9 3.4 2.6 10.9c-.9.4-.9 1.6 0 1.9l4.8 1.5 1.8 5.6c.2.7 1.1.9 1.6.4l2.6-2.4 4.9 3.6c.6.4 1.4.1 1.6-.6L23 4.6c.2-.9-.6-1.5-1.1-1.2zM9.6 14.1l8.1-5-6.2 6.5-.3 3.4-1.6-4.9z"/></svg>Join Telegram</a><button class="tg-x" type="button" aria-label="Close">&times;</button>';
+      document.body.appendChild(tg);
+      tg.querySelector(".tg-x").addEventListener("click",function(){tg.remove();tg=null;try{localStorage.setItem("pb.tgHide",String(Date.now()+864e5))}catch(e){}layout()});
+    }
+  }
+  /* stack above the cookie banner and the Telegram bar */
+  function layout(){
+    var cb=document.getElementById("cookieBanner"),h=0;
+    if(cb&&!cb.classList.contains("hidden")&&cb.offsetHeight)h=cb.offsetHeight;
+    if(tg)tg.style.bottom=h+"px";
+    var th=tg?tg.offsetHeight+h:h;
+    c.style.bottom=(th+14)+"px";
+  }
+  layout();window.addEventListener("resize",layout);setInterval(layout,700);
 })();
 

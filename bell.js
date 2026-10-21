@@ -1,9 +1,9 @@
 /* PicksBible: notification bell for logged-in members, on every page.
-   Costs nothing for ordinary visitors: it does nothing unless the visitor logged in on vip.html before. */
+   Costs nothing for ordinary visitors: it does nothing unless the visitor logged in on account.html before. */
 (function () {
   "use strict";
   var ok = false; try { ok = localStorage.getItem("pb.member") === "1"; } catch (_) {}
-  if (!ok || /admin|vip\.html|unsubscribe/.test(location.pathname)) return;
+  if (!ok || /admin|account\.html|unsubscribe/.test(location.pathname)) return;
   var V = "10.14.1", B = "https://www.gstatic.com/firebasejs/" + V + "/firebase-";
   function load(src) { return new Promise(function (res, rej) { var s = document.createElement("script"); s.src = src; s.onload = res; s.onerror = rej; document.head.appendChild(s); }); }
   var esc = function (s) { return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); };
@@ -42,14 +42,16 @@
     function mount() {
       if (document.getElementById("pbBell")) return;
       var css = document.createElement("style");
-      css.textContent = "#pbBell{position:relative;margin-left:10px;display:inline-flex;align-items:center}#pbBell>button{background:none;border:0;cursor:pointer;color:inherit;font-size:21px;line-height:1;padding:6px;position:relative}" +
+      css.textContent = "#pbBell{position:relative;margin-left:10px;display:inline-flex;align-items:center}#pbBell>button{background:none;border:0;cursor:pointer;color:#f5b301;font-size:22px;line-height:1;padding:6px;position:relative;filter:drop-shadow(0 0 6px #f5b30166)}" +
         "#pbBellN{position:absolute;top:0;right:-2px;background:#e11d48;color:#fff;border-radius:99px;font-size:11px;min-width:17px;height:17px;line-height:17px;text-align:center;font-weight:700}#pbBellN[hidden]{display:none}" +
         "#pbBellP{position:fixed;top:64px;right:12px;width:min(340px,calc(100vw - 24px));max-height:70vh;overflow:auto;background:#141032;color:#eef0ff;border:1px solid #2c2660;border-radius:14px;box-shadow:0 12px 40px #0009;z-index:9500}#pbBellP[hidden]{display:none}" +
         "#pbBellP .n{padding:11px 14px;border-bottom:1px solid #2c2660;font-size:14px;line-height:1.4}#pbBellP .n small{display:block;color:#a3a8d6;margin-top:3px}#pbBellP a{display:block;padding:11px 14px;text-align:center;color:#22d3ee;font-weight:700;text-decoration:none}";
       document.head.appendChild(css);
       var w = document.createElement("div"); w.id = "pbBell";
-      w.innerHTML = '<button type="button" aria-label="Notifications">&#128276;<span id="pbBellN" hidden>0</span></button><div id="pbBellP" hidden><div id="pbBellList"></div><a href="vip.html">Open my VIP dashboard</a></div>';
-      var host = document.querySelector(".top .wrap") || document.body; host.appendChild(w);
+      w.innerHTML = '<button type="button" aria-label="Notifications">&#128276;<span id="pbBellN" hidden>0</span></button><div id="pbBellP" hidden><div id="pbBellList"></div><a href="account.html">Open PicksBible dashboard</a></div>';
+      var ab = document.querySelector(".authbtns");
+      if (ab) { ab.innerHTML = '<a class="sgn" href="account.html">My Account</a>'; ab.insertBefore(w, ab.firstChild); w.style.marginLeft = "0"; }
+      else { var host = document.querySelector(".top .wrap") || document.body; host.appendChild(w); }
       var p = w.querySelector("#pbBellP");
       w.querySelector("button").onclick = function (e) {
         e.stopPropagation(); p.hidden = !p.hidden;
