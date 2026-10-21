@@ -1121,15 +1121,6 @@ table.pt.bw.lgbars.bk tr.lgb td:nth-child(6){width:22%}
 .hdates .hchat:hover{background:linear-gradient(180deg,#4ee38b,#1db954);transform:translateY(-1px)}
 @media(max-width:700px){.hdates .hchat{order:7;flex:1 1 auto;font-size:13px;padding:12px 8px}}
 
-/* ---- mobile: four quick tiles above the home heading ---- */
-.mtiles{display:none}
-@media(max-width:700px){
-  .mtiles{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:0 0 18px}
-  .mtiles a{display:flex;align-items:center;justify-content:center;gap:8px;text-align:center;padding:14px 10px;border-radius:12px;border:1px solid #3b3290;background:#1a1450cc;color:var(--text);font:700 15px var(--body);text-decoration:none}
-  .mtiles a i{font-style:normal;color:var(--cyan);font-size:20px;line-height:1}
-  .mtiles a.wa{background:linear-gradient(180deg,#34d77a,#16a34a);border-color:#34d77a;color:#04220f}
-  .mtiles a.wa i{color:#04220f}
-}
 /* ---- phone menu: VIP button sized like the other items ---- */
 .drawer nav a.vipnav{display:inline-block;align-self:flex-start;width:auto;padding:9px 30px;margin:8px 0 8px 6px;font-size:15px;border-radius:999px}
 /* ---- floating Chat Us (collapsible) and Telegram bar ---- */

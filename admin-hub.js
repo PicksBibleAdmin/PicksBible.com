@@ -59,7 +59,7 @@
 
 <div class="card">
   <h2>Customers</h2>
-  <p class="note">Everyone who created a member account, plus the emails collected by the popup and the checkout page.</p>
+  <p class="note">Every free member and paying member in one list. Anyone who completes the popup is a free member; a note shows whether they have set a password yet.</p>
   <div class="stats" id="hbStats"></div>
   <div class="warn" id="hubWarn" hidden><span id="hubWarnTxt"></span><button type="button" class="btn sm" id="hubRemind">Send reminders (email + dashboard)</button></div>
   <div class="fl" id="hubFl" role="group" aria-label="Filter">
@@ -70,7 +70,6 @@
     <button type="button" data-f="expiring" aria-pressed="false">Expiring in 7 days</button>
     <button type="button" data-f="free" aria-pressed="false">Free</button>
     <button type="button" data-f="expired" aria-pressed="false">Expired</button>
-    <button type="button" data-f="leads" aria-pressed="false">Email list (popup + checkout)</button>
   </div>
   <div class="row" style="margin-bottom:10px"><div style="flex:1;min-width:220px"><input id="hubQ" placeholder="Search name or email"></div>
     <div><button type="button" class="btn ghost" id="hubCsv">Download this list (CSV)</button> <button type="button" class="btn ghost" id="hubRef">Refresh</button></div></div>
@@ -124,7 +123,16 @@
       loaded = true; paint(); freeInfo();
     } catch (e) { if (!quiet) $("#hubNote").textContent = "Could not load (" + (e.code || e.message) + "). Make sure the new Firestore rules are published."; }
   }
+  /* popup/exit/checkout signups who have not yet chosen a password: they are free members too, shown in the same list */
+  const waOf = u => u.whatsapp || ((leads.find(l => (l.email || "").toLowerCase() === (u.email || "").toLowerCase()) || {}).whatsapp) || "";
+  function pending() {
+    const have = new Set(users.map(u => (u.email || "").toLowerCase()));
+    return leads.filter(l => l.email && !have.has(l.email.toLowerCase())).map(l => ({ id: "lead:" + l.id, email: l.email, name: nameOf(l), tier: "free", pending: true, whatsapp: l.whatsapp || "", source: l.source || "", createdAt: l.createdAt, unsub: l.unsub }));
+  }
   function view() {
+    if (filter === "all" || filter === "free") {
+      return users.filter(u => filter === "all" || u.tier === "free").concat(pending()).filter(u => !q || ((u.email || "") + " " + nameOf(u)).toLowerCase().includes(q)).sort((a, b) => String(b.createdAt).localeCompare(String(a.createdAt)));
+    }
     if (filter === "leads") {
       const have = new Set(users.map(u => (u.email || "").toLowerCase()));
       return leads.filter(l => !q || (l.email + " " + nameOf(l)).toLowerCase().includes(q)).map(l => Object.assign({ member: have.has((l.email || "").toLowerCase()) }, l));
@@ -141,7 +149,7 @@
   }
   function paint() {
     const paid = users.filter(isPaid), exp = users.filter(expiring);
-    $("#hbStats").innerHTML = [["Members", users.length], ["Paid", paid.length], ["Gold", paid.filter(u => u.tier === "gold").length], ["Titanium", paid.filter(u => u.tier === "titanium").length], ["Ending in 7 days", exp.length], ["Free", users.filter(u => u.tier === "free").length], ["Expired", users.filter(isExpired).length], ["Email list", leads.length]]
+    $("#hbStats").innerHTML = [["Members", users.length + pending().length], ["Paid", paid.length], ["Gold", paid.filter(u => u.tier === "gold").length], ["Titanium", paid.filter(u => u.tier === "titanium").length], ["Ending in 7 days", exp.length], ["Free", users.filter(u => u.tier === "free").length + pending().length], ["Expired", users.filter(isExpired).length]]
       .map(s => `<div class="stat"><b>${s[1]}</b><span>${s[0]}</span></div>`).join("");
     const todo = exp.filter(u => u.remindedFor !== u.paidUntil);
     $("#hubWarn").hidden = !exp.length;
@@ -150,23 +158,24 @@
     const tb = $("#tabHubBtn"); if (tb) tb.textContent = "8. Customers" + (exp.length ? " (" + exp.length + " ending)" : "");
     document.querySelectorAll("#hubFl button").forEach(b => b.setAttribute("aria-pressed", b.dataset.f === filter));
     const rows = view();
-    $("#hubNote").textContent = rows.length + (filter === "leads" ? " email" : " member") + (rows.length === 1 ? "" : "s") + " shown.";
+    $("#hubNote").textContent = rows.length + " member" + (rows.length === 1 ? "" : "s") + " shown.";
     if (filter === "leads") {
       $("#hubHead").innerHTML = "<tr><th>Joined</th><th>Name</th><th>Email</th><th>WhatsApp</th><th>Source</th><th>Plan tried</th><th>Member?</th><th>Emails</th></tr>";
       $("#hubBody").innerHTML = rows.length ? rows.map(l => `<tr><td>${esc(String(l.createdAt || "").slice(0, 10))}</td><td>${esc(nameOf(l))}</td><td>${esc(l.email)}</td><td>${esc(l.whatsapp || "")}</td><td>${esc(l.source || "")}</td><td>${esc(l.plan || "")}</td><td>${l.member ? "Yes" : "-"}</td><td>${l.unsub ? "Unsubscribed" : "On"}</td></tr>`).join("") : '<tr><td colspan="8" class="empty">Nobody here yet.</td></tr>';
       return;
     }
-    $("#hubHead").innerHTML = "<tr><th>Joined</th><th>Name</th><th>Email</th><th>Plan</th><th>Active until</th><th>Actions</th></tr>";
+    $("#hubHead").innerHTML = "<tr><th>Joined</th><th>Name</th><th>Email</th><th>WhatsApp</th><th>Plan</th><th>Active until</th><th>Actions</th></tr>";
     $("#hubBody").innerHTML = rows.length ? rows.map(u => {
       const on = isPaid(u), ex = isExpired(u), dl = daysLeft(u);
+      if (u.pending) return `<tr><td>${esc(String(u.createdAt || "").slice(0, 10))}</td><td>${esc(nameOf(u))}</td><td>${esc(u.email)}</td><td>${esc(u.whatsapp)}</td><td><span class="pill">Free</span></td><td>-</td><td><small class="muted">Gave email${u.source ? " (" + esc(u.source) + ")" : ""}, has not set a password yet${u.unsub ? ". Unsubscribed" : ""}</small></td></tr>`;
       const pill = `<span class="pill ${on ? u.tier : ex ? "exp" : ""}">${ex ? TIERS[u.tier] + " (expired)" : TIERS[u.tier] || "Free"}</span>`;
-      return `<tr data-id="${esc(u.id)}"><td>${esc(String(u.createdAt || "").slice(0, 10))}</td><td>${esc(nameOf(u))}</td><td>${esc(u.email)}</td><td>${pill}</td><td>${esc(u.paidUntil || "-")}${on ? " <small class='muted'>(" + dl + " day" + (dl === 1 ? "" : "s") + " left)</small>" : ""}</td>
+      return `<tr data-id="${esc(u.id)}"><td>${esc(String(u.createdAt || "").slice(0, 10))}</td><td>${esc(nameOf(u))}</td><td>${esc(u.email)}</td><td>${esc(waOf(u))}</td><td>${pill}</td><td>${esc(u.paidUntil || "-")}${on ? " <small class='muted'>(" + dl + " day" + (dl === 1 ? "" : "s") + " left)</small>" : ""}</td>
         <td><div class="act"><select class="mpT"><option value="gold">Gold</option><option value="titanium">Titanium</option></select>
         <select class="mpD"><option value="30">30 days</option><option value="7">7 days</option><option value="90">90 days</option><option value="365">1 year</option></select>
         <button type="button" class="btn sm mpGo">${on ? "Extend" : "Mark paid"}</button>
         ${on ? `<input class="dl" type="number" min="0" max="3650" value="${dl}" title="Days left"><button type="button" class="btn ghost sm mpSet">Set days left</button>` : ""}
         ${(on || ex) ? '<button type="button" class="btn ghost sm mpFree">Set free</button>' : ""}</div></td></tr>`;
-    }).join("") : '<tr><td colspan="6" class="empty">No members match.</td></tr>';
+    }).join("") : '<tr><td colspan="7" class="empty">No members match.</td></tr>';
     rows.forEach(u => { const tr = document.querySelector(`#hubBody tr[data-id="${CSS.escape(u.id)}"]`); if (tr && (u.tier === "gold" || u.tier === "titanium")) tr.querySelector(".mpT").value = u.tier; });
   }
 
@@ -210,7 +219,7 @@
         let cred;
         try { cred = await sa.createUserWithEmailAndPassword(em, token() + "Aa1"); }
         catch (e) {
-          if (e.code === "auth/email-already-in-use") { out("This email already has a login but no profile. Ask the customer to log in once at picksbible.com/vip.html, then press Activate again."); $("#acGo").disabled = false; return; }
+          if (e.code === "auth/email-already-in-use") { out("This email already has a login but no profile. Ask the customer to log in once at picksbible.com/account.html, then press Activate again."); $("#acGo").disabled = false; return; }
           throw e;
         }
         const rec = { email: em, name: nm.slice(0, 80), tier: "free", createdAt: new Date().toISOString(), source: "admin" };
@@ -322,7 +331,7 @@
     const rows = view(), esq = v => '"' + String(v == null ? "" : v).replace(/"/g, '""') + '"';
     const out = filter === "leads"
       ? [["joined", "first_name", "last_name", "email", "whatsapp", "source", "plan_tried", "unsubscribed"]].concat(rows.map(l => [l.createdAt, l.firstName, l.lastName, l.email, l.whatsapp, l.source, l.plan, l.unsub ? "yes" : ""]))
-      : [["joined", "name", "email", "plan", "active_until", "days_left"]].concat(rows.map(u => [u.createdAt, nameOf(u), u.email, u.tier, u.paidUntil, daysLeft(u)]));
+      : [["joined", "name", "email", "whatsapp", "plan", "password_set", "active_until", "days_left"]].concat(rows.map(u => [u.createdAt, nameOf(u), u.email, waOf(u), u.tier, u.pending ? "no" : "yes", u.paidUntil, u.pending ? "" : daysLeft(u)]));
     const blob = new Blob([out.map(r => r.map(esq).join(",")).join("\n")], { type: "text/csv" });
     const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = "picksbible-" + filter + "-" + todayStr() + ".csv"; document.body.appendChild(a); a.click(); a.remove();
   }

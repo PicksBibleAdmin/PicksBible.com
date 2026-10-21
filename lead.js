@@ -3,7 +3,7 @@
 (function () {
   "use strict";
   var P = location.pathname;
-  if (/vip|checkout|usdt-payment|admin/.test(P)) return;
+  if (/vip|account|checkout|usdt-payment|admin/.test(P)) return;
   var KEY = "pb.lead", DIS = "pb.leadDismissed";
   function get(k) { try { return localStorage.getItem(k); } catch (_) { return null; } }
   function set(k, v) { try { localStorage.setItem(k, v); } catch (_) {} }
@@ -71,9 +71,10 @@
         throw new Error("status " + r.status);
       })
       .then(function () {
-        set(KEY, "1"); msg.className = "lm o"; msg.textContent = "You are on the list. Watch your inbox for our free picks.";
+        set(KEY, "1"); msg.className = "lm o"; msg.textContent = "Great! One last step: create your password to finish your free account.";
+        try { sessionStorage.setItem("pb.prefill", JSON.stringify({ n: fn + " " + ln, e: em, w: wa })); } catch (_) {}
         try { if (window.gtag) gtag("event", "generate_lead", { method: el.dataset.why || "popup" }); } catch (_) {}
-        setTimeout(function () { el.hidden = true; }, 2200);
+        setTimeout(function () { location.href = "account.html#signup"; }, 1200);
       })
       .catch(function () { btn.disabled = false; msg.className = "lm e"; msg.textContent = "Could not save right now. Please try again."; });
   };
