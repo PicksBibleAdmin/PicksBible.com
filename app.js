@@ -86,7 +86,7 @@ function addFx(P,f,days){
       var bd=String(f.kickoff||"").slice(0,10), bday=days[bd]; if(!bd)return;
       var b=f.bb||{}, bt=(b.tip||"")+(b.tip&&String(b.spread||"").trim()?" "+String(b.spread).trim():"");   /* tip + handicap shown together, e.g. "1 -6.5" or "2 +10.5" */
       var bm={lg:lgKey(P,"basketball",f.competition,f.country),t:String(f.kickoff).slice(11,16),h:f.home,a:f.away,
-        o:[b.o1||"",b.o2||""],pk:bt,tip:bt||"-",to:b.tipOdds||"",conf:b.conf||"",spread:b.spread||"",ts:b.totalSide||"",tl:b.totalLine||"",sure:!!b.sure,xp:!!f.xp,st:b.st||"pending",score:b.score||""};
+        o:[b.o1||"",b.o2||""],pk:bt,tip:bt||"-",to:b.tipOdds||"",conf:b.conf||"",spread:b.spread||"",ts:b.totalSide||"",tl:b.totalLine||"",sure:!!b.sure,xp:!!f.xp,xt:f.xt||[],st:b.st||"pending",score:b.score||""};
       (P.byDate.basketball[bd]=P.byDate.basketball[bd]||[]).push(bm);
       if(bday){var bl=P.basketball[bday];bm.featured=bl.length<6;bl.push(bm)}
       return;
@@ -95,7 +95,7 @@ function addFx(P,f,days){
     var date=String(f.kickoff||"").slice(0,10), day=days[date]; if(!date)return;
     var v=f.fb||{};
     var m={lg:lgKey(P,"football",f.competition,f.country),t:String(f.kickoff).slice(11,16),h:f.home,a:f.away,
-      o:[v.o1||"",v.oX||"",v.o2||""],pk:v.tip||"",tip:v.tip||"-",gg:v.btts||"",ou:v.ou||"",conf:v.conf||"",to:v.tipOdds||"",dc:v.dc||"",dco:v.dcOdds||"",cs:v.cs||"",sure:!!v.sure,xp:!!f.xp,
+      o:[v.o1||"",v.oX||"",v.o2||""],pk:v.tip||"",tip:v.tip||"-",gg:v.btts||"",ou:v.ou||"",conf:v.conf||"",to:v.tipOdds||"",dc:v.dc||"",dco:v.dcOdds||"",cs:v.cs||"",sure:!!v.sure,xp:!!f.xp,xt:f.xt||[],
       st:v.st||"pending",score:v.score||""};
     (P.byDate.football[date]=P.byDate.football[date]||[]).push(m);   /* any date: used by the calendar picker */
     if(day){var list=P.football[day];m.featured=list.length<6;list.push(m)}
@@ -716,15 +716,16 @@ $$("[data-cat]").forEach(function(el){
   var sp=el.dataset.cat.split(":"), sport=sp[0], cat=sp[1];
   var q=new URLSearchParams(location.search), d0=q.get("day");
   var day=(d0==="yesterday"||d0==="tomorrow")?d0:"today";
+  var picked=function(m,k){return m.xt&&m.xt.indexOf(k)>=0};
   var isTip=function(m,re){var t=String(m.pk||m.tip||"");return re.test(t)};
   var CATS={
-    "1x2":{h:["1","X","2","Tip","Conf"],ok:function(m){return isTip(m,/^[1X2]$/)},row:function(m){return oddCell(m,0,"1")+oddCell(m,1,"X")+oddCell(m,2,"2")+'<td class="kv">'+pkBadge(m)+'</td>'+confCell(m)}},
-    "btts":{h:["BTTS Tip","Conf"],ok:function(m){return !!m.gg},row:function(m){return extraPick(m.gg,"","BTTS")+confCell(m)}},
-    "ou25":{h:["Over/Under 2.5","Conf"],ok:function(m){return !!m.ou},row:function(m){return extraPick(ouLabel2(m),"","O/U")+confCell(m)}},
-    "dc":{h:["Double Chance","Conf"],ok:function(m){return !!m.dc},row:function(m){return extraPick(m.dc,m.dco,"DC")+confCell(m)}},
-    "cs":{h:["Correct Score","Conf"],ok:function(m){return !!m.cs},row:function(m){return '<td class="cs kv">'+esc(m.cs)+'</td>'+confCell(m)}},
-    "ats":{h:["Spread Pick","Conf"],ok:function(m){return isTip(m,/\s/)},row:function(m){return '<td class="kv">'+pkBadge(m)+'</td>'+confCell(m)}},
-    "totals":{h:["Point Total","Conf"],ok:function(m){return !!m.ts},row:function(m){return '<td class="kv"><span class="xp"><b>'+esc(m.ts+(m.tl?" "+m.tl:""))+'</b></span></td>'+confCell(m)}}
+    "1x2":{h:["1","X","2","Tip","Conf"],ok:function(m){return picked(m,"1x2")&&isTip(m,/^[1X2]$/)},row:function(m){return oddCell(m,0,"1")+oddCell(m,1,"X")+oddCell(m,2,"2")+'<td class="kv">'+pkBadge(m)+'</td>'+confCell(m)}},
+    "btts":{h:["BTTS Tip","Conf"],ok:function(m){return picked(m,"btts")&&!!m.gg},row:function(m){return extraPick(m.gg,"","BTTS")+confCell(m)}},
+    "ou25":{h:["Over/Under 2.5","Conf"],ok:function(m){return picked(m,"ou25")&&!!m.ou},row:function(m){return extraPick(ouLabel2(m),"","O/U")+confCell(m)}},
+    "dc":{h:["Double Chance","Conf"],ok:function(m){return picked(m,"dc")&&isTip(m,/^(1X|X2|12)$/)},row:function(m){return '<td class="kv">'+pkBadge(m)+'</td>'+confCell(m)}},
+    "cs":{h:["Correct Score","Conf"],ok:function(m){return picked(m,"cs")&&!!m.cs},row:function(m){return '<td class="cs kv">'+esc(m.cs)+'</td>'+confCell(m)}},
+    "ats":{h:["Spread Pick","Conf"],ok:function(m){return picked(m,"ats")&&isTip(m,/\s/)},row:function(m){return '<td class="kv">'+pkBadge(m)+'</td>'+confCell(m)}},
+    "totals":{h:["Point Total","Conf"],ok:function(m){return picked(m,"totals")&&!!m.ts},row:function(m){return '<td class="kv"><span class="xp"><b>'+esc(m.ts+(m.tl?" "+m.tl:""))+'</b></span></td>'+confCell(m)}}
   };
   function ouLabel2(m){return m.ou?(m.ou==="Over"?"Over 2.5":"Under 2.5"):""}
   var C=CATS[cat];
@@ -734,7 +735,7 @@ $$("[data-cat]").forEach(function(el){
     var box=$("[data-slot=table]",el);
     if(!C){return}
     var list=((D[sport]&&D[sport][day])||[]).filter(C.ok);
-    if(!list.length){box.innerHTML='<p class="note center" style="padding:28px 10px">Our selections for this day are not posted yet. Check back soon or try another day.</p>';return}
+    if(!list.length){box.innerHTML='<p class="note center" style="padding:28px 10px">Our hand-picked selections for this day are not posted yet. Check back soon or try another day.</p>';return}
     var last=null;
     box.innerHTML='<div class="tscroll bwwrap"><table class="pt bw lgbars cat"><tbody>'+sortByLeague(list).map(function(m){
       var bar="",k=lgName(m.lg);if(k!==last){last=k;bar=lgBar(k,C.h,lgFlag(m.lg))}
