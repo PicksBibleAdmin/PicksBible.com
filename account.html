@@ -36,7 +36,7 @@
 .mb .mcta .gold{background:linear-gradient(180deg,#ffd75e,#f5b301 60%,#d99700);color:#2a1a00}
 .mb .mcta .wa{background:linear-gradient(180deg,#34d77a,#16a34a);color:#04220f}
 .mb .badge{display:inline-block;padding:4px 12px;border-radius:99px;font-weight:800;font-size:13px;background:var(--panel-2);color:var(--text)}
-.mb .badge.gold{background:#fde9a8;color:#6b4e00}.mb .badge.titanium{background:#d6e4ee;color:#1e3a52}
+.mb .badge.gold{background:#fde9a8;color:#6b4e00}
 .mb .pk{border:1px solid var(--line);border-radius:12px;padding:14px;margin-bottom:12px;background:var(--panel-2)}
 .mb .pk h3{margin:0 0 4px;font-size:16px;color:var(--text)}.mb .pk table{width:100%;border-collapse:collapse;margin-top:8px;font-size:14px;color:var(--text)}
 .mb .pk td,.mb .pk th{padding:7px 4px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
@@ -104,7 +104,7 @@
   };
   $("#mOut").onclick=function(){try{localStorage.removeItem("pb.member")}catch(_){}auth.signOut()};
   function stop(){unsubs.forEach(function(u){u()});unsubs=[]}
-  function active(u){return u&&(u.tier==="gold"||u.tier==="titanium")&&u.paidUntil&&u.paidUntil>=new Date().toISOString().slice(0,10)}
+  function active(u){return u&&u.tier==="gold"&&u.paidUntil&&u.paidUntil>=new Date().toISOString().slice(0,10)}
   auth.onAuthStateChanged(function(user){
     stop();
     if(!user){try{localStorage.removeItem("pb.member")}catch(_){}$("#mHome").hidden=true;$("#mAuth").hidden=false;return}
@@ -114,10 +114,10 @@
       var u=d.exists?d.data():{tier:"free"};
       $("#mHi").textContent="Hi"+(u.name?", "+u.name.split(" ")[0]:"");
       var on=active(u),t=on?u.tier:"free";
-      $("#mPlan").innerHTML='<span class="badge '+t+'">'+(on?(t==="gold"?"Gold":"Titanium")+" VIP":"Free member")+'</span>'+(on?' <small>active until '+esc(u.paidUntil)+'</small>':"");
+      $("#mPlan").innerHTML='<span class="badge '+t+'">'+(on?"Gold VIP":"Free member")+'</span>'+(on?' <small>active until '+esc(u.paidUntil)+'</small>':"");
       var left=on?Math.round((Date.parse(u.paidUntil+"T12:00:00Z")-Date.parse(new Date().toISOString().slice(0,10)+"T12:00:00Z"))/864e5):0;
-      $("#mWarn").hidden=!(on&&left<=7);if(on&&left<=7)$("#mWarn").innerHTML="Your "+(t==="gold"?"Gold":"Titanium")+" plan ends "+(left<=0?"today":"in "+left+" day"+(left===1?"":"s"))+" ("+esc(u.paidUntil)+"). <a href=\"premium.html\">Renew now</a> so you do not miss any picks.";
-      $("#mPlanNote").innerHTML=on?"Days left on your plan: <b>"+left+"</b>. Your picks appear below as soon as we publish them, and we notify you by message and email.":(u.tier==="gold"||u.tier==="titanium"?"Your VIP plan has expired. <a href=\"premium.html\">Renew your plan</a>.":"Thanks for joining PicksBible. Your free predictions are on the <a href=\"predictions.html\">predictions page</a>.");
+      $("#mWarn").hidden=!(on&&left<=7);if(on&&left<=7)$("#mWarn").innerHTML="Your Gold plan ends "+(left<=0?"today":"in "+left+" day"+(left===1?"":"s"))+" ("+esc(u.paidUntil)+"). <a href=\"premium.html\">Renew now</a> so you do not miss any picks.";
+      $("#mPlanNote").innerHTML=on?"Days left on your plan: <b>"+left+"</b>. Your picks appear below as soon as we publish them, and we notify you by message and email.":(u.tier==="gold"?"Your VIP plan has expired. <a href=\"premium.html\">Renew your plan</a>.":"Thanks for joining PicksBible. Your free predictions are on the <a href=\"predictions.html\">predictions page</a>.");
       listen(user,on,t);
     },function(){$("#mPlanNote").textContent="Could not load your account. Refresh the page."}));
   });
@@ -138,7 +138,7 @@
     feedUn.push(fs.collection("vip_feed").where("audience","array-contains",tier).onSnapshot(function(s){
       var a=[];s.forEach(function(d){a.push(d.data())});a.sort(function(x,y){return String(y.createdAt).localeCompare(String(x.createdAt))});a=a.slice(0,30);
       $("#mPickList").innerHTML=a.length?a.map(function(p){
-        return '<div class="pk"><h3><span class="badge '+(p.pkg==="gold"?"gold":"titanium")+'">'+(p.pkg==="gold"?"Gold":"Titanium")+'</span> '+esc(p.ymd)+(p.st?' &middot; '+esc(p.st):'')+'</h3><table><tr><th>Match</th><th>Market</th><th>Pick</th></tr>'+
+        return '<div class="pk"><h3><span class="badge gold">Gold</span> '+esc(p.ymd)+(p.st?' &middot; '+esc(p.st):'')+'</h3><table><tr><th>Match</th><th>Market</th><th>Pick</th></tr>'+
           (p.legs||[]).map(function(l){return '<tr><td>'+esc(l.home)+' v '+esc(l.away)+'<br><small>'+esc(l.comp)+' '+esc(String(l.ko).slice(11,16))+'</small></td><td>'+esc(l.market)+'</td><td><b>'+esc(l.sel)+'</b> '+(l.res==='won'?'&#10003;':l.res==='lost'?'&#10005;':'')+'</td></tr>'}).join("")+
           '</table><div class="tot">Total odds: '+esc(p.odds)+'</div></div>'}).join(""):'<p class="note">No picks published yet. We will notify you.</p>';
     },function(){$("#mPickList").innerHTML='<p class="note">Could not load picks. Refresh the page.</p>'}));

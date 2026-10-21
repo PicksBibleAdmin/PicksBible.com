@@ -62,8 +62,8 @@ function applyLive(P,live){
   var fixtures=(live&&live.fixtures)||[], props=(live&&live.props)||[];
   fixtures.sort(function(a,b){return String(a.kickoff).localeCompare(String(b.kickoff))});
   P.byDate={football:{},basketball:{}};
-  P.home={etl:{football:{},basketball:{}},et:{football:{},basketball:{}},bo:{football:{},basketball:{}},vip:{bronze:{},gold:{}}};
-  (live&&live.vip||[]).forEach(function(x){if(x&&x.ymd)P.home.vip[x.tier==="bronze"?"bronze":"gold"][x.ymd]={odds:x.odds||"",st:x.st||"",legs:x.legs||null}});
+  P.home={etl:{football:{},basketball:{}},et:{football:{},basketball:{}},bo:{football:{},basketball:{}},vip:{bronze:{}}};
+  (live&&live.vip||[]).forEach(function(x){if(x&&x.ymd&&x.tier==="bronze")P.home.vip.bronze[x.ymd]={odds:x.odds||"",st:x.st||"",legs:x.legs||null}});
   fixtures.forEach(function(f){addFx(P,f,days)});
   props.sort(function(a,b){return String(a.kickoff).localeCompare(String(b.kickoff))});
   props.forEach(function(p){addProp(P,p)});
@@ -529,7 +529,7 @@ function getBO(sport,ymd){
   var H=D.home||{}, l=H.bo&&H.bo[sport]&&H.bo[sport][ymd]; return l||[];
 }
 function getVIP(year,month,tier){ /* month is 0-11; one entry per calendar day */
-  var n=new Date(year,month+1,0).getDate(), today=wat(0), out=[], V=((D.home&&D.home.vip)||{})[tier||"gold"]||{};
+  var n=new Date(year,month+1,0).getDate(), today=wat(0), out=[], V=((D.home&&D.home.vip)||{}).bronze||{};
   for(var d=1;d<=n;d++){
     var ymd=year+"-"+("0"+(month+1)).slice(-2)+"-"+("0"+d).slice(-2), x=V[ymd];
     if(x&&(x.st==="won"||x.st==="lost")){out.push({ymd:ymd,d:d,odds:x.odds||"",st:x.st,legs:(x.legs&&x.legs.length)?x.legs:null});continue}
@@ -569,7 +569,7 @@ function showVipDay(label,x){
 function makeVIP(vipbox,getSel){
   var MON=["January","February","March","April","May","June","July","August","September","October","November","December"], Y, M;
   (function(){var t=wat(0).split("-");Y=+t[0];M=+t[1]-1})();
-  var tier=vipbox.dataset.tier==="bronze"?"bronze":"gold";
+  var tier="bronze";   /* the Gold package; stored under the key "bronze" in the published data */
   function draw(){
     var sel=getSel(), today=wat(0), data=getVIP(Y,M,tier), won=0,lost=0;
     var wrap=$("[data-vipdays]",vipbox);
@@ -587,7 +587,7 @@ function makeVIP(vipbox,getSel){
   function openDay(el){
     var col=el.closest(".vcol.has"); if(!col)return;
     var x=getVIP(Y,M,tier).filter(function(v){return v.ymd===col.dataset.ymd})[0]; if(!x||!x.legs)return;
-    showVipDay(tier==="bronze"?"Gold":"Titanium",x);
+    showVipDay("Gold",x);
   }
   $("[data-vipdays]",vipbox).addEventListener("click",function(e){openDay(e.target)});
   $("[data-vipdays]",vipbox).addEventListener("keydown",function(e){if(e.key==="Enter"||e.key===" "){e.preventDefault();openDay(e.target)}});
@@ -864,8 +864,8 @@ $$("[data-results]").forEach(function(el){
 });
 
 /* ---------- plans ---------- */
-var TIER_ICON={free:"🎯",gold:"🥇",titanium:"🔩"};
-(function(){D.plans.forEach(function(p){if(p.tier==="gold"){p.price="$19.99";p.ngn="\u20a619,999"}if(p.tier==="titanium"){p.price="$39.99";p.ngn="\u20a639,999"}})})();
+var TIER_ICON={free:"🎯",gold:"🥇"};
+(function(){D.plans.forEach(function(p){if(p.tier==="gold"){p.price="$19.99";p.ngn="\u20a619,999"}})})();
 function detectCountry(){try{var tz=Intl.DateTimeFormat().resolvedOptions().timeZone||"",l=navigator.language||"";if(tz==="Africa/Lagos"||/-NG$/i.test(l))return "Nigeria"}catch(e){}return ""}
 function isNG(){var c=store("premCountry");return c?c==="Nigeria":detectCountry()==="Nigeria"}
 $$("[data-plans]").forEach(function(el){

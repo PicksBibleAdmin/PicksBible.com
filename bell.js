@@ -19,7 +19,7 @@
       if (!user) { try { localStorage.removeItem("pb.member"); } catch (_) {} return; }
       un.push(fs.collection("users").doc(user.uid).onSnapshot(function (d) {
         var u = d.exists ? d.data() : { tier: "free" };
-        var paid = (u.tier === "gold" || u.tier === "titanium") && u.paidUntil && u.paidUntil >= new Date().toISOString().slice(0, 10);
+        var paid = u.tier === "gold" && u.paidUntil && u.paidUntil >= new Date().toISOString().slice(0, 10);
         watch(user, paid ? u.tier : "free");
       }, function () {}));
     });

@@ -318,9 +318,8 @@ window.PB = {
   /* ---------- PREMIUM PLANS ----------
      payLink = your Paystack / Flutterwave payment page link (Phase 3) */
   plans: [
-    { tier:"free", name:"Free", price:"$0", ngn:"₦0", per:"Forever", perks:["Daily free predictions","Match previews and analysis","!Premium 2-3 odds tips","!4-10 odds selections","!Priority support"], payLink:"" },
-    { tier:"gold", name:"Gold", price:"$19.99", ngn:"₦19,990", per:"1 Month", perks:["Everything in Free","2-3 odds premium results","Detailed match analysis","VIP room access","24/7 support"], payLink:"" },
-    { tier:"titanium", name:"Titanium", price:"$39.99", ngn:"₦39,990", per:"1 Month", perks:["Everything in Gold","2-3 odds premium tips","4-10 odds selections","Advanced stats and insights","Express support"], payLink:"" }
+    { tier:"free", name:"Free", price:"$0", ngn:"₦0", per:"Forever", perks:["Daily free predictions","Match previews and analysis","!Premium 2-3 odds tips","!Priority support"], payLink:"" },
+    { tier:"gold", name:"Gold", price:"$19.99", ngn:"₦19,999", per:"1 Month", perks:["Everything in Free","2-3 odds premium results","Detailed match analysis","VIP room access","24/7 support"], payLink:"" }
   ],
 
   /* ---------- PAYMENT DETAILS ----------
@@ -335,9 +334,9 @@ window.PB = {
        bankNgOnly: bank transfer is only offered to customers who pick Nigeria. Flip a method to true when it is ready. */
     live: { usdt:true, bank:true, card:false, stripe:false, whop:false, momo:false },
     bankNgOnly: true,
-    stripe:      { gold:"", titanium:"" },
-    flutterwave: { gold:{NGN:"",USD:""}, titanium:{NGN:"",USD:""} },
-    whop:        { gold:"", titanium:"" },
+    stripe:      { gold:"" },
+    flutterwave: { gold:{NGN:"",USD:""} },
+    whop:        { gold:"" },
     usdt:        { address:"TXoTZTaddtj7JJNNiMict6nQsbWUquJ6nW", network:"TRC20" },
     bank:        { name:"", number:"", bank:"" }
   },

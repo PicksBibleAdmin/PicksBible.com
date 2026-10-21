@@ -3,14 +3,14 @@
 (function () {
   "use strict";
   const $ = s => document.querySelector(s);
-  const TIERS = { free: "Free", gold: "Gold", titanium: "Titanium" };
+  const TIERS = { free: "Free", gold: "Gold" };
   const SITE = "https://picksbible.com";
   let users = [], leads = [], filter = "all", q = "", loaded = false, picks = [], freeDate = "";
 
   const addDays = (ymd, n) => { const d = new Date(ymd + "T12:00:00Z"); d.setUTCDate(d.getUTCDate() + n); return d.toISOString().slice(0, 10); };
   const daysBetween = (a, b) => Math.round((Date.parse(b + "T12:00:00Z") - Date.parse(a + "T12:00:00Z")) / 864e5);
-  const isPaid = u => (u.tier === "gold" || u.tier === "titanium") && u.paidUntil && u.paidUntil >= todayStr();
-  const isExpired = u => (u.tier === "gold" || u.tier === "titanium") && !isPaid(u);
+  const isPaid = u => u.tier === "gold" && u.paidUntil && u.paidUntil >= todayStr();
+  const isExpired = u => u.tier === "gold" && !isPaid(u);
   const daysLeft = u => isPaid(u) ? daysBetween(todayStr(), u.paidUntil) : null;
   const expiring = u => isPaid(u) && daysLeft(u) <= 7;
   const nameOf = u => (u.name || [u.firstName, u.lastName].filter(Boolean).join(" ") || "").trim();
@@ -36,7 +36,7 @@
 #tab-hub td select,#tab-hub td input{width:auto;padding:6px}
 #tab-hub td input.dl{width:64px}
 #tab-hub .pill{display:inline-block;padding:2px 9px;border-radius:99px;font-size:12px;font-weight:700;background:var(--panel-2)}
-#tab-hub .pill.gold{background:#5a4500;color:#ffd75e}#tab-hub .pill.titanium{background:#23405a;color:#b9dcf5}#tab-hub .pill.exp{background:#4a1d1d;color:#ff9b9b}
+#tab-hub .pill.gold{background:#5a4500;color:#ffd75e}#tab-hub .pill.exp{background:#4a1d1d;color:#ff9b9b}
 #tab-hub .act{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
 #tab-hub .warn{background:#4a3a00;border:1px solid #f5b301;color:#ffe08a;border-radius:10px;padding:10px 12px;margin-bottom:12px;display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap}
 #tab-hub .cb{position:relative}
@@ -51,7 +51,7 @@
   <div class="row" style="margin-bottom:10px">
     <div style="flex:2;min-width:220px"><label>Customer email</label><input id="acEmail" type="email" placeholder="customer@email.com"></div>
     <div><label>Name (optional)</label><input id="acName"></div>
-    <div><label>Plan</label><select id="acTier"><option value="gold">Gold</option><option value="titanium">Titanium</option></select></div>
+    <div><label>Plan</label><select id="acTier"><option value="gold">Gold</option></select></div>
     <div><label>Days</label><input id="acDays" type="number" min="1" max="3650" value="30" style="width:90px"></div>
   </div>
   <button type="button" class="btn" id="acGo">Activate</button> <span class="note" id="acRes"></span>
@@ -66,7 +66,6 @@
     <button type="button" data-f="all" aria-pressed="true">All members</button>
     <button type="button" data-f="paid" aria-pressed="false">Paid</button>
     <button type="button" data-f="gold" aria-pressed="false">Gold</button>
-    <button type="button" data-f="titanium" aria-pressed="false">Titanium</button>
     <button type="button" data-f="expiring" aria-pressed="false">Expiring in 7 days</button>
     <button type="button" data-f="free" aria-pressed="false">Free</button>
     <button type="button" data-f="expired" aria-pressed="false">Expired</button>
@@ -95,7 +94,7 @@
   <h2>Send a message</h2>
   <p class="note">Appears in each member's notifications on the site, and can also be emailed (Brevo free plan: up to 300 emails a day).</p>
   <div class="row" style="margin-bottom:10px">
-    <div><label>Send to</label><select id="bcAud"><option value="all">All members</option><option value="free">Free members</option><option value="paid">Paid members (Gold + Titanium)</option><option value="gold">Gold and Titanium (Gold picks)</option><option value="titanium">Titanium only</option></select></div>
+    <div><label>Send to</label><select id="bcAud"><option value="all">All members</option><option value="free">Free members</option><option value="paid">Paid members (Gold)</option></select></div>
   </div>
   <label>Message title</label><input id="bcTitle" maxlength="120">
   <label style="margin-top:10px">Message body</label><textarea id="bcBody" rows="4" maxlength="1000"></textarea>
@@ -140,7 +139,6 @@
     return users.filter(u => {
       if (filter === "paid" && !isPaid(u)) return false;
       if (filter === "gold" && !(isPaid(u) && u.tier === "gold")) return false;
-      if (filter === "titanium" && !(isPaid(u) && u.tier === "titanium")) return false;
       if (filter === "expiring" && !expiring(u)) return false;
       if (filter === "free" && (u.tier !== "free")) return false;
       if (filter === "expired" && !isExpired(u)) return false;
@@ -149,7 +147,7 @@
   }
   function paint() {
     const paid = users.filter(isPaid), exp = users.filter(expiring);
-    $("#hbStats").innerHTML = [["Members", users.length + pending().length], ["Paid", paid.length], ["Gold", paid.filter(u => u.tier === "gold").length], ["Titanium", paid.filter(u => u.tier === "titanium").length], ["Ending in 7 days", exp.length], ["Free", users.filter(u => u.tier === "free").length + pending().length], ["Expired", users.filter(isExpired).length]]
+    $("#hbStats").innerHTML = [["Members", users.length + pending().length], ["Paid", paid.length], ["Gold", paid.filter(u => u.tier === "gold").length], ["Ending in 7 days", exp.length], ["Free", users.filter(u => u.tier === "free").length + pending().length], ["Expired", users.filter(isExpired).length]]
       .map(s => `<div class="stat"><b>${s[1]}</b><span>${s[0]}</span></div>`).join("");
     const todo = exp.filter(u => u.remindedFor !== u.paidUntil);
     $("#hubWarn").hidden = !exp.length;
@@ -170,13 +168,13 @@
       if (u.pending) return `<tr><td>${esc(String(u.createdAt || "").slice(0, 10))}</td><td>${esc(nameOf(u))}</td><td>${esc(u.email)}</td><td>${esc(u.whatsapp)}</td><td><span class="pill">Free</span></td><td>-</td><td><small class="muted">Gave email${u.source ? " (" + esc(u.source) + ")" : ""}, has not set a password yet${u.unsub ? ". Unsubscribed" : ""}</small></td></tr>`;
       const pill = `<span class="pill ${on ? u.tier : ex ? "exp" : ""}">${ex ? TIERS[u.tier] + " (expired)" : TIERS[u.tier] || "Free"}</span>`;
       return `<tr data-id="${esc(u.id)}"><td>${esc(String(u.createdAt || "").slice(0, 10))}</td><td>${esc(nameOf(u))}</td><td>${esc(u.email)}</td><td>${esc(waOf(u))}</td><td>${pill}</td><td>${esc(u.paidUntil || "-")}${on ? " <small class='muted'>(" + dl + " day" + (dl === 1 ? "" : "s") + " left)</small>" : ""}</td>
-        <td><div class="act"><select class="mpT"><option value="gold">Gold</option><option value="titanium">Titanium</option></select>
+        <td><div class="act"><select class="mpT"><option value="gold">Gold</option></select>
         <select class="mpD"><option value="30">30 days</option><option value="7">7 days</option><option value="90">90 days</option><option value="365">1 year</option></select>
         <button type="button" class="btn sm mpGo">${on ? "Extend" : "Mark paid"}</button>
         ${on ? `<input class="dl" type="number" min="0" max="3650" value="${dl}" title="Days left"><button type="button" class="btn ghost sm mpSet">Set days left</button>` : ""}
         ${(on || ex) ? '<button type="button" class="btn ghost sm mpFree">Set free</button>' : ""}</div></td></tr>`;
     }).join("") : '<tr><td colspan="7" class="empty">No members match.</td></tr>';
-    rows.forEach(u => { const tr = document.querySelector(`#hubBody tr[data-id="${CSS.escape(u.id)}"]`); if (tr && (u.tier === "gold" || u.tier === "titanium")) tr.querySelector(".mpT").value = u.tier; });
+    rows.forEach(u => { const tr = document.querySelector(`#hubBody tr[data-id="${CSS.escape(u.id)}"]`); if (tr && u.tier === "gold") tr.querySelector(".mpT").value = u.tier; });
   }
 
   /* ---------- plans ---------- */
@@ -335,7 +333,7 @@
     const blob = new Blob([out.map(r => r.map(esq).join(",")).join("\n")], { type: "text/csv" });
     const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = "picksbible-" + filter + "-" + todayStr() + ".csv"; document.body.appendChild(a); a.click(); a.remove();
   }
-  const AUD = { all: ["free", "gold", "titanium"], free: ["free"], paid: ["gold", "titanium"], gold: ["gold", "titanium"], titanium: ["titanium"] };
+  const AUD = { all: ["free", "gold"], free: ["free"], paid: ["gold"], gold: ["gold"] };
   async function send() {
     const title = $("#bcTitle").value.trim(), body = $("#bcBody").value.trim(), key = $("#bcAud").value;
     if (!title || !body) return toast("Fill in the title and the message");

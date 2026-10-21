@@ -1,13 +1,12 @@
 /* PicksBible admin: "7. VIP packages" builder.
    Loaded by admin.html after the main script (same style as admin-csv-import.js).
    Uses the page globals: db, Store, commit, toast, esc, todayStr, showTab.
-   Internal tier keys (unchanged from the Home boxes tab): "bronze" = GOLD package, "gold" = TITANIUM package. */
+   Internal tier key: "bronze" = the GOLD package (kept so existing published results stay valid). */
 (function () {
   "use strict";
   const $ = s => document.querySelector(s);
   const PK = {
-    gold:     { label: "Gold",     key: "bronze", range: [2, 3],  hint: "2 to 3 odds" },
-    titanium: { label: "Titanium", key: "gold",   range: [4, 10], hint: "4 to 10 odds" }
+    gold:     { label: "Gold",     key: "bronze", range: [2, 3],  hint: "2 to 3 odds" }
   };
   const MARKETS = {
     "1X2":             ["Home Win", "Draw", "Away Win", "Home or Draw", "Away or Draw", "Home or Away"],
@@ -81,7 +80,7 @@
   <p class="note">Pick the day and the package, enter the total odd, then add the matches (3 to 6 on average). <b>Save draft</b> keeps it private. <b>Publish to VIP members</b> sends it to members. Picks stay private until the package is settled by the results upload.</p>
   <div class="row" style="margin-bottom:12px">
     <div><label>Date</label><input type="date" id="vpkDate"></div>
-    <div><label>Package</label><select id="vpkPk"><option value="gold">Gold (2 to 3 odds)</option><option value="titanium">Titanium (4 to 10 odds)</option></select></div>
+    <div><label>Package</label><select id="vpkPk"><option value="gold">Gold (2 to 3 odds)</option></select></div>
     <div><label>Total odd</label><input id="vpkOdds" inputmode="decimal" placeholder="e.g. 2.03" maxlength="7"></div>
   </div>
   <p class="note" id="vpkStatus" style="margin-top:0"></p>
@@ -218,7 +217,7 @@
     const e = findEntry(state.pk, state.ymd);
     $("#vpMsgTitle").value = (e && e.msgTitle) || `Today's ${L} VIP picks are ready`;
     $("#vpMsgBody").value = (e && e.msgBody) || `Your ${L} VIP picks for today are live in your VIP dashboard. Total odds ${readOdds()}. Good luck!`;
-    $("#vpMsgAud").textContent = (state.pk === "gold" ? "This goes to Gold and Titanium members." : "This goes to Titanium members only.") + warn;
+    $("#vpMsgAud").textContent = "This goes to Gold members." + warn;
     $("#vpMsgForm").hidden = false; $("#vpMsgDone").hidden = true; $("#vpMsgSend").disabled = false;
     $("#vipPop").hidden = false;
   }
@@ -228,7 +227,7 @@
     $("#vpMsgSend").disabled = true; $("#vpMsgSend").textContent = "Publishing...";
     const e = buildEntry(false);
     e.msgTitle = title; e.msgBody = body; e.pubAt = new Date().toISOString();
-    const aud = state.pk === "gold" ? ["gold", "titanium"] : ["titanium"];
+    const aud = ["gold"];
     let n = 0, note = "", mailTo = [];
     try {
       const today = todayStr();
@@ -240,7 +239,7 @@
     } catch (err) { note = "Could not read the members list (" + (err.code || err.message) + "). The package is published, but delivery could not be counted."; }
     e.delivered = n;
     try {
-      /* the private copy members read (rules let only Gold/Titanium members with an active plan read it) */
+      /* the private copy members read (rules let only Gold members with an active plan read it) */
       await Store.fs.collection("vip_feed").doc(e.id).set({
         pkg: state.pk, ymd: state.ymd, odds: e.odds, audience: aud, createdAt: e.pubAt, st: e.st || "",
         legs: e.legs.map(l => ({ sport: l.sport, home: l.home, away: l.away, comp: l.comp, ko: l.ko, market: l.market, sel: l.sel }))
@@ -259,7 +258,7 @@
     Store.save(db); $("#stats").textContent = statsText();
     $("#vpMsgForm").hidden = true;
     const d = $("#vpMsgDone"); d.hidden = false;
-    d.innerHTML = `<h2>Published</h2><div class="res ${(note || mailFail) ? "bad" : ""}"><b>Delivered to ${n} VIP member${n === 1 ? "" : "s"}</b><br>${note ? esc(note) : (state.pk === "gold" ? "Gold and Titanium members" : "Titanium members") + " can see the picks in their VIP dashboard, and the message is in their notifications."}${mailNote ? "<br>" + esc(mailNote) : ""}</div><div class="acts"><button type="button" class="btn" id="vpMsgClose">Done</button></div>`;
+    d.innerHTML = `<h2>Published</h2><div class="res ${(note || mailFail) ? "bad" : ""}"><b>Delivered to ${n} VIP member${n === 1 ? "" : "s"}</b><br>${note ? esc(note) : "Gold members" + " can see the picks in their VIP dashboard, and the message is in their notifications."}${mailNote ? "<br>" + esc(mailNote) : ""}</div><div class="acts"><button type="button" class="btn" id="vpMsgClose">Done</button></div>`;
     $("#vpMsgClose").onclick = () => { $("#vipPop").hidden = true; $("#vpMsgSend").textContent = "Publish"; load(); };
   }
 
