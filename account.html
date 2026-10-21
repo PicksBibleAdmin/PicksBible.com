@@ -30,6 +30,7 @@
 .mb .note a{color:var(--cyan)}
 .mb .perks{list-style:none;margin:14px 0 0;padding:0;display:grid;gap:6px;color:var(--muted);font-size:14px}
 .mb .perks li:before{content:"\2713";color:#34d77a;font-weight:800;margin-right:8px}
+.mb .sw{margin-top:10px;text-align:center}
 .mb .mcta{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .mb .mcta a{display:flex;align-items:center;justify-content:center;gap:8px;padding:13px 10px;border-radius:12px;font:800 15px var(--body);text-decoration:none}
 .mb .mcta .gold{background:linear-gradient(180deg,#ffd75e,#f5b301 60%,#d99700);color:#2a1a00}
@@ -51,20 +52,20 @@
 </style>
 <main class="mb">
 <div id="mAuth" hidden>
-  <div class="mhero"><h1 id="mTitle">Log in to <span>PicksBible</span></h1><p id="mSub">Welcome back. Log in to see your picks, messages and plan.</p></div>
+  <div class="mhero"><h1 id="mTitle">Log in</h1><p id="mSub">Welcome back. Enter your details to continue.</p></div>
   <div class="mcard">
-    <div class="tabs2"><button type="button" id="mTabIn" class="on">Log in</button><button type="button" id="mTabUp">Sign up free</button></div>
     <form id="mForm" novalidate>
-      <div id="mNameRow" hidden><label for="mName">Your name</label><input id="mName" autocomplete="name" placeholder="e.g. Peter"></div>
+      <div id="mNameRow" hidden><label for="mName">Name</label><input id="mName" autocomplete="name" placeholder="Your name"></div>
       <label for="mEmail">Email</label><input id="mEmail" type="email" autocomplete="email" placeholder="you@example.com" required>
-      <label for="mPass">Password</label><input id="mPass" type="password" autocomplete="current-password" minlength="6" placeholder="At least 6 characters" required>
+      <label for="mPass">Password</label><input id="mPass" type="password" autocomplete="current-password" minlength="6" placeholder="Password" required>
+      <div id="mPass2Row" hidden><label for="mPass2">Confirm password</label><input id="mPass2" type="password" autocomplete="new-password" placeholder="Repeat password"></div>
       <p class="msg" id="mMsg" hidden></p>
       <button class="go" type="submit" id="mGo">Log in</button>
       <p class="note" id="mForgotRow"><a href="#" id="mForgot">Forgot password?</a></p>
+      <p class="note sw" id="mSwIn">Don't have an account? <a href="#signup" id="mToUp">Sign up</a></p>
+      <p class="note sw" id="mSwUp" hidden>Already have an account? <a href="#login" id="mToIn">Log in</a></p>
     </form>
-    <ul class="perks" id="mPerks" hidden><li>Free daily predictions straight to your inbox</li><li>Alerts when VIP results are settled</li><li>Your own PicksBible dashboard</li><li>Upgrade to Gold or Titanium any time</li></ul>
   </div>
-  <div class="mcta"><a class="gold" href="premium.html">&#128081; See VIP plans</a><a class="wa" href="https://wa.me/2349129823308" target="_blank" rel="noopener">Chat now</a></div>
 </div>
 <div id="mHome" hidden>
   <div class="mcard">
@@ -72,7 +73,7 @@
     <p class="note" id="mPlanNote"></p>
   </div>
   <div class="warn" id="mWarn" hidden></div>
-  <div class="mcta" style="margin-bottom:16px"><a class="gold" href="premium.html">&#128081; VIP plans</a><a class="wa" href="https://wa.me/2349129823308" target="_blank" rel="noopener">Chat now</a></div>
+  
   <div class="mcard" id="mNotes"><h2>Notifications <span class="dot" id="mDot" hidden></span></h2><div id="mNoteList"><p class="note">No messages yet.</p></div></div>
   <div class="mcard" id="mPicks"><h2>Your VIP picks</h2><div id="mPickList"><p class="note">Loading...</p></div></div>
 </div>
@@ -88,12 +89,12 @@
   var auth=firebase.auth(), fs=firebase.firestore(), mode="in", unsubs=[];
   var ERR={"auth/invalid-credential":"Wrong email or password.","auth/wrong-password":"Wrong email or password.","auth/user-not-found":"Wrong email or password.","auth/email-already-in-use":"This email already has an account. Log in instead.","auth/weak-password":"Password must be at least 6 characters.","auth/invalid-email":"That email address is not valid.","auth/too-many-requests":"Too many attempts. Wait a few minutes.","auth/network-request-failed":"No connection. Try again."};
   function msg(t,ok){var e=$("#mMsg");e.textContent=t||"";e.hidden=!t;e.className="msg "+(ok?"ok":"err")}
-  function setMode(m){mode=m;$("#mNameRow").hidden=m!=="up";$("#mPerks").hidden=m!=="up";$("#mForgotRow").hidden=m==="up";$("#mGo").textContent=m==="up"?"Create my free account":"Log in";$("#mTabIn").className=m==="in"?"on":"";$("#mTabUp").className=m==="up"?"on":"";$("#mTitle").innerHTML=m==="up"?"Join <span>PicksBible</span> free":"Log in to <span>PicksBible</span>";$("#mSub").textContent=m==="up"?"Create a free account to get daily picks by email, results alerts and your own dashboard.":"Welcome back. Log in to see your picks, messages and plan.";document.title=(m==="up"?"Sign Up Free":"Log In")+" | PicksBible";$("#mPass").autocomplete=m==="up"?"new-password":"current-password";msg("")}
-  $("#mTabIn").onclick=function(){setMode("in")};$("#mTabUp").onclick=function(){setMode("up")};
+  function setMode(m){mode=m;var up=m==="up";$("#mNameRow").hidden=!up;$("#mPass2Row").hidden=!up;$("#mForgotRow").hidden=up;$("#mSwIn").hidden=up;$("#mSwUp").hidden=!up;$("#mGo").textContent=up?"Sign up":"Log in";$("#mTitle").textContent=up?"Create your account":"Log in";$("#mSub").textContent=up?"It's free and takes a minute.":"Welcome back. Enter your details to continue.";document.title=(up?"Sign Up":"Log In")+" | PicksBible";$("#mPass").autocomplete=up?"new-password":"current-password";$("#mPass").placeholder=up?"At least 6 characters":"Password";msg("")}
   function fromHash(){setMode(location.hash==="#signup"?"up":"in")}fromHash();window.addEventListener("hashchange",fromHash);
   $("#mForgot").onclick=function(e){e.preventDefault();var em=$("#mEmail").value.trim();if(!em)return msg("Type your email above first.");auth.sendPasswordResetEmail(em).then(function(){msg("Password reset email sent. Check your inbox and spam folder.",true)},function(x){msg(ERR[x.code]||"Could not send the email.")})};
   $("#mForm").onsubmit=function(e){
     e.preventDefault();var em=$("#mEmail").value.trim().toLowerCase(),pw=$("#mPass").value;if(!em||!pw)return msg("Enter your email and password.");
+    if(mode==="up"&&pw!==$("#mPass2").value)return msg("Passwords do not match.");
     $("#mGo").disabled=true;msg("");
     var p=mode==="up"?auth.createUserWithEmailAndPassword(em,pw).then(function(c){
       return fs.collection("users").doc(c.user.uid).set({email:em,name:$("#mName").value.trim().slice(0,80),tier:"free",createdAt:new Date().toISOString(),source:"signup"});
@@ -115,7 +116,7 @@
       $("#mPlan").innerHTML='<span class="badge '+t+'">'+(on?(t==="gold"?"Gold":"Titanium")+" VIP":"Free member")+'</span>'+(on?' <small>active until '+esc(u.paidUntil)+'</small>':"");
       var left=on?Math.round((Date.parse(u.paidUntil+"T12:00:00Z")-Date.parse(new Date().toISOString().slice(0,10)+"T12:00:00Z"))/864e5):0;
       $("#mWarn").hidden=!(on&&left<=7);if(on&&left<=7)$("#mWarn").innerHTML="Your "+(t==="gold"?"Gold":"Titanium")+" plan ends "+(left<=0?"today":"in "+left+" day"+(left===1?"":"s"))+" ("+esc(u.paidUntil)+"). <a href=\"premium.html\">Renew now</a> so you do not miss any picks.";
-      $("#mPlanNote").innerHTML=on?"Days left on your plan: <b>"+left+"</b>. Your picks appear below as soon as we publish them, and we notify you by message and email.":(u.tier==="gold"||u.tier==="titanium"?"Your VIP plan has expired. <a href=\"premium.html\">Renew your plan</a>.":"You are on the free plan. <a href=\"premium.html\">Join Gold or Titanium</a> to receive our VIP picks here and by email.");
+      $("#mPlanNote").innerHTML=on?"Days left on your plan: <b>"+left+"</b>. Your picks appear below as soon as we publish them, and we notify you by message and email.":(u.tier==="gold"||u.tier==="titanium"?"Your VIP plan has expired. <a href=\"premium.html\">Renew your plan</a>.":"Thanks for joining PicksBible. Your free predictions are on the <a href=\"predictions.html\">predictions page</a>.");
       listen(user,on,t);
     },function(){$("#mPlanNote").textContent="Could not load your account. Refresh the page."}));
   });
@@ -132,7 +133,7 @@
     }
     feedUn.push(fs.collection("broadcasts").where("audience","array-contains",tier).onSnapshot(function(s){bcList=[];s.forEach(function(d){bcList.push(d.data())});drawNotes()},function(){}));
     feedUn.push(fs.collection("notes").where("to","==",user.uid).onSnapshot(function(s){ntList=[];s.forEach(function(d){ntList.push(d.data())});drawNotes()},function(){}));
-    if(!on){$("#mPickList").innerHTML='<p class="note">VIP picks are for Gold and Titanium members.</p>';return}
+    $("#mPicks").hidden=!on;if(!on){return}
     feedUn.push(fs.collection("vip_feed").where("audience","array-contains",tier).onSnapshot(function(s){
       var a=[];s.forEach(function(d){a.push(d.data())});a.sort(function(x,y){return String(y.createdAt).localeCompare(String(x.createdAt))});a=a.slice(0,30);
       $("#mPickList").innerHTML=a.length?a.map(function(p){

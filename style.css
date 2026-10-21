@@ -729,7 +729,7 @@ section[data-vipbox]+section[data-vipbox]{margin-top:14px}
 .vtier.bronze{background:linear-gradient(135deg,#ffe08a,#e3a13a)}
 .vtier.gold{background:linear-gradient(135deg,#e6edf5,#8fa3ba)}
 [data-plans]{grid-template-columns:1fr;max-width:1100px;margin-left:auto;margin-right:auto}
-@media(min-width:900px){[data-plans]{grid-template-columns:repeat(3,1fr)}}
+@media(min-width:700px){[data-plans]{grid-template-columns:repeat(2,1fr);max-width:820px}}
 .plan.slip{--ac:#d98a4e;position:relative;background:#f4f1e8;color:#1b1b22;border:0;border-radius:14px;padding:0 0 18px;text-align:left;box-shadow:0 14px 34px #0008;
   -webkit-mask:radial-gradient(circle 9px at 0 64px,#0000 98%,#000) left/51% 100% no-repeat,radial-gradient(circle 9px at 100% 64px,#0000 98%,#000) right/51% 100% no-repeat;mask:radial-gradient(circle 9px at 0 64px,#0000 98%,#000) left/51% 100% no-repeat,radial-gradient(circle 9px at 100% 64px,#0000 98%,#000) right/51% 100% no-repeat}
 .plan.slip.tier-free{--ac:#9aa0ae}.plan.slip.tier-gold{--ac:#e3a13a}.plan.slip.tier-titanium{--ac:#8fa3ba}

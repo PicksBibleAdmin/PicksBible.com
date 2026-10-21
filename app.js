@@ -869,7 +869,7 @@ var TIER_ICON={free:"🎯",gold:"🥇",titanium:"🔩"};
 function detectCountry(){try{var tz=Intl.DateTimeFormat().resolvedOptions().timeZone||"",l=navigator.language||"";if(tz==="Africa/Lagos"||/-NG$/i.test(l))return "Nigeria"}catch(e){}return ""}
 function isNG(){var c=store("premCountry");return c?c==="Nigeria":detectCountry()==="Nigeria"}
 $$("[data-plans]").forEach(function(el){
-  function drawPlans(){el.innerHTML=D.plans.map(function(p,i){var price=isNG()&&p.ngn?p.ngn:p.price;
+  function drawPlans(){el.innerHTML=D.plans.filter(function(p){return p.tier!=="free"}).map(function(p,i){var price=isNG()&&p.ngn?p.ngn:p.price;
     return '<div class="pcard tier-'+esc(p.tier)+'"><div class="pc-head"><span class="pc-chip">'+(TIER_ICON[p.tier]||"")+' '+esc(p.name)+'</span><span class="pc-sub">'+(p.tier==="free"?"Basic member":"VIP membership")+'</span></div>'+
       '<div class="pc-price"><b>'+esc(price)+'</b><span>'+(p.tier==="free"?"free forever":"/ month")+'</span></div>'+
       '<ul class="pc-list">'+p.perks.map(function(k){var no=k.charAt(0)==="!";return '<li class="'+(no?'no':'')+'"><b>'+(no?'&#10005;':'&#10003;')+'</b><span>'+esc(no?k.slice(1):k)+'</span></li>'}).join("")+'</ul>'+
