@@ -728,7 +728,7 @@ $$("[data-analysis]").forEach(function(el){
    '<h1>'+esc(title)+' | '+esc(shortDate)+'</h1>'+
    '<p class="bbintro">'+esc(v.h)+' welcome '+esc(v.a)+' in the '+esc(v.lg)+' on '+esc(dateTxt)+', with our prediction model identifying '+(selTxt?'<b>'+esc(selTxt)+'</b>':'our selection')+' as the best betting opportunity for this fixture.</p></div>'+
    '<section class="bbbox"><div class="bbbar"><span>Banker Bet of the Day</span>'+(done?'<em class="bbres '+v.st+'">'+(v.st==="won"?"&#10003; Won":"Lost")+'</em>':'<em class="bbres pend">Pending</em>')+'</div>'+
-   '<div class="bbin"><div class="bbl"><span class="bbk">Our Best Bet</span><h2>'+(selTxt?esc(selTxt):'<span class="na">Not posted yet</span>')+'</h2>'+
+   '<div class="bbin"><div class="bbl"><span class="bbk">Our Best Bet</span><h2>'+(hasBM?'<span class="mk">'+esc(bm.m)+'</span><span class="dash"> - </span><span class="sl">'+esc(bm.l[bm.i])+'</span>':(selTxt?'<span class="sl">'+esc(selTxt)+'</span>':'<span class="na">Not posted yet</span>'))+'</h2>'+
    (paras.length?paras.map(function(t){return '<p>'+esc(t)+'</p>'}).join(""):'<p class="note">The analyst reasoning for this bet has not been written yet.</p>')+
    '<p class="note by">Banker Bet by <b>'+esc(v.by)+'</b> &middot; '+(sp==="football"?"&#9917; Football":"&#127936; Basketball")+'</p></div>'+
    '<div class="bbr"><div class="bbcard"><span class="bbk">Market Odds</span>'+oddsHtml+'</div>'+

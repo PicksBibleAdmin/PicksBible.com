@@ -1178,3 +1178,26 @@ table.pt.bw.lgbars.cat{display:table!important}
 .bbt.ours{border-color:var(--cyan);background:#22d3ee1f;box-shadow:0 0 0 1px var(--cyan) inset}.bbt.ours small{color:var(--cyan)}
 .bbrate{display:flex;align-items:baseline;gap:10px;margin-bottom:8px}.bbrate b{font:800 24px var(--body)}.bbrate b.hi{color:#34d77a}.bbrate b.mid{color:#ffd75e}.bbrate b.lo{color:#ff8e8e}.bbrate span{color:var(--muted);font-size:14px}
 @media(max-width:760px){.bbin{grid-template-columns:1fr}.bbteams{gap:6px}}
+
+/* ---- Banker Bet page: colour pass ---- */
+.bbhero{background:radial-gradient(ellipse at 50% -10%,#5b3fd155,transparent 62%),linear-gradient(180deg,#1b1456,#0e0a30);border:1px solid #3b3290;border-radius:18px;padding:20px 16px 24px;margin:0 0 16px;box-shadow:0 12px 34px #0007}
+.bbhero .crumbs{margin-bottom:12px}
+.bbcomp{display:inline-block;padding:6px 14px;border-radius:99px;background:#ffffff14;color:#cfd6ff}
+.bbteam .crest,.bbteam svg,.bbteam img{filter:drop-shadow(0 4px 10px #0008)}
+.bbvs strong{display:grid;place-items:center;width:54px;height:54px;border-radius:50%;background:linear-gradient(180deg,#ffd75e,#f5b301 60%,#d99700);color:#2a1a00;font-size:19px;box-shadow:0 6px 18px #f5b30166}
+.bbvs span{padding:4px 14px;border-radius:99px;background:#22d3ee;color:#04222a;font-weight:800}
+.bbhero h1{background:linear-gradient(90deg,#fff,#cfe9ff);-webkit-background-clip:text;background-clip:text;color:transparent}
+.bbintro{color:#c7cdf5}.bbintro b{color:#ffd75e}
+.bbbox{background:#fff;border:0;border-radius:16px;box-shadow:0 16px 40px #0008}
+.bbbar{background:linear-gradient(90deg,#6d28d9,#3b3290 55%,#0ea5e9);border:0;color:#fff;padding:15px 20px;position:relative}
+.bbbar:before{content:"";position:absolute;left:0;top:0;bottom:0;width:6px;background:linear-gradient(180deg,#ffd75e,#f5b301)}
+.bbres{background:#f59e0b;color:#2a1a00}.bbres.won{background:#22c55e;color:#04220f}.bbres.lost{background:#ef4444;color:#fff}
+.bbbox .bbk{color:#6b7280}
+.bbl h2{color:#111827}.bbl h2 .mk{color:#5b21b6}.bbl h2 .dash{color:#9ca3af}.bbl h2 .sl{color:#15803d}.bbl h2 .na{color:#9ca3af}
+.bbl p{color:#374151;opacity:1}.bbl p.by{color:#6b7280}.bbl .note{color:#6b7280}
+.bbcard{background:#f5f6fb;border:1px solid #e5e7f0}
+.bbt{background:#fff;border:1px solid #e1e4ee}.bbt small{color:#6b7280}.bbt b{color:#111827}
+.bbt.ours{background:linear-gradient(180deg,#34d77a,#16a34a);border-color:#16a34a;box-shadow:0 6px 16px #16a34a55}.bbt.ours small,.bbt.ours b{color:#fff}
+.bbrate b{display:inline-block;padding:3px 14px;border-radius:99px;font-size:18px;color:#fff}.bbrate b.hi{background:#16a34a}.bbrate b.mid{background:#f59e0b;color:#2a1a00}.bbrate b.lo{background:#ef4444}.bbrate span{color:#4b5563;font-weight:600}
+.bbbox .etmeter{background:#e5e7eb;display:block;height:8px;border-radius:99px;overflow:hidden}
+.bbbox .etmeter u{display:block;height:100%;border-radius:99px;text-decoration:none}.bbbox .etmeter u.hi{background:#16a34a}.bbbox .etmeter u.mid{background:#f59e0b}.bbbox .etmeter u.lo{background:#ef4444}
