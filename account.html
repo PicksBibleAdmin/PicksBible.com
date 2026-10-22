@@ -6,76 +6,197 @@
 <button class="iconbtn menu-toggle" type="button" data-open="drawer" aria-label="Open menu"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
 <a class="brand" href="index.html" aria-label="PicksBible home"><img src="img/pb-logo.png" alt="PicksBible logo" width="61" height="44"><span>Picks<b>Bible</b></span></a>
 <nav class="desk-nav" aria-label="Main"><a href="index.html">Home</a><a href="predictions.html">Predictions</a><div class="dd"><a class="ddt" href="expert-tips.html">Expert Tips <i>&#9662;</i></a><div class="ddm"><div class="ddc"><b>&#9917; Football</b><a href="best-1x2-predictions-today.html">Best 1X2 Predictions</a><a href="best-btts-predictions-today.html">Best BTTS Predictions</a><a href="best-over-under-2-5-predictions-today.html">Best Over/Under 2.5 Tips</a><a href="best-double-chance-tips-today.html">Best Double Chance Tips</a><a href="best-correct-score-predictions-today.html">Best Correct Score Predictions</a></div><div class="ddc"><b>&#127936; Basketball</b><a href="best-nba-ats-picks-today.html">Best NBA ATS Picks</a><a href="best-nba-over-under-picks-today.html">Best NBA Over/Under Picks</a><a href="best-nba-player-props-today.html">Best NBA Player Props</a></div></div></div><a href="https://t.me/picksbibleforum" rel="noopener">Bet Forum</a><a href="blog.html">Blog</a><a class="vipnav" href="premium.html">VIP</a><a href="about.html">About Us</a><a href="contact.html">Contact Us</a></nav>
-<div class="authbtns"><a class="lgn" href="account.html">Login</a><a class="sgn" href="account.html#signup">Sign Up</a></div></div>
+<div class="authbtns"><a class="lgn" href="account.html#login">Login</a><a class="sgn" href="account.html#signup">Sign Up</a></div></div>
 </header>
 <div class="drawer" id="drawer" hidden><nav aria-label="Menu"><button class="iconbtn close" type="button" aria-label="Close menu"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button><a href="index.html">Home</a><a href="predictions.html">Predictions</a><a class="sub" href="football-predictions.html">Football predictions ⚽</a><a class="sub" href="basketball-predictions.html">Basketball predictions 🏀</a><a href="expert-tips.html">Expert Tips</a><a class="sub" href="expert-tips.html#football">&#9917; Football expert tips</a><a class="sub" href="expert-tips.html#basketball">&#127936; Basketball expert tips</a><a href="https://t.me/picksbibleforum" rel="noopener">Bet Forum</a><a href="blog.html">Blog</a><a class="vipnav" href="premium.html">VIP</a><a href="about.html">About Us</a><a href="contact.html">Contact Us</a><a href="results.html">VIP room results</a><a href="legal.html#faq">FAQ</a></nav></div>
 <style>
-.mb{max-width:720px;margin:0 auto;padding:22px 16px 40px}
-.mb .mhero{text-align:center;margin:0 0 18px}
-.mb .mhero h1{margin:0 0 8px;font:800 clamp(26px,5vw,36px)/1.15 var(--display,var(--body));color:var(--text)}
-.mb .mhero h1 span{color:var(--cyan)}
-.mb .mhero p{margin:0 auto;max-width:520px;color:var(--muted);font-size:15px;line-height:1.5}
-.mb .mcard{display:block;background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:20px;margin:0 0 16px;min-height:0;overflow:visible}
-.mb .mcard h2{margin:0 0 10px;font-size:19px;color:var(--text)}
-.mb .tabs2{display:grid;grid-template-columns:1fr 1fr;gap:6px;background:var(--panel-2);border:1px solid var(--line);border-radius:999px;padding:4px;margin:0 0 14px}
-.mb .tabs2 button{border:0;background:transparent;color:var(--muted);font:700 14px var(--body);padding:10px 8px;border-radius:999px;cursor:pointer}
-.mb .tabs2 button.on{background:var(--cyan);color:var(--cyan-ink)}
-.mb label{display:block;font-size:13px;margin:12px 0 5px;font-weight:700;color:var(--text)}
-.mb input{display:block;width:100%;box-sizing:border-box;padding:12px;border:1px solid var(--line);border-radius:10px;background:var(--panel-2);color:var(--text);font:16px var(--body)}
-.mb input:focus{outline:2px solid var(--cyan);outline-offset:1px}
-.mb .go{display:block;width:100%;margin-top:16px;padding:13px;border:0;border-radius:999px;background:var(--cyan);color:var(--cyan-ink);font:800 15px var(--body);cursor:pointer}
-.mb .go[disabled]{opacity:.6}
-.mb .msg{margin:12px 0 0;font-size:14px}.mb .msg.err{color:#ff8e8e}.mb .msg.ok{color:#6ee7a0}
-.mb .note{color:var(--muted);font-size:14px;line-height:1.5;margin:8px 0 0}
-.mb .note a{color:var(--cyan)}
-.mb .perks{list-style:none;margin:14px 0 0;padding:0;display:grid;gap:6px;color:var(--muted);font-size:14px}
-.mb .perks li:before{content:"\2713";color:#34d77a;font-weight:800;margin-right:8px}
-.mb .sw{margin-top:10px;text-align:center}
-.mb .mcta{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.mb .mcta a{display:flex;align-items:center;justify-content:center;gap:8px;padding:13px 10px;border-radius:12px;font:800 15px var(--body);text-decoration:none}
-.mb .mcta .gold{background:linear-gradient(180deg,#ffd75e,#f5b301 60%,#d99700);color:#2a1a00}
-.mb .mcta .wa{background:linear-gradient(180deg,#34d77a,#16a34a);color:#04220f}
-.mb .badge{display:inline-block;padding:4px 12px;border-radius:99px;font-weight:800;font-size:13px;background:var(--panel-2);color:var(--text)}
-.mb .badge.gold{background:#fde9a8;color:#6b4e00}
-.mb .pk{border:1px solid var(--line);border-radius:12px;padding:14px;margin-bottom:12px;background:var(--panel-2)}
-.mb .pk h3{margin:0 0 4px;font-size:16px;color:var(--text)}.mb .pk table{width:100%;border-collapse:collapse;margin-top:8px;font-size:14px;color:var(--text)}
-.mb .pk td,.mb .pk th{padding:7px 4px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
-.mb .pk .tot{margin-top:8px;font-weight:800;color:var(--text)}
-.mb .nt{border-bottom:1px solid var(--line);padding:10px 0;color:var(--text);font-size:14px}.mb .nt:last-child{border:0}.mb .nt small{color:var(--muted)}
-.mb .dot{display:inline-block;background:#e11d48;color:#fff;border-radius:99px;font-size:12px;padding:1px 8px;margin-left:6px}
-.mb .row{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
-.mb .row h1{margin:0 0 6px;font-size:24px;color:var(--text)}
-.mb .out{border:1px solid var(--line);background:transparent;color:var(--text);padding:9px 16px;border-radius:999px;font:700 13px var(--body);cursor:pointer}
-.mb .warn{background:#3a2e0a;border:1px solid #8a6b10;color:#ffe08a;border-radius:12px;padding:14px;margin:0 0 16px;font-size:14px}
-.mb .warn a{color:#ffd75e}
-@media(max-width:480px){.mb .mcta{grid-template-columns:1fr}}
+.ac{max-width:1180px;margin:0 auto;padding:26px 16px 48px}
+.ac h1,.ac h2,.ac h3,.ac p{margin-top:0}
+.ac [hidden]{display:none!important}
+/* ---------- log in / sign up ---------- */
+.ac-au{display:grid;grid-template-columns:1.05fr .95fr;gap:44px;align-items:center;min-height:62vh}
+.ac-l .eb{font:800 12px var(--body);letter-spacing:.14em;text-transform:uppercase;color:var(--cyan)}
+.ac-l h1{margin:10px 0 14px;font:800 clamp(32px,5.2vw,54px)/1.06 var(--display,var(--body));color:var(--text);text-wrap:balance}
+.ac-l p{max-width:500px;margin:0 0 20px;color:var(--muted);font-size:16px;line-height:1.65}
+.ac-l ul{list-style:none;margin:0;padding:0;display:grid;gap:13px}
+.ac-l li{display:flex;align-items:center;gap:12px;font:700 16px var(--body);color:var(--text)}
+.ac-l li:before{content:"\2713";flex:none;width:24px;height:24px;border-radius:50%;background:#34d77a24;color:#34d77a;display:grid;place-items:center;font-size:13px;font-weight:800}
+.ac-card{background:var(--panel);border:1px solid var(--line);border-top:3px solid var(--cyan);border-radius:16px;padding:26px;box-shadow:0 18px 44px #0006}
+.ac-card .eb2{font:800 11px var(--body);letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+.ac-card h2{margin:6px 0 4px;font:800 26px var(--body);color:var(--text)}
+.ac-card .sub{margin:0 0 6px;color:var(--muted);font-size:14px}
+.ac label{display:block;font-size:13px;margin:14px 0 6px;font-weight:700;color:var(--text)}
+.ac input,.ac select,.ac textarea{display:block;width:100%;box-sizing:border-box;padding:12px 13px;border:1px solid var(--line);border-radius:10px;background:var(--panel-2);color:var(--text);font:16px var(--body)}
+.ac input[readonly]{opacity:.7}
+.ac input:focus,.ac select:focus{outline:2px solid var(--cyan);outline-offset:1px}
+.ac .two{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.ac .go{display:block;width:100%;margin-top:18px;padding:14px;border:0;border-radius:10px;background:var(--cyan);color:var(--cyan-ink);font:800 15px var(--body);cursor:pointer}
+.ac .go[disabled]{opacity:.6}
+.ac .msg{margin:12px 0 0;font-size:14px}.ac .msg.err{color:#ff8e8e}.ac .msg.ok{color:#6ee7a0}
+.ac .note{color:var(--muted);font-size:14px;line-height:1.55;margin:10px 0 0}.ac .note a,.ac a.lk{color:var(--cyan)}
+.ac .sw{margin-top:14px;text-align:center}
+.ac .help{margin-top:18px;padding:12px 14px;border-radius:10px;background:var(--panel-2);border:1px solid var(--line);font-size:13px;color:var(--muted);text-align:center}
+.ac .help a{color:var(--cyan);font-weight:700;word-break:break-all}
+/* ---------- member area ---------- */
+.ac-dash{display:grid;grid-template-columns:250px minmax(0,1fr);gap:22px;align-items:start}
+.ac-side{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:12px;position:sticky;top:84px}
+.ac-side a{display:flex;align-items:center;gap:11px;padding:12px 14px;border-radius:10px;color:var(--muted);font:700 14px var(--body);text-decoration:none;cursor:pointer}
+.ac-side a:hover{background:var(--panel-2);color:var(--text)}
+.ac-side a.on{background:#22d3ee1a;color:var(--cyan)}
+.ac-side a .ct{margin-left:auto;background:#e11d48;color:#fff;border-radius:99px;font-size:11px;padding:1px 8px}
+.ac-side .out{margin-top:6px;border-top:1px solid var(--line);padding-top:6px}
+.ac-plan{margin-top:10px;background:#14102e;border:1px solid var(--line);border-radius:12px;padding:16px;text-align:center}
+.ac-plan b{display:block;font-size:16px;color:var(--text);margin:4px 0}
+.ac-plan small{display:block;color:var(--muted);line-height:1.5;margin-bottom:12px}
+.ac-plan .crown{font-size:22px}
+.ac-btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:12px 20px;border-radius:10px;border:0;font:800 14px var(--body);text-decoration:none;cursor:pointer;color:var(--cyan-ink);background:var(--cyan)}
+.ac-btn.gold{background:linear-gradient(180deg,#ffd75e,#f5b301 60%,#d99700);color:#2a1a00}
+.ac-btn.wa{background:linear-gradient(180deg,#34d77a,#16a34a);color:#04220f}
+.ac-btn.ghost{background:transparent;border:1px solid var(--line);color:var(--text)}
+.ac-main .hd{margin:0 0 18px}
+.ac-main .hd .eb{font:800 11px var(--body);letter-spacing:.14em;text-transform:uppercase;color:var(--cyan)}
+.ac-main .hd h1{margin:4px 0 6px;font:800 clamp(26px,4vw,36px)/1.12 var(--display,var(--body));color:var(--text)}
+.ac-main .hd p{margin:0;color:var(--muted);font-size:15px}
+.ac-box{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:20px;margin:0 0 16px}
+.ac-box h2{margin:0 0 6px;font-size:19px;color:var(--text)}
+.ac-btns{display:flex;flex-wrap:wrap;gap:10px;margin-top:18px}
+.ac-stat{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:0 0 16px}
+.ac-stat div{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px 16px}
+.ac-stat small{display:block;color:var(--muted);font-size:12px;margin-bottom:4px}.ac-stat b{font:800 24px var(--body);color:var(--text)}
+.ac-bar{display:flex;flex-wrap:wrap;gap:12px;align-items:end;justify-content:space-between;margin:0 0 16px}
+.ac-bar .f{min-width:150px}
+.ac-pkg{border:1px solid var(--line);border-radius:16px;overflow:hidden;background:var(--panel);margin:0 0 16px}
+.ac-ph{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:16px 18px;background:#1b1536}
+.ac-ph .k{font:800 11px var(--body);letter-spacing:.12em;text-transform:uppercase;color:#ffd75e}
+.ac-ph h3{margin:2px 0 0;font:800 22px var(--body);color:var(--text)}.ac-ph small{color:var(--muted)}
+.ac-odds{text-align:right}.ac-odds small{display:block}.ac-odds b{font:800 28px var(--body);color:var(--text)}
+.ac-leg{padding:14px 18px;border-top:1px solid var(--line)}
+.ac-leg .lg{font-size:12px;color:var(--muted)}.ac-leg .tm{font:700 16px var(--body);color:var(--text);margin:4px 0 8px}.ac-leg .tm i{font-style:normal;color:var(--muted);font-weight:500;margin:0 6px}
+.ac-hid{border:1px dashed #8a6b10;background:repeating-linear-gradient(135deg,#2b2208,#2b2208 10px,#33290b 10px,#33290b 20px);border-radius:10px;padding:12px 14px;color:#ffe08a;font-weight:800}
+.ac-hid small{display:block;font-weight:500;color:#cdb56a}
+.ac-dark{margin:0 18px 16px;background:#0f1c3a;border:1px solid #223a6b;border-radius:12px;padding:14px 16px;color:#dfe8ff;display:flex;gap:12px;align-items:center}
+.ac-dark small{display:block;color:#9fb2dd}
+.ac-foot{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;padding:16px 18px;border-top:1px solid var(--line);color:var(--muted);font-size:13px}.ac-foot b{color:var(--text);font-size:14px}
+.ac-res{display:inline-block;padding:3px 12px;border-radius:99px;font:800 12px var(--body);background:#3b3f63;color:#fff}.ac-res.won{background:var(--won)}.ac-res.lost{background:#8a3a4a}
+.ac-pkg details>summary{list-style:none;cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:12px;padding:16px 18px;flex-wrap:wrap}
+.ac-pkg details>summary::-webkit-details-marker{display:none}
+.ac-pkg details[open]>summary{border-bottom:1px solid var(--line);background:#1b1536}
+.ac-pkg table{width:100%;border-collapse:collapse;font-size:14px;color:var(--text)}.ac-pkg td,.ac-pkg th{padding:10px 14px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}.ac-pkg th{color:var(--muted);font-size:12px;text-transform:uppercase}
+.ac-nt{border-bottom:1px solid var(--line);padding:12px 0;color:var(--text);font-size:14px}.ac-nt:last-child{border:0}.ac-nt small{color:var(--muted)}.ac-nt.new b:before{content:"";display:inline-block;width:8px;height:8px;border-radius:50%;background:#e11d48;margin-right:8px}
+.ac-tabs{display:flex;gap:8px;margin:0 0 16px;flex-wrap:wrap}.ac-tabs button{border:1px solid var(--line);background:var(--panel);color:var(--muted);padding:10px 18px;border-radius:10px;font:700 14px var(--body);cursor:pointer}.ac-tabs button.on{background:var(--cyan);color:var(--cyan-ink);border-color:var(--cyan)}
+.ac-sup{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;margin:0 0 16px}
+.ac-sup .ac-box{margin:0}.ac-sup p{color:var(--muted);font-size:14px;line-height:1.55}
+.ac details.faq{border-bottom:1px solid var(--line);padding:12px 0}.ac details.faq summary{cursor:pointer;font-weight:700;color:var(--text)}.ac details.faq p{margin:8px 0 0;color:var(--muted);font-size:14px;line-height:1.6}
+@media(max-width:860px){
+  .ac-au{grid-template-columns:1fr;gap:24px;min-height:0}
+  .ac-dash{grid-template-columns:1fr}
+  .ac-side{position:static;display:flex;gap:6px;overflow-x:auto;padding:8px;-webkit-overflow-scrolling:touch}
+  .ac-side a{white-space:nowrap;flex:none}.ac-side .out{margin:0;border:0;padding-top:0}
+  .ac-plan{display:none}
+  .ac-stat{grid-template-columns:1fr 1fr}.ac-sup{grid-template-columns:1fr}.ac .two{grid-template-columns:1fr}
+}
 </style>
-<main class="mb">
-<div id="mAuth" hidden>
-  <div class="mhero"><h1 id="mTitle">Log in</h1><p id="mSub">Welcome back. Enter your details to continue.</p></div>
-  <div class="mcard">
-    <form id="mForm" novalidate>
-      <div id="mNameRow" hidden><label for="mName">Name</label><input id="mName" autocomplete="name" placeholder="Your name"></div>
-      <label for="mEmail">Email</label><input id="mEmail" type="email" autocomplete="email" placeholder="you@example.com" required>
-      <label for="mPass">Password</label><input id="mPass" type="password" autocomplete="current-password" minlength="6" placeholder="Password" required>
-      <div id="mPass2Row" hidden><label for="mPass2">Confirm password</label><input id="mPass2" type="password" autocomplete="new-password" placeholder="Repeat password"></div>
-      <p class="msg" id="mMsg" hidden></p>
-      <button class="go" type="submit" id="mGo">Log in</button>
-      <p class="note" id="mForgotRow"><a href="#" id="mForgot">Forgot password?</a></p>
-      <p class="note sw" id="mSwIn">Don't have an account? <a href="#signup" id="mToUp">Sign up</a></p>
-      <p class="note sw" id="mSwUp" hidden>Already have an account? <a href="#login" id="mToIn">Log in</a></p>
+<main class="ac">
+<!-- ============ LOG IN / SIGN UP ============ -->
+<div id="aAuth" class="ac-au" hidden>
+  <div class="ac-l">
+    <div class="eb" id="aEb">Join PicksBible</div>
+    <h1 id="aH1">Your football and basketball picks, all in one place.</h1>
+    <p id="aP">Create your PicksBible account to follow our daily predictions, track VIP results and manage your plan from one dashboard.</p>
+    <ul id="aList"></ul>
+  </div>
+  <div class="ac-card">
+    <div class="eb2" id="aEb2">Create account</div>
+    <h2 id="aTitle">Join PicksBible</h2>
+    <p class="sub" id="aSub">It only takes a minute.</p>
+    <form id="aForm" novalidate>
+      <div id="aNameRow"><label for="aName">Full name</label><input id="aName" autocomplete="name" placeholder="Enter your full name"></div>
+      <label for="aEmail">Email address</label><input id="aEmail" type="email" autocomplete="email" placeholder="you@example.com">
+      <div class="two" id="aPassRow"><div><label for="aPass">Password</label><input id="aPass" type="password" autocomplete="new-password" minlength="6" placeholder="Minimum 6 characters"></div>
+      <div id="aPass2Row"><label for="aPass2">Confirm password</label><input id="aPass2" type="password" autocomplete="new-password" placeholder="Repeat password"></div></div>
+      <p class="msg" id="aMsg" hidden></p>
+      <button class="go" type="submit" id="aGo">Create account</button>
+      <p class="note" id="aForgotRow" style="text-align:center"><a href="#" id="aForgot">Forgot password?</a></p>
+      <p class="note sw" id="aSwIn">Don't have an account? <a href="#signup">Sign up</a></p>
+      <p class="note sw" id="aSwUp" hidden>Already have an account? <a href="#login">Log in</a></p>
     </form>
+    <div class="help">Need help? <a href="mailto:picksbiblesupport@gmail.com">picksbiblesupport@gmail.com</a></div>
   </div>
 </div>
-<div id="mHome" hidden>
-  <div class="mcard">
-    <div class="row"><div><h1 id="mHi">Welcome</h1><div id="mPlan"></div></div><button class="out" id="mOut" type="button">Log out</button></div>
-    <p class="note" id="mPlanNote"></p>
+
+<!-- ============ MEMBER AREA ============ -->
+<div id="aHome" class="ac-dash" hidden>
+  <aside class="ac-side" aria-label="Account menu">
+    <a data-t="dashboard" href="#dashboard">&#127968; Dashboard</a>
+    <a data-t="vip-picks" href="#vip-picks">&#11088; VIP Picks</a>
+    <a data-t="results" href="#results">&#128202; Results &amp; History</a>
+    <a data-t="settings" href="#settings">&#9881;&#65039; Account Settings</a>
+    <a data-t="notifications" href="#notifications">&#128276; Notifications <span class="ct" id="aCt" hidden></span></a>
+    <a data-t="support" href="#support">&#128172; Support Center</a>
+    <div class="out"><a id="aOut" href="#">&#8617;&#65039; Logout</a></div>
+    <div class="ac-plan" id="aPlan"></div>
+  </aside>
+  <div class="ac-main">
+
+    <section data-p="dashboard">
+      <div class="hd"><h1 id="dHi">Welcome back!</h1><p>Here's what's happening with your PicksBible account today.</p></div>
+      <div class="ac-box"><h2>Today's predictions</h2><p class="note" style="margin-top:0">Open all of today's free football and basketball predictions. Use your browser's back button to return here.</p>
+        <div class="ac-btns"><a class="ac-btn" href="predictions.html">Today's Predictions</a><a class="ac-btn ghost" href="football-predictions.html">&#9917; Football</a><a class="ac-btn ghost" href="basketball-predictions.html">&#127936; Basketball</a></div></div>
+    </section>
+
+    <section data-p="vip-picks" hidden>
+      <div class="ac-bar"><div class="hd" style="margin:0"><div class="eb">PicksBible Premium</div><h1>VIP Picks</h1><p>Curated Gold football selections for PicksBible VIP members.</p></div>
+        <div class="f"><label for="vDate" style="margin-top:0">Pick date</label><input id="vDate" type="date"></div></div>
+      <div class="ac-stat" style="grid-template-columns:1fr 1.6fr"><div><small>Your membership</small><b id="vMem" style="font-size:16px">Free Member</b></div><div><small>Viewing</small><b id="vView" style="font-size:16px"></b></div></div>
+      <div id="vBody"><p class="note">Loading...</p></div>
+    </section>
+
+    <section data-p="results" hidden>
+      <div class="ac-bar"><div class="hd" style="margin:0"><div class="eb">PicksBible Results</div><h1>Results &amp; History</h1><p>Open any settled VIP package from any day. Today's picks appear here only after the matches are settled.</p></div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap"><div class="f"><label for="rFrom" style="margin-top:0">From</label><input id="rFrom" type="date"></div><div class="f"><label for="rTo" style="margin-top:0">To</label><input id="rTo" type="date"></div></div></div>
+      <div class="ac-stat"><div><small>Packages won</small><b id="rWon">0</b></div><div><small>Packages lost</small><b id="rLost">0</b></div><div><small>Settled in range</small><b id="rAll">0</b></div></div>
+      <div id="rBody"><p class="note">Loading...</p></div>
+    </section>
+
+    <section data-p="settings" hidden>
+      <div class="hd"><div class="eb">PicksBible Account</div><h1>Account Settings</h1><p>Manage your personal information and security.</p></div>
+      <div class="ac-tabs"><button type="button" class="on" data-st="profile">Profile</button><button type="button" data-st="security">Security</button></div>
+      <div class="ac-box" data-sp="profile"><h2>Profile Settings</h2>
+        <form id="sForm" novalidate>
+          <div class="two"><div><label for="sName">Full name</label><input id="sName" autocomplete="name"></div><div><label for="sEmail">Email address</label><input id="sEmail" readonly></div></div>
+          <div class="two"><div><label for="sCountry">Country</label><input id="sCountry" autocomplete="country-name" placeholder="e.g. Nigeria"></div><div><label for="sWa">WhatsApp number</label><input id="sWa" type="tel" autocomplete="tel" placeholder="+234..." maxlength="20"></div></div>
+          <p class="note" style="margin-top:6px">Your WhatsApp number is used privately for account support and important service messages.</p>
+          <p class="msg" id="sMsg" hidden></p><button class="go" type="submit" style="width:auto;padding:13px 28px">Save profile</button>
+        </form></div>
+      <div class="ac-box" data-sp="security" hidden><h2>Security</h2>
+        <form id="pForm" novalidate>
+          <label for="pCur">Current password</label><input id="pCur" type="password" autocomplete="current-password">
+          <div class="two"><div><label for="pNew">New password</label><input id="pNew" type="password" autocomplete="new-password" placeholder="Minimum 6 characters"></div><div><label for="pNew2">Confirm new password</label><input id="pNew2" type="password" autocomplete="new-password"></div></div>
+          <p class="msg" id="pMsg" hidden></p><button class="go" type="submit" style="width:auto;padding:13px 28px">Change password</button>
+        </form>
+        <p class="note" style="margin-top:16px">Forgot your current password? <a href="#" id="pReset">Email me a reset link</a>.</p></div>
+    </section>
+
+    <section data-p="notifications" hidden>
+      <div class="hd"><div class="eb">PicksBible Account</div><h1>Notifications</h1><p>Premium updates, subscription alerts and important account messages.</p></div>
+      <div class="ac-stat" style="grid-template-columns:repeat(2,minmax(0,200px))"><div><small>Unread</small><b id="nUn">0</b></div><div><small>Total</small><b id="nTot">0</b></div></div>
+      <div class="ac-box"><div style="display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:6px"><h2 style="margin:0">Messages</h2><button type="button" class="ac-btn ghost" id="nRead" style="padding:8px 14px">Mark all as read</button></div><div id="nList"></div></div>
+    </section>
+
+    <section data-p="support" hidden>
+      <div class="hd"><div class="eb">PicksBible Support</div><h1>Support Center</h1><p>We are here to help with your account, plan and payments.</p></div>
+      <div class="ac-sup">
+        <div class="ac-box"><h2>&#128172; Chat on WhatsApp</h2><p>The fastest way to reach us, including sending payment proof to activate your plan.</p><a class="ac-btn wa" href="https://wa.me/2349129823308" target="_blank" rel="noopener">Chat now</a></div>
+        <div class="ac-box"><h2>&#9993;&#65039; Email support</h2><p>Write to us and we will reply as soon as we can.</p><p><a class="lk" href="mailto:picksbiblesupport@gmail.com">picksbiblesupport@gmail.com</a></p></div>
+      </div>
+      <div class="ac-box"><h2>Quick answers</h2>
+        <details class="faq"><summary>How do I activate my Gold plan?</summary><p>Open the VIP page, choose Gold and pay with your preferred method. Send your payment proof to us on WhatsApp and we will activate your plan. It then shows here as Gold VIP.</p></details>
+        <details class="faq"><summary>When do VIP results appear?</summary><p>A package is shown in Results &amp; History once all of its matches are settled. Today's picks stay private to Gold members until then.</p></details>
+        <details class="faq"><summary>I forgot my password</summary><p>Go to Account Settings, open Security and choose "Email me a reset link". You can also use "Forgot password?" on the log in page.</p></details>
+        <details class="faq"><summary>How do I stop receiving emails?</summary><p>Use the unsubscribe link at the bottom of any email we send you, or message us on WhatsApp.</p></details>
+        <p class="note"><a href="legal.html#faq">Read the full FAQ</a></p></div>
+    </section>
   </div>
-  <div class="warn" id="mWarn" hidden></div>
-  
-  <div class="mcard" id="mNotes"><h2>Notifications <span class="dot" id="mDot" hidden></span></h2><div id="mNoteList"><p class="note">No messages yet.</p></div></div>
-  <div class="mcard" id="mPicks"><h2>Your VIP picks</h2><div id="mPickList"><p class="note">Loading...</p></div></div>
 </div>
 </main>
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
@@ -83,66 +204,165 @@
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
 <script>
 (function(){
-  var $=function(s){return document.querySelector(s)};
+  var $=function(s,r){return (r||document).querySelector(s)}, $$=function(s,r){return Array.prototype.slice.call((r||document).querySelectorAll(s))};
   var esc=function(s){return String(s==null?"":s).replace(/[&<>"']/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]})};
   firebase.initializeApp({apiKey:"AIzaSyBBnSFHx_z1YWwOXz6sdKOSzelTIuvusa8",authDomain:"picksbible-7fa7f.firebaseapp.com",projectId:"picksbible-7fa7f",appId:"1:670341631512:web:7478818fbb53b5cec6fd6d"});
-  var auth=firebase.auth(), fs=firebase.firestore(), mode="in", unsubs=[];
+  var auth=firebase.auth(), fs=firebase.firestore(), mode="up", unsubs=[], U=null, UD={tier:"free"}, LIVE=null, FEED=[], BC=[], NT=[];
   var ERR={"auth/invalid-credential":"Wrong email or password.","auth/wrong-password":"Wrong email or password.","auth/user-not-found":"Wrong email or password.","auth/email-already-in-use":"This email already has an account. Log in instead.","auth/weak-password":"Password must be at least 6 characters.","auth/invalid-email":"That email address is not valid.","auth/too-many-requests":"Too many attempts. Wait a few minutes.","auth/network-request-failed":"No connection. Try again."};
-  function msg(t,ok){var e=$("#mMsg");e.textContent=t||"";e.hidden=!t;e.className="msg "+(ok?"ok":"err")}
-  function setMode(m){mode=m;var up=m==="up";$("#mNameRow").hidden=!up;$("#mPass2Row").hidden=!up;$("#mForgotRow").hidden=up;$("#mSwIn").hidden=up;$("#mSwUp").hidden=!up;$("#mGo").textContent=up?"Sign up":"Log in";$("#mTitle").textContent=up?"Create your account":"Log in";$("#mSub").textContent=up?"It's free and takes a minute.":"Welcome back. Enter your details to continue.";document.title=(up?"Sign Up":"Log In")+" | PicksBible";$("#mPass").autocomplete=up?"new-password":"current-password";$("#mPass").placeholder=up?"At least 6 characters":"Password";msg("")}
-  function fromHash(){setMode(location.hash==="#signup"?"up":"in")}fromHash();window.addEventListener("hashchange",fromHash);
-  try{var pf=JSON.parse(sessionStorage.getItem("pb.prefill")||"null");if(pf&&location.hash==="#signup"){$("#mName").value=pf.n||"";$("#mEmail").value=pf.e||"";setMode("up");$("#mSub").textContent="One last step: choose a password to finish your free account.";setTimeout(function(){$("#mPass").focus()},200)}}catch(_){}
-  $("#mForgot").onclick=function(e){e.preventDefault();var em=$("#mEmail").value.trim();if(!em)return msg("Type your email above first.");auth.sendPasswordResetEmail(em).then(function(){msg("Password reset email sent. Check your inbox and spam folder.",true)},function(x){msg(ERR[x.code]||"Could not send the email.")})};
-  $("#mForm").onsubmit=function(e){
-    e.preventDefault();var em=$("#mEmail").value.trim().toLowerCase(),pw=$("#mPass").value;if(!em||!pw)return msg("Enter your email and password.");
-    if(mode==="up"&&pw!==$("#mPass2").value)return msg("Passwords do not match.");
-    $("#mGo").disabled=true;msg("");
-    var p=mode==="up"?auth.createUserWithEmailAndPassword(em,pw).then(function(c){
-      return fs.collection("users").doc(c.user.uid).set({email:em,name:$("#mName").value.trim().slice(0,80),tier:"free",createdAt:new Date().toISOString(),source:"signup"});
-    }):auth.signInWithEmailAndPassword(em,pw);
-    p.catch(function(x){msg(ERR[x.code]||("Something went wrong ("+(x.code||x.message)+")"))}).then(function(){$("#mGo").disabled=false});
-  };
-  $("#mOut").onclick=function(){try{localStorage.removeItem("pb.member")}catch(_){}auth.signOut()};
-  function stop(){unsubs.forEach(function(u){u()});unsubs=[]}
-  function active(u){return u&&u.tier==="gold"&&u.paidUntil&&u.paidUntil>=new Date().toISOString().slice(0,10)}
-  auth.onAuthStateChanged(function(user){
-    stop();
-    if(!user){try{localStorage.removeItem("pb.member")}catch(_){}$("#mHome").hidden=true;$("#mAuth").hidden=false;return}
-    try{localStorage.setItem("pb.member","1")}catch(_){}
-    $("#mAuth").hidden=true;$("#mHome").hidden=false;
-    unsubs.push(fs.collection("users").doc(user.uid).onSnapshot(function(d){
-      var u=d.exists?d.data():{tier:"free"};
-      $("#mHi").textContent="Hi"+(u.name?", "+u.name.split(" ")[0]:"");
-      var on=active(u),t=on?u.tier:"free";
-      $("#mPlan").innerHTML='<span class="badge '+t+'">'+(on?"Gold VIP":"Free member")+'</span>'+(on?' <small>active until '+esc(u.paidUntil)+'</small>':"");
-      var left=on?Math.round((Date.parse(u.paidUntil+"T12:00:00Z")-Date.parse(new Date().toISOString().slice(0,10)+"T12:00:00Z"))/864e5):0;
-      $("#mWarn").hidden=!(on&&left<=7);if(on&&left<=7)$("#mWarn").innerHTML="Your Gold plan ends "+(left<=0?"today":"in "+left+" day"+(left===1?"":"s"))+" ("+esc(u.paidUntil)+"). <a href=\"premium.html\">Renew now</a> so you do not miss any picks.";
-      $("#mPlanNote").innerHTML=on?"Days left on your plan: <b>"+left+"</b>. Your picks appear below as soon as we publish them, and we notify you by message and email.":(u.tier==="gold"?"Your VIP plan has expired. <a href=\"premium.html\">Renew your plan</a>.":"Thanks for joining PicksBible. Your free predictions are on the <a href=\"predictions.html\">predictions page</a>.");
-      listen(user,on,t);
-    },function(){$("#mPlanNote").textContent="Could not load your account. Refresh the page."}));
-  });
-  var feedUn=[];
-  function listen(user,on,tier){
-    feedUn.forEach(function(u){u()});feedUn=[];
-    var seen=0;try{seen=+localStorage.getItem("pb.noteSeen")||0}catch(_){}
-    var bcList=[],ntList=[];
-    function drawNotes(){
-      var a=bcList.concat(ntList);a.sort(function(x,y){return String(y.createdAt).localeCompare(String(x.createdAt))});a=a.slice(0,30);
-      $("#mNoteList").innerHTML=a.length?a.map(function(n){return '<div class="nt"><b>'+esc(n.title)+'</b><br>'+esc(n.body)+'<br><small>'+esc(String(n.createdAt).slice(0,16).replace("T"," "))+' UTC</small></div>'}).join(""):'<p class="note">No messages yet.</p>';
-      var fresh=a.filter(function(n){return Date.parse(n.createdAt)>seen}).length;$("#mDot").hidden=!fresh;$("#mDot").textContent=fresh+" new";
-      try{if(a.length)localStorage.setItem("pb.noteSeen",String(Date.parse(a[0].createdAt)))}catch(_){}
-    }
-    feedUn.push(fs.collection("broadcasts").where("audience","array-contains",tier).onSnapshot(function(s){bcList=[];s.forEach(function(d){bcList.push(d.data())});drawNotes()},function(){}));
-    feedUn.push(fs.collection("notes").where("to","==",user.uid).onSnapshot(function(s){ntList=[];s.forEach(function(d){ntList.push(d.data())});drawNotes()},function(){}));
-    $("#mPicks").hidden=!on;if(!on){return}
-    feedUn.push(fs.collection("vip_feed").where("audience","array-contains",tier).onSnapshot(function(s){
-      var a=[];s.forEach(function(d){a.push(d.data())});a.sort(function(x,y){return String(y.createdAt).localeCompare(String(x.createdAt))});a=a.slice(0,30);
-      $("#mPickList").innerHTML=a.length?a.map(function(p){
-        return '<div class="pk"><h3><span class="badge gold">Gold</span> '+esc(p.ymd)+(p.st?' &middot; '+esc(p.st):'')+'</h3><table><tr><th>Match</th><th>Market</th><th>Pick</th></tr>'+
-          (p.legs||[]).map(function(l){return '<tr><td>'+esc(l.home)+' v '+esc(l.away)+'<br><small>'+esc(l.comp)+' '+esc(String(l.ko).slice(11,16))+'</small></td><td>'+esc(l.market)+'</td><td><b>'+esc(l.sel)+'</b> '+(l.res==='won'?'&#10003;':l.res==='lost'?'&#10005;':'')+'</td></tr>'}).join("")+
-          '</table><div class="tot">Total odds: '+esc(p.odds)+'</div></div>'}).join(""):'<p class="note">No picks published yet. We will notify you.</p>';
-    },function(){$("#mPickList").innerHTML='<p class="note">Could not load picks. Refresh the page.</p>'}));
+  var WAT=function(off){var d=new Date(Date.now()+(off||0)*864e5);return new Intl.DateTimeFormat("en-CA",{timeZone:"Africa/Lagos"}).format(d)};
+  var dLong=function(y){return new Date(y+"T12:00:00Z").toLocaleDateString("en-GB",{weekday:"long",day:"numeric",month:"long",year:"numeric",timeZone:"UTC"})};
+  var dShort=function(y){return new Date(y+"T12:00:00Z").toLocaleDateString("en-GB",{day:"numeric",month:"short",year:"numeric",timeZone:"UTC"})};
+
+  /* ---------- log in / sign up ---------- */
+  function msg(id,t,ok){var e=$(id);e.textContent=t||"";e.hidden=!t;e.className="msg "+(ok?"ok":"err")}
+  var COPY={
+    up:{eb:"Join PicksBible",h:"Your football and basketball picks, all in one place.",p:"Create your PicksBible account to follow our daily predictions, track VIP results and manage your plan from one dashboard.",li:["Personal predictions dashboard","Gold premium access","Results, history and account activity"],eb2:"Create account",t:"Join PicksBible",s:"It only takes a minute.",go:"Create account"},
+    "in":{eb:"Welcome back",h:"Welcome back to PicksBible.",p:"Log in to check your plan, open your VIP picks and review settled results.",li:["Access your active Gold plan","View premium results, history and account activity"],eb2:"Log in",t:"Log in to PicksBible",s:"Enter your details to continue.",go:"Log in"}};
+  function setMode(m){
+    mode=m;var c=COPY[m],up=m==="up";
+    $("#aEb").textContent=c.eb;$("#aH1").textContent=c.h;$("#aP").textContent=c.p;$("#aList").innerHTML=c.li.map(function(x){return "<li>"+esc(x)+"</li>"}).join("");
+    $("#aEb2").textContent=c.eb2;$("#aTitle").textContent=c.t;$("#aSub").textContent=c.s;$("#aGo").textContent=c.go;
+    $("#aNameRow").hidden=!up;$("#aPass2Row").hidden=!up;$("#aForgotRow").hidden=up;$("#aSwIn").hidden=up;$("#aSwUp").hidden=!up;
+    $("#aPassRow").className=up?"two":"";$("#aPass").autocomplete=up?"new-password":"current-password";$("#aPass").placeholder=up?"Minimum 6 characters":"Your password";
+    document.title=(up?"Sign Up":"Log In")+" | PicksBible";msg("#aMsg","")}
+  function fromHash(){
+    var h=location.hash.replace("#","");
+    if(U){route();return}
+    setMode(h==="login"?"in":"up");
   }
+  $("#aForgot").onclick=function(e){e.preventDefault();var em=$("#aEmail").value.trim();if(!em)return msg("#aMsg","Type your email above first.");auth.sendPasswordResetEmail(em).then(function(){msg("#aMsg","Password reset email sent. Check your inbox and spam folder.",true)},function(x){msg("#aMsg",ERR[x.code]||"Could not send the email.")})};
+  $("#aForm").onsubmit=function(e){
+    e.preventDefault();var em=$("#aEmail").value.trim().toLowerCase(),pw=$("#aPass").value;
+    if(!em||!pw)return msg("#aMsg","Enter your email and password.");
+    if(mode==="up"){if(!$("#aName").value.trim())return msg("#aMsg","Enter your full name.");if(pw!==$("#aPass2").value)return msg("#aMsg","Passwords do not match.")}
+    $("#aGo").disabled=true;msg("#aMsg","");
+    var p=mode==="up"?auth.createUserWithEmailAndPassword(em,pw).then(function(c){
+      return fs.collection("users").doc(c.user.uid).set({email:em,name:$("#aName").value.trim().slice(0,80),tier:"free",createdAt:new Date().toISOString(),source:"signup"});
+    }):auth.signInWithEmailAndPassword(em,pw);
+    p.catch(function(x){msg("#aMsg",ERR[x.code]||("Something went wrong ("+(x.code||x.message)+")"))}).then(function(){$("#aGo").disabled=false});
+  };
+  var PREF=false;
+  try{var pf=JSON.parse(sessionStorage.getItem("pb.prefill")||"null");if(pf){$("#aName").value=pf.n||"";$("#aEmail").value=pf.e||"";sessionStorage.removeItem("pb.prefill");PREF=true}}catch(_){}
+
+  /* ---------- member area ---------- */
+  var TABS=["dashboard","vip-picks","results","settings","notifications","support"];
+  function route(){
+    var h=location.hash.replace("#","");if(TABS.indexOf(h)<0)h="dashboard";
+    $$("[data-p]").forEach(function(s){s.hidden=s.dataset.p!==h});
+    $$(".ac-side a[data-t]").forEach(function(a){a.className=a.dataset.t===h?"on":""});
+    var names={dashboard:"Dashboard","vip-picks":"VIP Picks",results:"Results & History",settings:"Account Settings",notifications:"Notifications",support:"Support Center"};
+    document.title=names[h]+" | PicksBible";window.scrollTo(0,0);
+  }
+  window.addEventListener("hashchange",fromHash);
+  function stop(){unsubs.forEach(function(u){u()});unsubs=[]}
+  var active=function(u){return u&&u.tier==="gold"&&u.paidUntil&&u.paidUntil>=WAT(0)};
+  $("#aOut").onclick=function(e){e.preventDefault();try{localStorage.removeItem("pb.member")}catch(_){}auth.signOut()};
+
+  auth.onAuthStateChanged(function(user){
+    stop();U=user;
+    var ab=$(".authbtns");
+    if(!user){
+      try{localStorage.removeItem("pb.member")}catch(_){}
+      $("#aHome").hidden=true;$("#aAuth").hidden=false;
+      var h=location.hash.replace("#","");setMode(h==="login"?"in":(PREF||h==="signup"||!h)?"up":"in");
+      if(PREF)$("#aSub").textContent="One last step: choose a password to finish your free account.";
+      return}
+    try{localStorage.setItem("pb.member","1")}catch(_){}
+    if(ab)ab.innerHTML='<a class="lgn" href="account.html#login">My Account</a>';
+    $("#aAuth").hidden=true;$("#aHome").hidden=false;
+    if(TABS.indexOf(location.hash.replace("#",""))<0)history.replaceState(null,"","#dashboard");
+    route();
+    $("#sEmail").value=user.email||"";
+    unsubs.push(fs.collection("users").doc(user.uid).onSnapshot(function(d){UD=d.exists?d.data():{tier:"free"};paintUser();listen(user)},function(){}));
+    fs.collection("public").doc("live").get().then(function(d){LIVE=d.exists?d.data():{};drawVip();drawResults()},function(){LIVE={};drawVip();drawResults()});
+  });
+
+  function paintUser(){
+    var on=active(UD), first=(UD.name||(U&&U.displayName)||"").split(" ")[0];
+    $("#dHi").textContent="Welcome back"+(first?", "+first:"")+"! 👋";
+    var left=on?Math.round((Date.parse(UD.paidUntil+"T12:00:00Z")-Date.parse(WAT(0)+"T12:00:00Z"))/864e5):0;
+    $("#aPlan").innerHTML=on?'<span class="crown">👑</span><b>Gold VIP</b><small>Active until '+esc(UD.paidUntil)+' ('+left+' day'+(left===1?"":"s")+' left).</small><a class="ac-btn ghost" href="premium.html" style="width:100%;box-sizing:border-box">Renew plan</a>':
+      '<span class="crown">👑</span><b>Free Member</b><small>'+(UD.tier==="gold"?"Your Gold plan has expired.":"Upgrade to unlock today’s premium selections.")+'</small><a class="ac-btn gold" href="premium.html" style="width:100%;box-sizing:border-box">'+(UD.tier==="gold"?"Renew to Gold":"Upgrade to Gold")+'</a>';
+    $("#vMem").textContent=on?"Gold VIP":"Free Member";
+    $("#sName").value=UD.name||"";$("#sCountry").value=UD.country||"";$("#sWa").value=UD.whatsapp||"";
+    drawVip();
+  }
+
+  /* ----- VIP picks ----- */
+  var vDate=$("#vDate");vDate.value=WAT(0);vDate.onchange=function(){drawVip()};
+  function legRows(legs){return (legs||[]).map(function(l){return '<tr><td>'+esc(l.home)+' v '+esc(l.away)+'<br><small style="color:var(--muted)">'+esc(l.comp)+(l.ko?' · '+esc(String(l.ko).slice(11,16)):'')+'</small></td><td>'+esc(l.market)+'</td><td><b>'+esc(l.sel)+'</b> '+(l.res==="won"?'<span style="color:#34d77a">&#10003;</span>':l.res==="lost"?'<span style="color:#ff8e8e">&#10005;</span>':'')+'</td></tr>'}).join("")}
+  function fullPkg(p,legs,odds,st){
+    return '<div class="ac-pkg"><div class="ac-ph"><div><div class="k">Gold package</div><h3>2–3 Odds Picks</h3><small>'+legs.length+' selection'+(legs.length===1?"":"s")+' · '+esc(dShort(p))+'</small></div><div class="ac-odds"><small>Total odds</small><b>'+esc(odds||"-")+'</b>'+(st?'<div><span class="ac-res '+esc(st)+'">'+(st==="won"?"Won":"Lost")+'</span></div>':'')+'</div></div>'+
+      '<div style="overflow-x:auto"><table><tr><th>Match</th><th>Market</th><th>Pick</th></tr>'+legRows(legs)+'</table></div></div>'}
+  function drawVip(){
+    var ymd=vDate.value||WAT(0), on=active(UD), body=$("#vBody"); $("#vView").textContent=dLong(ymd);
+    var pub=((LIVE&&LIVE.vip)||[]).filter(function(x){return x.ymd===ymd&&x.tier==="bronze"})[0];
+    if(on){
+      var f=FEED.filter(function(x){return x.ymd===ymd&&x.pkg==="gold"})[0];
+      if(f){body.innerHTML=fullPkg(ymd,f.legs||[],f.odds,f.st);return}
+      if(pub&&pub.legs){body.innerHTML=fullPkg(ymd,pub.legs,pub.odds,pub.st);return}
+      body.innerHTML='<div class="ac-box"><h2>No Gold package yet</h2><p class="note" style="margin-top:0">Nothing has been published for '+esc(dLong(ymd))+' yet. We will notify you when it goes live.</p></div>';return}
+    if(pub&&pub.legs){body.innerHTML='<div class="ac-box"><h2>This package is settled</h2><p class="note" style="margin-top:0">Settled packages are open to everyone. <a href="#results">See it in Results &amp; History</a>.</p></div>';return}
+    if(pub&&pub.teaser){
+      var t=pub.teaser,g=t.g||{},extra=Math.max(0,(t.n||1)-1);
+      body.innerHTML='<div class="ac-pkg"><div class="ac-ph"><div><div class="k">Gold package</div><h3>2–3 Odds Picks</h3><small>'+esc(t.n)+' selection'+(t.n===1?"":"s")+'</small></div><div class="ac-odds"><small>Total odds</small><b>'+esc(pub.odds||"-")+'</b></div></div>'+
+        '<div class="ac-leg"><div class="lg">'+esc(g.comp||"")+(g.ko?' · '+esc(String(g.ko).slice(11,16)):'')+'</div><div class="tm">'+esc(g.home||"")+'<i>vs</i>'+esc(g.away||"")+'</div><div class="ac-hid">🔒 Premium Tip<small>Unlock to reveal selection</small></div></div>'+
+        (extra?'<div class="ac-dark"><span style="font-size:22px">🔒</span><div><b>'+extra+' additional Gold pick'+(extra===1?"":"s")+' hidden</b><small>Premium selections are protected and available only to eligible members.</small></div></div>':'')+
+        '<div class="ac-foot"><span>Unlock this package<br><b>Get full access to all '+esc(t.n)+' selection'+(t.n===1?"":"s")+'</b></span><a class="ac-btn gold" href="premium.html">Upgrade to Gold</a></div></div>';return}
+    body.innerHTML='<div class="ac-box"><h2>No Gold package yet</h2><p class="note" style="margin-top:0">Nothing has been published for '+esc(dLong(ymd))+' yet. Check back later, or pick another date.</p></div>';
+  }
+
+  /* ----- results & history (settled packages only) ----- */
+  var rFrom=$("#rFrom"),rTo=$("#rTo");rFrom.value=WAT(-30);rTo.value=WAT(0);rFrom.onchange=rTo.onchange=function(){drawResults()};
+  function drawResults(){
+    var list=((LIVE&&LIVE.vip)||[]).filter(function(x){return x.tier==="bronze"&&x.legs&&x.legs.length&&(x.st==="won"||x.st==="lost")&&x.ymd>=rFrom.value&&x.ymd<=rTo.value});
+    list.sort(function(a,b){return a.ymd<b.ymd?1:-1});
+    var w=list.filter(function(x){return x.st==="won"}).length;
+    $("#rWon").textContent=w;$("#rLost").textContent=list.length-w;$("#rAll").textContent=list.length;
+    $("#rBody").innerHTML=list.length?list.map(function(x){return '<div class="ac-pkg"><details><summary><div><div class="k" style="font:800 11px var(--body);letter-spacing:.12em;text-transform:uppercase;color:#ffd75e">Gold package</div><b style="font-size:17px;color:var(--text)">'+esc(dShort(x.ymd))+'</b> <small style="color:var(--muted)">· '+x.legs.length+' selection'+(x.legs.length===1?"":"s")+'</small></div><div style="display:flex;align-items:center;gap:12px"><span style="color:var(--muted);font-size:13px">Total odds <b style="color:var(--text);font-size:17px">'+esc(x.odds||"-")+'</b></span><span class="ac-res '+x.st+'">'+(x.st==="won"?"Won":"Lost")+'</span></div></summary><div style="overflow-x:auto"><table><tr><th>Match</th><th>Market</th><th>Pick</th></tr>'+legRows(x.legs)+'</table></div></details></div>'}).join(""):
+      '<div class="ac-box"><h2>No settled packages in this range</h2><p class="note" style="margin-top:0">Change the dates above. A package appears here as soon as its matches are settled.</p></div>';
+  }
+
+  /* ----- notifications + VIP feed ----- */
+  var feedUn=[];
+  function listen(user){
+    feedUn.forEach(function(u){u()});feedUn=[];
+    var tier=UD.tier==="gold"?"gold":"free", on=active(UD);
+    feedUn.push(fs.collection("broadcasts").where("audience","array-contains",tier).onSnapshot(function(s){BC=[];s.forEach(function(d){BC.push(d.data())});drawNotes()},function(){}));
+    feedUn.push(fs.collection("notes").where("to","==",user.uid).onSnapshot(function(s){NT=[];s.forEach(function(d){NT.push(d.data())});drawNotes()},function(){}));
+    if(on)feedUn.push(fs.collection("vip_feed").where("audience","array-contains","gold").onSnapshot(function(s){FEED=[];s.forEach(function(d){FEED.push(d.data())});drawVip()},function(){}));
+    else FEED=[];
+  }
+  unsubs.push(function(){feedUn.forEach(function(u){u()});feedUn=[]});
+  var seen=0;try{seen=+localStorage.getItem("pb.noteSeen")||0}catch(_){}
+  var ALL=[];
+  function drawNotes(){
+    ALL=BC.concat(NT).sort(function(a,b){return String(b.createdAt).localeCompare(String(a.createdAt))}).slice(0,50);
+    var un=ALL.filter(function(n){return Date.parse(n.createdAt)>seen}).length;
+    $("#nUn").textContent=un;$("#nTot").textContent=ALL.length;$("#aCt").hidden=!un;$("#aCt").textContent=un;
+    $("#nList").innerHTML=ALL.length?ALL.map(function(n){var nw=Date.parse(n.createdAt)>seen;return '<div class="ac-nt'+(nw?' new':'')+'"><b>'+esc(n.title)+'</b><br>'+esc(n.body)+'<br><small>'+esc(String(n.createdAt).slice(0,16).replace("T"," "))+' UTC</small></div>'}).join(""):
+      '<p class="note">No notifications yet. Premium and account updates will appear here.</p><p><a class="ac-btn" href="#dashboard">Return to Dashboard</a></p>';
+  }
+  $("#nRead").onclick=function(){if(ALL.length){seen=Date.parse(ALL[0].createdAt);try{localStorage.setItem("pb.noteSeen",String(seen))}catch(_){}}drawNotes()};
+
+  /* ----- account settings ----- */
+  $$(".ac-tabs [data-st]").forEach(function(b){b.onclick=function(){$$(".ac-tabs [data-st]").forEach(function(x){x.className=x===b?"on":""});$$("[data-sp]").forEach(function(s){s.hidden=s.dataset.sp!==b.dataset.st})}});
+  $("#sForm").onsubmit=function(e){
+    e.preventDefault();if(!U)return;
+    var name=$("#sName").value.trim().slice(0,80),country=$("#sCountry").value.trim().slice(0,60),wa=$("#sWa").value.trim();
+    if(!name)return msg("#sMsg","Enter your full name.");
+    if(wa&&!/^\+?[0-9 ()-]{7,20}$/.test(wa))return msg("#sMsg","Enter a valid WhatsApp number or leave it empty.");
+    fs.collection("users").doc(U.uid).update({name:name,country:country,whatsapp:wa}).then(function(){msg("#sMsg","Profile saved.",true)},function(x){msg("#sMsg",x.code==="permission-denied"?"Saving is not switched on yet. Please message us on WhatsApp and we will update it for you.":"Could not save right now. Try again.")});
+  };
+  $("#pForm").onsubmit=function(e){
+    e.preventDefault();if(!U)return;var cur=$("#pCur").value,nw=$("#pNew").value;
+    if(!cur||!nw)return msg("#pMsg","Fill in all the password fields.");if(nw.length<6)return msg("#pMsg","New password must be at least 6 characters.");if(nw!==$("#pNew2").value)return msg("#pMsg","The new passwords do not match.");
+    var cred=firebase.auth.EmailAuthProvider.credential(U.email,cur);
+    U.reauthenticateWithCredential(cred).then(function(){return U.updatePassword(nw)}).then(function(){$("#pForm").reset();msg("#pMsg","Password changed.",true)},function(x){msg("#pMsg",ERR[x.code]||"Could not change the password. Check your current password.")});
+  };
+  $("#pReset").onclick=function(e){e.preventDefault();if(!U||!U.email)return;auth.sendPasswordResetEmail(U.email).then(function(){msg("#pMsg","Reset link sent to "+U.email+". Check your inbox and spam folder.",true)},function(){msg("#pMsg","Could not send the email. Try again.")})};
+
+  fromHash();
 })();
 </script>
 

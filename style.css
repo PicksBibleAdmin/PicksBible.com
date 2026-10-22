@@ -1150,3 +1150,31 @@ table.pt.bw.lgbars.cat tr.lgb td:nth-child(n+2){width:auto}
 table.pt.bw.lgbars.cat{width:100%!important;min-width:100%;table-layout:auto}
 table.pt.bw.lgbars.cat tr.lgb td:nth-child(1){width:42%}
 table.pt.bw.lgbars.cat{display:table!important}
+
+/* ---- Banker Bet page: match header + one Banker Bet of the Day box ---- */
+.bbhero{text-align:center;padding:6px 0 18px}
+.bbhero .crumbs{text-align:left;margin:0 0 14px}
+.bbcomp{margin:0 0 14px;color:var(--muted);font-size:14px;font-weight:600}.bbcomp i{font-style:normal;margin:0 6px;opacity:.6}
+.bbteams{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:12px;max-width:760px;margin:0 auto 18px}
+.bbteam{display:flex;flex-direction:column;align-items:center;gap:8px;min-width:0}
+.bbteam b{font:800 clamp(15px,2.6vw,21px)/1.2 var(--body);color:var(--text);overflow-wrap:anywhere}
+.bbvs{display:flex;flex-direction:column;align-items:center;gap:2px}
+.bbvs strong{font:800 clamp(20px,4vw,28px) var(--display,var(--body));color:var(--text)}
+.bbvs span{font:700 16px var(--body);color:var(--cyan)}
+.bbhero h1{margin:0 auto 10px;max-width:880px;font:800 clamp(22px,4.6vw,36px)/1.15 var(--display,var(--body));color:var(--text);text-wrap:balance}
+.bbintro{margin:0 auto;max-width:720px;color:var(--muted);font-size:15px;line-height:1.6}.bbintro b{color:var(--text)}
+.bbbox{background:var(--panel);border:1px solid var(--line);border-radius:14px;overflow:hidden;margin:0 0 16px}
+.bbbar{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:14px 18px;background:#14102e;border-bottom:1px solid var(--line);font:800 17px var(--body);color:var(--text)}
+.bbres{font:800 12px var(--body);font-style:normal;padding:4px 12px;border-radius:99px;background:#3b3f63;color:#fff}.bbres.won{background:var(--won)}.bbres.lost{background:#8a3a4a}
+.bbin{display:grid;grid-template-columns:1.25fr 1fr;gap:18px;padding:18px}
+.bbk{display:block;font:800 11px var(--body);letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin:0 0 8px}
+.bbl h2{margin:0 0 10px;font:800 clamp(22px,3.6vw,30px)/1.15 var(--display,var(--body));color:var(--text)}.bbl h2 .na{color:var(--muted)}
+.bbl p{margin:0 0 10px;color:var(--text);opacity:.9;line-height:1.65;font-size:15px}.bbl p.by{opacity:1;color:var(--muted);font-size:13px}
+.bbr{display:grid;gap:12px;align-content:start}
+.bbcard{background:var(--panel-2,#0f0b26);border:1px solid var(--line);border-radius:12px;padding:14px}
+.bbo{display:grid;gap:8px}.bbo.n3{grid-template-columns:repeat(3,1fr)}.bbo.n2{grid-template-columns:repeat(2,1fr)}.bbo.n1{grid-template-columns:1fr}
+.bbt{display:flex;flex-direction:column;align-items:center;gap:3px;padding:10px 6px;border:1px solid var(--line);border-radius:10px;background:var(--panel);min-width:0}
+.bbt small{font:700 12px var(--body);color:var(--muted);text-align:center;overflow-wrap:anywhere}.bbt b{font:800 18px var(--body);color:var(--text)}
+.bbt.ours{border-color:var(--cyan);background:#22d3ee1f;box-shadow:0 0 0 1px var(--cyan) inset}.bbt.ours small{color:var(--cyan)}
+.bbrate{display:flex;align-items:baseline;gap:10px;margin-bottom:8px}.bbrate b{font:800 24px var(--body)}.bbrate b.hi{color:#34d77a}.bbrate b.mid{color:#ffd75e}.bbrate b.lo{color:#ff8e8e}.bbrate span{color:var(--muted);font-size:14px}
+@media(max-width:760px){.bbin{grid-template-columns:1fr}.bbteams{gap:6px}}

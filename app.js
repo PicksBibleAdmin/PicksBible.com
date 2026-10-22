@@ -73,13 +73,27 @@ function addProp(P,p){
   var team=p.team||"", other=team===p.home?p.away:p.home;
   (P.propsByDate[k]=P.propsByDate[k]||[]).push({k:p.market,player:p.player||"",team:team,opp:team?("vs "+other):(p.home+" v "+p.away),line:p.line||"",pick:p.side||"",odds:p.odds||"",st:p.st||"pending"});
 }
+/* Banker Bet market: the analyst picks a market, types the odds for every option and marks which one is ours.
+   Returns {m:market, l:[option labels], o:[odds], i:index of our selection or -1}, or null when no market was chosen. */
+var BB_OPTS={"1X2":["1","X","2"],"Double Chance":["1X","X2","12"],"BTTS":["Yes","No"],"Over/Under goals":["Over","Under"],"Moneyline":["1","2"],"Spread":["1","2"],"Total points":["Over","Under"]};
+function etBM(f){
+  var e=f&&f.et; if(!e||!e.mk||!BB_OPTS[e.mk])return null;
+  var base=BB_OPTS[e.mk], line=String(e.line||"").trim(), n=parseFloat(line), l=base.slice();
+  if(line&&(e.mk==="Over/Under goals"||e.mk==="Total points"))l=base.map(function(x){return x+" "+line});
+  if(e.mk==="Spread"&&line&&!isNaN(n)){var sg=function(v){return (v>0?"+":"")+v};l=["1 "+sg(n),"2 "+sg(-n)]}
+  var x=(f.sport==="basketball"?f.bb:f.fb)||{}, auto=e.mk==="1X2"?[x.o1,x.oX,x.o2]:e.mk==="Moneyline"?[x.o1,x.o2]:[];
+  var o=base.map(function(_,i){return String(e["o"+i]||auto[i]||"").trim()});
+  var i=parseInt(e.ours,10); if(isNaN(i)||i<0||i>=base.length)i=-1;
+  return {m:e.mk,l:l,o:o,i:i};
+}
 /* one fixture -> every list it belongs to (tables, expert tips, bets of the day). Used for the live document and for archived days. */
 function addFx(P,f,days){
   {
     var hd=String(f.kickoff||"").slice(0,10), sp=f.sport==="basketball"?"basketball":"football";
     var cname=(function(){var c=String(f.country||""),k=String(f.competition||"");if(!c)return k;if(k.toLowerCase().indexOf(c.toLowerCase())===0)k=k.slice(c.length).replace(/^[\s:\-\u00b7]+/,"");return c+": "+k})();
     if(f.et&&f.et.on&&hd)(P.home.etl[sp][hd]=P.home.etl[sp][hd]||[]).push({h:f.home,a:f.away,lg:cname,t:String(f.kickoff).slice(11,16),by:f.et.by||"PB Analyst",st:f.et.st||"",sp:sp});
-    if(f.et&&f.et.on&&hd)P.home.et[sp][hd]={h:f.home,a:f.away,lg:cname,t:String(f.kickoff).slice(11,16),by:f.et.by||"PB Analyst",st:f.et.st||((sp==="basketball"?(f.bb&&f.bb.st):(f.fb&&f.fb.st))==="won"||(sp==="basketball"?(f.bb&&f.bb.st):(f.fb&&f.fb.st))==="lost"?(sp==="basketball"?f.bb.st:f.fb.st):""),reasoning:f.et.reasoning||"",hl:f.et.hl||"",al:f.et.al||"",hc:f.hc||"",ac:f.ac||"",sp:sp,tip:(f.et.pick||(sp==="basketball"?(f.bb&&f.bb.tip):(f.fb&&f.fb.tip))||""),conf:String(f.et.conf||(sp==="basketball"?(f.bb&&f.bb.conf):(f.fb&&f.fb.conf))||"").replace("%",""),score:(sp==="basketball"?(f.bb&&f.bb.score):(f.fb&&f.fb.score))||"",odd:String(f.et.odd||"").trim()||(function(){var x=sp==="basketball"?(f.bb||{}):(f.fb||{}),t=String(f.et.pick||x.tip||"");return t==="1"?x.o1:t==="2"?x.o2:t==="X"?x.oX:t==="1X"?x.dcOdds:""})()||""};
+    var bm=(f.et&&f.et.on)?etBM(f):null;
+    if(f.et&&f.et.on&&hd)P.home.et[sp][hd]={bm:bm,h:f.home,a:f.away,lg:cname,t:String(f.kickoff).slice(11,16),by:f.et.by||"PB Analyst",st:f.et.st||((sp==="basketball"?(f.bb&&f.bb.st):(f.fb&&f.fb.st))==="won"||(sp==="basketball"?(f.bb&&f.bb.st):(f.fb&&f.fb.st))==="lost"?(sp==="basketball"?f.bb.st:f.fb.st):""),reasoning:f.et.reasoning||"",hl:f.et.hl||"",al:f.et.al||"",hc:f.hc||"",ac:f.ac||"",sp:sp,tip:(f.et.pick||(bm&&bm.i>=0?bm.l[bm.i]:"")||(sp==="basketball"?(f.bb&&f.bb.tip):(f.fb&&f.fb.tip))||""),conf:String(f.et.conf||(sp==="basketball"?(f.bb&&f.bb.conf):(f.fb&&f.fb.conf))||"").replace("%",""),score:(sp==="basketball"?(f.bb&&f.bb.score):(f.fb&&f.fb.score))||"",odd:String(f.et.odd||"").trim()||(bm&&bm.i>=0?String(bm.o[bm.i]||""):"")||(function(){var x=sp==="basketball"?(f.bb||{}):(f.fb||{}),t=String(f.et.pick||x.tip||"");return t==="1"?x.o1:t==="2"?x.o2:t==="X"?x.oX:t==="1X"?x.dcOdds:""})()||""};
     if(f.bo&&f.bo.on&&hd){var bl=P.home.bo[sp][hd]=P.home.bo[sp][hd]||[];bl.push({lg:cname,t:(f.bo.st==="won"||f.bo.st==="lost")?"FT":String(f.kickoff).slice(11,16),h:f.home,a:f.away,pick:f.bo.pick||"",st:f.bo.st||"pending",sc:f.bo.score||""})}
     if(!((f.fb&&f.fb.live)||(f.bb&&f.bb.live)))return;
     if(f.sport==="basketball"){
@@ -694,20 +708,31 @@ $$("[data-analysis]").forEach(function(el){
   var v=getET(sp,ymd);
   if(!v){el.innerHTML='<div class="panel"><h2>Reasoning not available</h2><p>There is no published Banker Bet of the Day for this date yet.</p><a class="btn" href="index.html">Back to home</a></div>';return}
   var paras=String(v.reasoning||"").split(/\n+/).map(function(t){return t.trim()}).filter(Boolean);
-  var MEAN={"1":sp==="football"?"Home win":"Home team wins","2":sp==="football"?"Away win":"Away team wins","X":"Draw","1X":"Home win or draw","X2":"Away win or draw","12":"Either team wins (no draw)"};
   var cn=parseFloat(v.conf), clv=isNaN(cn)?"":cn<45?"Low":cn<=55?"Medium":"High", ccl=isNaN(cn)?"":cn<45?"lo":cn<=55?"mid":"hi";
   var done=v.st==="won"||v.st==="lost", ft=done&&v.score?esc(v.score):"";
-  var tipTxt=v.tip?esc(v.tip):"";
+  var bm=v.bm, hasBM=bm&&bm.i>=0, selTxt=hasBM?bm.m+" - "+bm.l[bm.i]:(v.tip||"");
+  var dateTxt=new Date(ymd+"T12:00:00Z").toLocaleDateString("en-GB",{weekday:"long",day:"numeric",month:"long",year:"numeric",timeZone:"UTC"});
+  var shortDate=new Date(ymd+"T12:00:00Z").toLocaleDateString("en-GB",{day:"numeric",month:"short",year:"numeric",timeZone:"UTC"});
+  var title=v.h+" vs "+v.a+" Prediction, Betting Tips, Stats and Odds";
+  try{document.title=title+" | "+shortDate+" | PicksBible"}catch(_){}
+  var oddsHtml="";
+  if(bm){oddsHtml='<div class="bbo n'+bm.l.length+'">'+bm.l.map(function(lb,i){return '<div class="bbt'+(i===bm.i?" ours":"")+'"><small>'+esc(lb)+'</small><b>'+(bm.o[i]?esc(bm.o[i]):"-")+'</b></div>'}).join("")+'</div>'}
+  else if(v.odd){oddsHtml='<div class="bbo n1"><div class="bbt ours"><small>'+esc(v.tip)+'</small><b>'+esc(v.odd)+'</b></div></div>'}
+  else oddsHtml='<p class="note" style="margin:0">Odds not posted yet.</p>';
   el.innerHTML=
-   '<div class="panel anhead"><div class="crumbs"><a href="index.html">Home</a> &rsaquo; <a href="index.html">Banker Bet of the Day</a> &rsaquo; '+esc(v.h)+' vs '+esc(v.a)+'</div>'+
-   '<div class="vb-main anmatch"><div>'+teamCrest(v.h,v.hl,v.sp,v.hc)+'<div class="vb-team">'+esc(v.h)+'</div></div><div class="vb-mid">'+(ft?'<strong class="ftscore">'+ft+'</strong>FT':'<strong>'+esc(v.t)+'</strong>vs')+'<br>'+esc(v.lg)+'<br>'+esc(ymd)+'</div><div>'+teamCrest(v.a,v.al,v.sp,v.ac)+'<div class="vb-team">'+esc(v.a)+'</div></div></div>'+
-   '<div class="etstats">'+
-    '<div class="etstat"><span class="etk">Best bet</span>'+(tipTxt?'<b class="etbet">'+tipTxt+'</b><small>'+esc(MEAN[v.tip]||"")+(v.odd?' &middot; @ '+esc(v.odd):'')+'</small>':'<b class="etbet na">&ndash;</b><small>Not posted yet</small>')+'</div>'+
-    '<div class="etstat"><span class="etk">Confidence</span>'+(clv?'<b class="etconf '+ccl+'">'+esc(String(Math.round(cn)))+'%</b><i class="etmeter"><u class="'+ccl+'" style="width:'+Math.max(4,Math.min(100,cn))+'%"></u></i><small>'+clv+'</small>':'<b class="etbet na">&ndash;</b><small>Not posted yet</small>')+'</div>'+
-    '<div class="etstat"><span class="etk">Result</span><b class="etresbig '+(done?v.st:"pend")+'">'+(v.st==="won"?"&#10003; Won":v.st==="lost"?"Lost":"Pending")+'</b><small>'+(done?(v.score?"Full time "+esc(v.score):"Settled"):"Settled after the match")+'</small></div>'+
-   '</div>'+
-   '<p class="note" style="margin-top:10px">Banker Bet of the Day by <b>'+esc(v.by)+'</b> &middot; '+(sp==="football"?"&#9917; Football":"&#127936; Basketball")+'</p></div>'+
-   '<div class="panel"><h2>Expert reasoning</h2>'+(paras.length?paras.map(function(t){return '<p>'+esc(t)+'</p>'}).join(""):'<p>The reasoning for this tip has not been written yet.</p>')+'</div>'+
+   '<div class="bbhero"><div class="crumbs"><a href="index.html">Home</a> &rsaquo; <a href="index.html">Banker Bet of the Day</a> &rsaquo; '+esc(v.h)+' vs '+esc(v.a)+'</div>'+
+   '<p class="bbcomp">'+esc(v.lg)+' <i>&bull;</i> '+esc(dateTxt)+'</p>'+
+   '<div class="bbteams"><div class="bbteam">'+teamCrest(v.h,v.hl,v.sp,v.hc)+'<b>'+esc(v.h)+'</b></div>'+
+   '<div class="bbvs"><strong>VS</strong><span>'+(ft?'FT '+ft:esc(v.t))+'</span></div>'+
+   '<div class="bbteam">'+teamCrest(v.a,v.al,v.sp,v.ac)+'<b>'+esc(v.a)+'</b></div></div>'+
+   '<h1>'+esc(title)+' | '+esc(shortDate)+'</h1>'+
+   '<p class="bbintro">'+esc(v.h)+' welcome '+esc(v.a)+' in the '+esc(v.lg)+' on '+esc(dateTxt)+', with our prediction model identifying '+(selTxt?'<b>'+esc(selTxt)+'</b>':'our selection')+' as the best betting opportunity for this fixture.</p></div>'+
+   '<section class="bbbox"><div class="bbbar"><span>Banker Bet of the Day</span>'+(done?'<em class="bbres '+v.st+'">'+(v.st==="won"?"&#10003; Won":"Lost")+'</em>':'<em class="bbres pend">Pending</em>')+'</div>'+
+   '<div class="bbin"><div class="bbl"><span class="bbk">Our Best Bet</span><h2>'+(selTxt?esc(selTxt):'<span class="na">Not posted yet</span>')+'</h2>'+
+   (paras.length?paras.map(function(t){return '<p>'+esc(t)+'</p>'}).join(""):'<p class="note">The analyst reasoning for this bet has not been written yet.</p>')+
+   '<p class="note by">Banker Bet by <b>'+esc(v.by)+'</b> &middot; '+(sp==="football"?"&#9917; Football":"&#127936; Basketball")+'</p></div>'+
+   '<div class="bbr"><div class="bbcard"><span class="bbk">Market Odds</span>'+oddsHtml+'</div>'+
+   '<div class="bbcard"><span class="bbk">Rating</span>'+(clv?'<div class="bbrate"><b class="'+ccl+'">'+clv+'</b><span>'+esc(String(Math.round(cn)))+'% confidence</span></div><i class="etmeter"><u class="'+ccl+'" style="width:'+Math.max(4,Math.min(100,cn))+'%"></u></i>':'<p class="note" style="margin:0">Not posted yet.</p>')+'</div></div></div></section>'+
    '<p class="note center" style="margin-top:14px">'+(sp==="football"?"Football":"Basketball")+' predictions are based on statistical analysis and are not guaranteed. Please bet responsibly.</p>';
 });
 

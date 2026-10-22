@@ -32,6 +32,12 @@ service cloud.firestore {
         && request.resource.data.tier == 'free'
         && request.resource.data.keys().hasOnly(['email','name','tier','createdAt','source']);
       allow update: if isAdmin()
+        /* a member can edit only their own name, country and WhatsApp number (never their plan) */
+        || (request.auth != null && request.auth.uid == uid
+            && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['name','country','whatsapp'])
+            && request.resource.data.get('name','').size() <= 80
+            && request.resource.data.get('country','').size() <= 60
+            && request.resource.data.get('whatsapp','').size() <= 25)
         /* unsubscribe link: anyone holding the member's private key can switch emails off, and nothing else */
         || (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['unsub','proof'])
             && resource.data.keys().hasAny(['unsubToken'])

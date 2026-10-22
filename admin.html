@@ -438,7 +438,7 @@ const Store = {
       const recent = r => { const k=String(r.kickoff||"").slice(0,10); return k >= cutoff && k <= farOut; };
       const snap = {
         fixtures: db.fixtures.filter(f=>liveOf("fixtures",f) && (recent(f) || homeBox(f))).map(f=>this.docOf("fixtures",f)),
-        vip:      (db.vip||[]).filter(v=>v.tier==="bronze"&&v.ymd>=cut120).map(v=>{ const o={ymd:v.ymd,tier:"bronze",odds:v.draft?"":(v.odds||""),st:v.st||""}; if((v.st==="won"||v.st==="lost")&&!v.draft&&v.legs&&v.legs.length) o.legs=v.legs.map(l=>({sport:l.sport,home:l.home,away:l.away,comp:l.comp,ko:l.ko,market:l.market,sel:l.sel,res:l.res||""})); return o; }),
+        vip:      (db.vip||[]).filter(v=>v.tier==="bronze"&&v.ymd>=cut120).map(v=>{ const o={ymd:v.ymd,tier:"bronze",odds:v.draft?"":(v.odds||""),st:v.st||""}; if((v.st==="won"||v.st==="lost")&&!v.draft&&v.legs&&v.legs.length) o.legs=v.legs.map(l=>({sport:l.sport,home:l.home,away:l.away,comp:l.comp,ko:l.ko,market:l.market,sel:l.sel,res:l.res||""})); else if(!v.draft&&v.legs&&v.legs.length){ const g=v.legs[0]; o.teaser={n:v.legs.length,g:{sport:g.sport,home:g.home,away:g.away,comp:g.comp,ko:g.ko}}; } return o; }),
         props:    db.props.filter(r=>liveOf("props",r)).map(r=>this.docOf("props",r)).filter(recent)
       };
       const sj = JSON.stringify(snap);
@@ -745,6 +745,25 @@ $("#fbBody").addEventListener("change", e => {
 /* ============ HOME BOXES (Banker Bet of the Day, Bets of the day, VIP results) ============ */
 const todayStr = () => new Intl.DateTimeFormat("en-CA",{timeZone:"Africa/Lagos"}).format(new Date());
 $("#hbDate").value = todayStr(); $("#vpMonth").value = todayStr().slice(0,7);
+
+/* Banker Bet market picker: market, line, odds for EVERY option, and which option is ours (that one is highlighted on the page) */
+const BB_MK = { football:{ "1X2":["1","X","2"], "Double Chance":["1X","X2","12"], "BTTS":["Yes","No"], "Over/Under goals":["Over","Under"] },
+                basketball:{ "Moneyline":["1","2"], "Spread":["1","2"], "Total points":["Over","Under"] } };
+function bbCell(f,e){
+  const defs = BB_MK[f.sport] || BB_MK.football, base = defs[e.mk], x = (f.sport==="basketball"?f.bb:f.fb) || {};
+  const needLine = e.mk==="Over/Under goals" || e.mk==="Total points" || e.mk==="Spread";
+  const auto = e.mk==="1X2" ? [x.o1,x.oX,x.o2] : e.mk==="Moneyline" ? [x.o1,x.o2] : [];
+  let h = `<b>Market:</b> <select data-g="et" data-f="mk"><option value="">Choose a market</option>${Object.keys(defs).map(k=>`<option ${e.mk===k?"selected":""}>${k}</option>`).join("")}</select>`;
+  if(needLine) h += ` <b>Line:</b> <input data-g="et" data-f="line" value="${esc(e.line||"")}" placeholder="${e.mk==="Spread"?"-6.5":e.mk==="Total points"?"220.5":"2.5"}" style="width:80px" maxlength="7" title="${e.mk==="Spread"?"Handicap for team 1, e.g. -6.5 (team 2 gets +6.5 automatically)":"The goals or points line, e.g. 2.5"}">`;
+  if(base){
+    const lab = base.map((o,i)=> e.mk==="Spread" ? (e.line&&!isNaN(parseFloat(e.line)) ? o+" "+(i===0?parseFloat(e.line):-parseFloat(e.line)).toString().replace(/^(\d)/,"+$1") : o) : (needLine&&e.line ? o+" "+e.line : o));
+    h += `<br><small class="muted">Type the market odds for every option, then choose which one is OURS:</small><br>` +
+      lab.map((l,i)=>`${esc(l)} odds <input data-g="et" data-f="o${i}" value="${esc(e["o"+i]||"")}" placeholder="${esc(auto[i]||"odds")}" style="width:70px" maxlength="7" inputmode="decimal">`).join(" &nbsp; ") +
+      `<br><b>Our selection:</b> <select data-g="et" data-f="ours"><option value="">Choose</option>${lab.map((l,i)=>`<option value="${i}" ${String(e.ours)===String(i)?"selected":""}>${esc(l)}</option>`).join("")}</select>`;
+  }
+  h += ` <input data-g="et" data-f="conf" value="${esc(e.conf||"")}" placeholder="Confidence %" style="width:110px" maxlength="4" inputmode="numeric" title="Your confidence in this Banker Bet, e.g. 78. Leave empty to use the table confidence."><br>`;
+  return h;
+}
 function renderHome(){
   const day = $("#hbDate").value, dayAll = db.fixtures.filter(f=>String(f.kickoff||"").slice(0,10)===day).sort((a,b)=>a.kickoff.localeCompare(b.kickoff));
   const rows = dayAll.filter(f=>(f.et&&f.et.on)||(f.bo&&f.bo.on));
@@ -767,7 +786,7 @@ function renderHome(){
       <td class="t">${esc(hhmm(f.kickoff))}</td>
       <td class="tm"><b>${esc(f.home)}</b> v <b>${esc(f.away)}</b><br><small>${f.sport==="football"?"Football":"Basketball"} · ${esc(f.competition)}</small></td>
       <td><label class="sw"><input type="checkbox" data-g="et" data-f="on" ${e.on?"checked":""}><i></i></label></td>
-      <td>${e.on?`<b>Our pick:</b> <input data-g="et" data-f="pick" list="etPicks" value="${esc(e.pick||"")}" placeholder="Table tip: ${(()=>{const t=(f.sport==="basketball"?f.bb:f.fb)||{};return esc(((t.tip||"")+(f.sport==="basketball"&&t.spread?" "+t.spread:"")).trim()||"1X")})()}" style="width:170px" title="Choose from the list or type your own, e.g. Over 2.5, GG, 1 -6.5. Leave empty to use the tip from the table."> <input data-g="et" data-f="odd" value="${esc(e.odd||"")}" placeholder="Odds" style="width:70px" maxlength="7" title="Optional price for this pick"> <input data-g="et" data-f="conf" value="${esc(e.conf||"")}" placeholder="Confidence %" style="width:100px" maxlength="4" inputmode="numeric" title="Your confidence in this Banker Bet, e.g. 78. Leave empty to use the table confidence."><br><small class="muted">Empty pick, odds or confidence = uses the one from the football/basketball table.</small><br><textarea data-g="et" data-f="reasoning" rows="3" style="min-width:240px;max-width:320px" placeholder="Why this tip? (new line = new paragraph)">${esc(e.reasoning||"")}</textarea><br><input data-g="et" data-f="by" value="${esc(e.by||"PB Analyst")}" placeholder="By" style="width:140px"><br><input data-g="et" data-f="hl" value="${esc(e.hl||"")}" placeholder="Home logo link" style="width:150px"> <input data-g="et" data-f="al" value="${esc(e.al||"")}" placeholder="Away logo link" style="width:150px"><br><small class="muted">National teams get their flag automatically. For clubs, paste an https image link, or leave blank for a neutral ball icon.</small><br>Result: <select data-g="et" data-f="st"><option value="">pending</option><option value="won" ${e.st==="won"?"selected":""}>won</option><option value="lost" ${e.st==="lost"?"selected":""}>lost</option></select>`:'<span class="muted">-</span>'}</td>
+      <td>${e.on?`${bbCell(f,e)}<textarea data-g="et" data-f="reasoning" rows="3" style="min-width:240px;max-width:320px" placeholder="Why this tip? (new line = new paragraph)">${esc(e.reasoning||"")}</textarea><br><input data-g="et" data-f="by" value="${esc(e.by||"PB Analyst")}" placeholder="By" style="width:140px"><br><input data-g="et" data-f="hl" value="${esc(e.hl||"")}" placeholder="Home logo link" style="width:150px"> <input data-g="et" data-f="al" value="${esc(e.al||"")}" placeholder="Away logo link" style="width:150px"><br><small class="muted">National teams get their flag automatically. For clubs, paste an https image link, or leave blank for a neutral ball icon.</small><br>Result: <select data-g="et" data-f="st"><option value="">pending</option><option value="won" ${e.st==="won"?"selected":""}>won</option><option value="lost" ${e.st==="lost"?"selected":""}>lost</option></select>`:'<span class="muted">-</span>'}</td>
       <td><label class="sw"><input type="checkbox" data-g="bo" data-f="on" ${b.on?"checked":""}><i></i></label></td>
       <td>${b.on?`<input data-g="bo" data-f="pick" value="${esc(b.pick||"")}" placeholder="1X" style="width:110px">`:'<span class="muted">-</span>'}</td>
       <td>${b.on?`<select data-g="bo" data-f="st">${["pending","won","lost"].map(r=>`<option ${(b.st||"pending")===r?"selected":""}>${r}</option>`).join("")}</select>`:'<span class="muted">-</span>'}</td>
@@ -821,6 +840,7 @@ $("#hbBody").addEventListener("change", e => {
     if(n>=lim){ toast(g==="et" ? "Only one Banker Bet of the Day per sport per day. Untick the other one first." : "Maximum 5 Bets of the day per sport. Untick one first."); el.checked=false; return; }
   }
   f[g] = f[g] || {}; f[g][el.dataset.f] = val;
+  if(g==="et" && el.dataset.f==="mk"){ ["line","ours","o0","o1","o2"].forEach(k=>{ delete f.et[k]; }); }
   if(g==="bo" && el.dataset.f==="on" && val && !f.bo.st) f.bo.st="pending";
   commit();
 });
