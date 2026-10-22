@@ -195,6 +195,7 @@ tr.lghead td{background:#ffffff0d;padding:10px 8px;border-bottom:1px solid var(-
       <div><label>What is in the file?</label><select id="csvMode"><option value="pre">Predictions (before the matches)</option><option value="res">Results (file has an FT SCORE column)</option></select></div>
     </div>
     <p><label style="text-transform:none;letter-spacing:0"><input type="checkbox" id="csvLive" checked> Show on the website immediately</label></p>
+    <p><label style="text-transform:none;letter-spacing:0"><input type="checkbox" id="csvLate"> Results file only: also add finished matches that are missing from the site</label><br><small class="muted">Tick this only if the tip was already in your sheet before kick-off (Google Sheets &rarr; File &rarr; Version history shows when). The match is added with its tip and result, so it counts in your record.</small></p>
     <div class="row" id="csvBtns">
       <label class="btn" data-csvbtn style="margin:0">&#9917; Upload football CSV<input type="file" id="csvFileFb" data-sport="football" accept=".csv,text/csv" hidden></label>
       <label class="btn" data-csvbtn style="margin:0">&#127936; Upload basketball CSV<input type="file" id="csvFileBb" data-sport="basketball" accept=".csv,text/csv" hidden></label>

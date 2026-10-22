@@ -104,5 +104,17 @@
       "source": "/10-odds-predictions-today",
       "destination": "/api/seo?t=hub&slug=10-odds-predictions-today"
     }
+  ],
+  "redirects": [
+    {
+      "source": "/vip.html",
+      "destination": "/account.html",
+      "permanent": true
+    },
+    {
+      "source": "/index.html",
+      "destination": "/",
+      "permanent": true
+    }
   ]
 }

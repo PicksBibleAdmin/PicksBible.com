@@ -148,6 +148,7 @@
         rep.rows++;
         const label = home + " vs " + away;
         const t = hhmm(get(r, "time")); if (t) lastTime = t;
+        let late = null;   /* results file only: a finished match that was never uploaded before kick-off */
 
         const findFx = () => {
           const h = norm(home), a = norm(away);
@@ -162,7 +163,9 @@
           if (!ft) { rep.waiting++; return; }
           if (!parseScore(ft)) { rep.problems.push(label + ": FT SCORE '" + ft + "' is not like 2-1"); return; }
           const f = findFx();
-          if (!f) { rep.problems.push(label + ": not found on " + opt.date + ". Spelling must match the predictions upload"); return; }
+          if (!f && opt.late) { late = parseScore(ft).join("-"); }
+          else {
+          if (!f) { rep.problems.push(label + ": not found on " + opt.date + ". Spelling must match the predictions upload, or tick \"Add matches missing from the site\" if its tip was in your sheet before kick-off"); return; }
           const sc = parseScore(ft).join("-");
           if (sport === "football") {
             const v = f.fb = Object.assign({ st: "", score: "", sure: false }, f.fb || {});
@@ -175,6 +178,7 @@
           }
           rep.results++; rep.changed = true;
           return;
+          }
         }
 
         /* ---------- PREDICTIONS ---------- */
@@ -222,6 +226,11 @@
           db.fixtures.push(f);
           rep.added++;
         }
+        if (late) {
+          const v = f[key]; v.score = late;
+          v.st = sport === "football" ? footballStatus(v.tip, late) : basketballStatus(v.tip, v.spread, late);
+          rep.results++; rep.late = (rep.late || 0) + 1;
+        }
         rep.changed = true;
       });
     });
@@ -252,7 +261,7 @@
     if (!dateEl.value) { out.textContent = "Pick the match date first."; inp.value = ""; return; }
     try {
       const rep = run(await f.text(),
-        { mode, date: dateEl.value, live: el("csvLive").checked, only: sport },
+        { mode, date: dateEl.value, live: el("csvLive").checked, only: sport, late: mode === "res" && !!(el("csvLate") && el("csvLate").checked) },
         { db, uid, colorOf: typeof colorOf === "function" ? colorOf : () => "", leagues: window.PB_LEAGUES });
       if (rep.changed) commit();
       const head = (sport === "football" ? "Football" : "Basketball") + " " + dateEl.value + ": " + (mode === "res"
@@ -261,6 +270,20 @@
       const info = mode === "res" ? "\n[importer v2: read " + rep.rows + " match rows; " + rep.cols.join("; ") + "]" : "";
       out.textContent = head + info + (rep.problems.length ? "\n\nNeeds attention (" + rep.problems.length + "):\n- " + rep.problems.join("\n- ") : "");
       out.style.color = rep.problems.length ? "var(--lost)" : "";
+      if (mode === "res" && rep.late) out.textContent += "\n\n" + rep.late + " match" + (rep.late === 1 ? " was" : "es were") + " not on the site before kick-off, so " + (rep.late === 1 ? "it was" : "they were") + " added now from this file with the result.";
+      /* a skipped prediction row is a match visitors will never see: keep a red bar on screen until a clean upload */
+      try {
+        const KEY = "pb.skipWarn", bar = document.getElementById("pbSkipBar") || Object.assign(document.createElement("div"), { id: "pbSkipBar" });
+        if (mode === "pre" && rep.problems.length) localStorage.setItem(KEY, JSON.stringify({ d: dateEl.value, sport, p: rep.problems.slice(0, 12) }));
+        else if (mode === "pre") localStorage.removeItem(KEY);
+        const w = JSON.parse(localStorage.getItem(KEY) || "null");
+        if (w) {
+          bar.style.cssText = "position:fixed;left:0;right:0;top:0;z-index:9999;background:#b3261e;color:#fff;padding:10px 14px;font:600 14px system-ui;box-shadow:0 4px 14px #0008";
+          bar.innerHTML = "&#9888; " + w.p.length + " " + w.sport + " match" + (w.p.length === 1 ? " was" : "es were") + " NOT added from your " + w.d + " predictions upload. Visitors cannot see " + (w.p.length === 1 ? "it" : "them") + ": <br><small style='font-weight:400'>" + w.p.map(x => x.replace(/&/g, "&amp;").replace(/</g, "&lt;")).join(" &bull; ") + "</small> <button type='button' style='margin-left:10px;padding:3px 10px' id='pbSkipX'>Dismiss</button>";
+          document.body.appendChild(bar);
+          document.getElementById("pbSkipX").onclick = () => { try { localStorage.removeItem(KEY); } catch (_) {} bar.remove(); };
+        } else bar.remove();
+      } catch (_) {}
       if (typeof toast === "function") toast(head);
     } catch (e) { out.textContent = "Import failed: " + e.message; console.error(e); }
     inp.value = "";
