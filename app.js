@@ -706,7 +706,7 @@ $$("[data-analysis]").forEach(function(el){
   $$("[data-tipslist],[data-hub]").forEach(function(x){x.hidden=true});
   var q=new URLSearchParams(location.search), sp=q.get("s")==="basketball"?"basketball":"football", ymd=q.get("d")||wat(0);
   var v=getET(sp,ymd);
-  if(!v){el.innerHTML='<div class="panel"><h2>Reasoning not available</h2><p>There is no published Banker Bet of the Day for this date yet.</p><a class="btn" href="index.html">Back to home</a></div>';return}
+  if(!v){el.innerHTML='<div class="panel"><h2>Reasoning not available</h2><p>There is no published Banker Bet of the Day for this date yet.</p><a class="btn" href="/">Back to home</a></div>';return}
   var paras=String(v.reasoning||"").split(/\n+/).map(function(t){return t.trim()}).filter(Boolean);
   var cn=parseFloat(v.conf), clv=isNaN(cn)?"":cn<45?"Low":cn<=55?"Medium":"High", ccl=isNaN(cn)?"":cn<45?"lo":cn<=55?"mid":"hi";
   var done=v.st==="won"||v.st==="lost", ft=done&&v.score?esc(v.score):"";
@@ -720,7 +720,7 @@ $$("[data-analysis]").forEach(function(el){
   else if(v.odd){oddsHtml='<div class="bbo n1"><div class="bbt ours"><small>'+esc(v.tip)+'</small><b>'+esc(v.odd)+'</b></div></div>'}
   else oddsHtml='<p class="note" style="margin:0">Odds not posted yet.</p>';
   el.innerHTML=
-   '<div class="bbhero"><div class="crumbs"><a href="index.html">Home</a> &rsaquo; <a href="index.html">Banker Bet of the Day</a> &rsaquo; '+esc(v.h)+' vs '+esc(v.a)+'</div>'+
+   '<div class="bbhero"><div class="crumbs"><a href="/">Home</a> &rsaquo; <a href="/">Banker Bet of the Day</a> &rsaquo; '+esc(v.h)+' vs '+esc(v.a)+'</div>'+
    '<p class="bbcomp">'+esc(v.lg)+' <i>&bull;</i> '+esc(dateTxt)+'</p>'+
    '<div class="bbteams"><div class="bbteam">'+teamCrest(v.h,v.hl,v.sp,v.hc)+'<b>'+esc(v.h)+'</b></div>'+
    '<div class="bbvs"><strong>VS</strong><span>'+(ft?'FT '+ft:esc(v.t))+'</span></div>'+
