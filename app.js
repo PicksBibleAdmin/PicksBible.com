@@ -905,14 +905,14 @@ $$("[data-results]").forEach(function(el){
 
 /* ---------- plans ---------- */
 var TIER_ICON={free:"🎯",gold:"🥇"};
-(function(){D.plans.forEach(function(p){if(p.tier==="gold"){p.price="$5";p.ngn="\u20a62,000";p.per="1 Week";p.perks=["2 to 4 odds VIP tips everyday","Guaranteed 5 wins out of 7 days - any extra lost day is refunded to you","Priority support","VIP lounge access"]}})})();
+(function(){D.plans.forEach(function(p){if(p.tier==="gold"){p.price="$5";p.ngn="\u20a62,500";p.per="1 Week";p.perks=["2 to 4 odds VIP tips everyday","Guaranteed 5 wins out of 7 days - any extra lost day is refunded to you","Priority support","VIP lounge access"]}})})();
 function detectCountry(){try{var tz=Intl.DateTimeFormat().resolvedOptions().timeZone||"",l=navigator.language||"";if(tz==="Africa/Lagos"||/-NG$/i.test(l))return "Nigeria"}catch(e){}return ""}
 function isAF(){try{var tz=Intl.DateTimeFormat().resolvedOptions().timeZone||"";return /^Africa\//.test(tz)}catch(e){return false}}
 function isNG(){var c=store("premCountry");return c?c==="Nigeria":detectCountry()==="Nigeria"}
 $$("[data-plans]").forEach(function(el){
   function drawPlans(){el.innerHTML=D.plans.filter(function(p){return p.tier!=="free"}).map(function(p,i){var price=isNG()&&p.ngn?p.ngn:p.price;
-    return '<div class="pcard tier-'+esc(p.tier)+'"><div class="pc-head"><span class="pc-chip">'+(TIER_ICON[p.tier]||"")+' '+esc(p.name)+'</span><span class="pc-sub">'+(p.tier==="free"?"Basic member":"Premium membership")+'</span></div>'+
-      '<div class="pc-price"><b>'+esc(price)+'</b><span>'+(p.tier==="free"?"free forever":"/ week")+'</span></div>'+(p.tier==="free"||isNG()?'':'<p class="pc-alt">'+(isAF()?'Pay 5 USDT or $5 USD weekly':'$5 USD weekly')+'</p>')+(p.tier==="free"?'':'<p class="pc-blurb">Enjoy consistent winnings without sitting in front of a desk and performing hours of manual research.</p>')+
+    return '<div class="pcard tier-'+esc(p.tier)+'"><div class="pc-head"><span class="pc-chip">'+(TIER_ICON[p.tier]||"")+' '+esc(p.name)+'</span></div>'+
+      '<div class="pc-price"><b>'+esc(price)+'</b><span>'+(p.tier==="free"?"free forever":"/ week")+'</span></div>'+(p.tier==="free"||isNG()?'':'<p class="pc-alt">'+(isAF()?'Pay 5 USDT or $5 USD weekly':'$5 USD weekly')+'</p>')+
       '<ul class="pc-list">'+p.perks.map(function(k){var no=k.charAt(0)==="!";return '<li class="'+(no?'no':'')+'"><b>'+(no?'&#10005;':'&#10003;')+'</b><span>'+esc(no?k.slice(1):k)+'</span></li>'}).join("")+'</ul>'+
       (p.tier==="free"?'<a class="btn ghost wide" href="predictions.html">Start free</a>':'<a class="btn wide" href="checkout.html?plan='+esc(p.tier)+'">Join '+esc(p.name)+'</a>')+'</div>'}).join("");
   $$("[data-pay]",el).forEach(function(b){b.addEventListener("click",function(){$('[data-paynote="'+b.dataset.pay+'"]',el).hidden=false})})}
