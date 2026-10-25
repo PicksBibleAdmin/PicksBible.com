@@ -67,6 +67,12 @@
     /* other spellings people use in sheets */
     const ALIAS = { "uefa champions league": "champions league", "uefa europa league": "europa league", "uefa europa conference league": "conference league", "uefa conference league": "conference league", "saudi professional league": "saudi pro league", "saudi league": "saudi pro league", "spl": "saudi pro league", "la liga": "laliga", "serie a tim": "serie a" };
     want = ALIAS[want] || want;
+    /* sheet names that differ from our league list, written per country ("Cyprus: Cyprus League" = our "First Division") */
+    const CA = { "cyprus|cyprus league": "first division", "cyprus|cypriot first division": "first division", "cyprus|cyprus cup": "cypriot cup",
+      "ecuador|liga pro": "ligapro serie a", "ecuador|ligapro": "ligapro serie a", "ecuador|liga pro serie a": "ligapro serie a", "ecuador|ligapro serie a": "ligapro serie a", "ecuador|liga pro ecuador": "ligapro serie a", "ecuador|serie b": "serie b",
+      "france|ligue two": "ligue 2", "france|ligue 2 bkt": "ligue 2", "france|ligue 1 mcdonald s": "ligue 1", "france|national": "national 1" };
+    if (c0 && CA[c0 + "|" + want]) want = CA[c0 + "|" + want];
+    else if (!c0 && CA[want]) want = CA[want];
     if (c0 === "uefa" || c0 === "international" || c0 === "europe") c0 = "europe uefa";
     if (c0 === "caf" || c0 === "africa") { c0 = "africa caf"; if (want === "champions league" || want === "confederation cup") want = "caf " + want; }  if (c0 === "afc") c0 = "asia afc"; if (c0 === "concacaf") c0 = "north central america concacaf";
     const hits = [];
@@ -81,6 +87,12 @@
       });
     }
     if (hits.length === 1) return hits[0];
+    /* "Country: League" where the COUNTRY is known but the league name is new: accept it instead of skipping the match
+       (the website creates the league automatically; add it to leagues.js later if you want it in the picker) */
+    if (!hits.length && c0) {
+      const g = ((leagues || {})[sport] || []).filter(g => norm(g.c) === c0 || norm(g.c).startsWith(c0 + " "));
+      if (g.length === 1) return { country: g[0].c, competition: name.slice(ci + 1).trim().replace(/\s+/g, " ").toLowerCase().replace(/(^|[\s(-])([a-z])/g, (m, a, b) => a + b.toUpperCase()), isNew: true };
+    }
     return hits.length
       ? { err: '"' + name + '" exists in ' + hits.length + ' countries. Write it as "Country: League" in the sheet' }
       : { err: 'league "' + name + '" is not in the league list (check spelling, or write "Country: League")' };
@@ -185,6 +197,7 @@
         if (!t && !lastTime) { rep.problems.push(label + ": no start time"); return; }
         const lg = findLeague(leagues, sport, get(r, "league"));
         if (lg.err) { rep.problems.push(label + ": " + lg.err); return; }
+        if (lg.isNew) { rep.newLeagues = rep.newLeagues || {}; rep.newLeagues[lg.country + ": " + lg.competition] = 1; }
 
         const kickoff = opt.date + "T" + (t || lastTime);
         const conf = String(get(r, "conf")).replace(/[^0-9.]/g, "");
@@ -266,7 +279,7 @@
       if (rep.changed) commit();
       const head = (sport === "football" ? "Football" : "Basketball") + " " + dateEl.value + ": " + (mode === "res"
         ? rep.results + " result" + (rep.results === 1 ? "" : "s") + " saved and marked won/lost." + (rep.waiting ? " " + rep.waiting + " match" + (rep.waiting === 1 ? "" : "es") + " had no score yet (left pending)." : "")
-        : rep.added + " added, " + rep.updated + " updated.");
+        : rep.added + " added, " + rep.updated + " updated." + (rep.newLeagues ? " New leagues created from your sheet: " + Object.keys(rep.newLeagues).join("; ") + "." : ""));
       const info = mode === "res" ? "\n[importer v2: read " + rep.rows + " match rows; " + rep.cols.join("; ") + "]" : "";
       out.textContent = head + info + (rep.problems.length ? "\n\nNeeds attention (" + rep.problems.length + "):\n- " + rep.problems.join("\n- ") : "");
       out.style.color = rep.problems.length ? "var(--lost)" : "";
