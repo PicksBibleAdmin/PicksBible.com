@@ -38,8 +38,8 @@
     '<div><label for="pbL">Last name <i>*</i></label><input id="pbL" name="l" autocomplete="family-name" maxlength="50"></div></div>' +
     '<div class="fw"><label for="pbE">Email <i>*</i></label><input id="pbE" name="e" type="email" autocomplete="email"></div>' +
     '<div class="fw"><label for="pbW">WhatsApp number <em>(optional)</em></label><input id="pbW" name="w" type="tel" autocomplete="tel" placeholder="+234 801 234 5678" maxlength="20"></div>' +
-    '<hr><p class="tx">Get our model\'s highest-confidence picks delivered straight to your inbox every day.</p>' +
-    '<div class="ft"><button class="lg" type="submit">Get winning tips for free</button></div><div class="lm" role="status"></div></form></div>';
+    '<hr><p class="tx">Be the first to know when winning tips are published.</p>' +
+    '<div class="ft"><button class="lg" type="submit">Create your PicksBible account</button></div><div class="lm" role="status"></div></form></div>';
   document.body.appendChild(el);
   var msg = el.querySelector(".lm"), form = el.querySelector("form");
 

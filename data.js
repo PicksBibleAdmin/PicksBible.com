@@ -319,7 +319,7 @@ window.PB = {
      payLink = your Paystack / Flutterwave payment page link (Phase 3) */
   plans: [
     { tier:"free", name:"Free", price:"$0", ngn:"₦0", per:"Forever", perks:["Daily free predictions","Match previews and analysis","!Premium 2-3 odds tips","!Priority support"], payLink:"" },
-    { tier:"gold", name:"Gold", price:"$19.99", ngn:"₦19,999", per:"1 Month", perks:["Everything in Free","2-3 odds premium results","Detailed match analysis","VIP room access","24/7 support"], payLink:"" }
+    { tier:"gold", name:"Gold", price:"$5", ngn:"₦2,000", per:"1 Week", perks:["2 to 4 odds VIP tips everyday","Guaranteed 5 wins out of 7 days - any extra lost day is refunded to you","Priority support","VIP lounge access"], payLink:"" }
   ],
 
   /* ---------- PAYMENT DETAILS ----------

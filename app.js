@@ -1,3 +1,14 @@
+/* ---- kick-off times in the visitor's own time zone. Stored times are Nigeria time (WAT = UTC+1). "+1 / -1" marks a different calendar day. ---- */
+var TZPREF="local";try{TZPREF=localStorage.getItem("pb.tz")||"local"}catch(e){}
+var RTZ="Africa/Lagos";try{RTZ=Intl.DateTimeFormat().resolvedOptions().timeZone||"Africa/Lagos"}catch(e){}
+var VTZ=TZPREF==="wat"?"Africa/Lagos":RTZ, LTF=null;
+try{LTF=new Intl.DateTimeFormat("en-GB",{timeZone:VTZ,hour:"2-digit",minute:"2-digit",hour12:false,year:"numeric",month:"2-digit",day:"2-digit"})}catch(e){LTF=null}
+function lt(k){k=String(k||"");var raw=k.slice(11,16);if(!LTF||VTZ==="Africa/Lagos"||k.length<16)return raw;
+  var y=+k.slice(0,4),mo=+k.slice(5,7),d=+k.slice(8,10),h=+k.slice(11,13),mi=+k.slice(14,16),inst=new Date(Date.UTC(y,mo-1,d,h-1,mi));if(isNaN(inst.getTime()))return raw;
+  var p={};LTF.formatToParts(inst).forEach(function(x){p[x.type]=x.value});var t=(p.hour==="24"?"00":p.hour)+":"+p.minute;
+  var diff=Math.round((Date.UTC(+p.year,+p.month-1,+p.day)-Date.UTC(y,mo-1,d))/864e5);return diff>0?t+"\u207A\u00B9":diff<0?t+"\u207B\u00B9":t}
+function tzLabel(){try{var o=new Intl.DateTimeFormat("en-US",{timeZone:RTZ,timeZoneName:"shortOffset"}).formatToParts(new Date()).filter(function(x){return x.type==="timeZoneName"})[0];return o?o.value:"your time zone"}catch(e){return "your time zone"}}
+
 (function(){
 /* ======================================================================
    LIVE DATA: one public document in Firestore (public/live), written by the admin
@@ -91,15 +102,15 @@ function addFx(P,f,days){
   {
     var hd=String(f.kickoff||"").slice(0,10), sp=f.sport==="basketball"?"basketball":"football";
     var cname=(function(){var c=String(f.country||""),k=String(f.competition||"");if(!c)return k;if(k.toLowerCase().indexOf(c.toLowerCase())===0)k=k.slice(c.length).replace(/^[\s:\-\u00b7]+/,"");return c+": "+k})();
-    if(f.et&&f.et.on&&hd)(P.home.etl[sp][hd]=P.home.etl[sp][hd]||[]).push({h:f.home,a:f.away,lg:cname,t:String(f.kickoff).slice(11,16),by:f.et.by||"PB Analyst",st:f.et.st||"",sp:sp});
+    if(f.et&&f.et.on&&hd)(P.home.etl[sp][hd]=P.home.etl[sp][hd]||[]).push({h:f.home,a:f.away,lg:cname,t:lt(f.kickoff),by:f.et.by||"PB Analyst",st:f.et.st||"",sp:sp});
     var bm=(f.et&&f.et.on)?etBM(f):null;
-    if(f.et&&f.et.on&&hd)P.home.et[sp][hd]={bm:bm,h:f.home,a:f.away,lg:cname,t:String(f.kickoff).slice(11,16),by:f.et.by||"PB Analyst",st:f.et.st||((sp==="basketball"?(f.bb&&f.bb.st):(f.fb&&f.fb.st))==="won"||(sp==="basketball"?(f.bb&&f.bb.st):(f.fb&&f.fb.st))==="lost"?(sp==="basketball"?f.bb.st:f.fb.st):""),reasoning:f.et.reasoning||"",hl:f.et.hl||"",al:f.et.al||"",hc:f.hc||"",ac:f.ac||"",sp:sp,tip:(f.et.pick||(bm&&bm.i>=0?bm.l[bm.i]:"")||(sp==="basketball"?(f.bb&&f.bb.tip):(f.fb&&f.fb.tip))||""),conf:String(f.et.conf||(sp==="basketball"?(f.bb&&f.bb.conf):(f.fb&&f.fb.conf))||"").replace("%",""),score:(sp==="basketball"?(f.bb&&f.bb.score):(f.fb&&f.fb.score))||"",odd:String(f.et.odd||"").trim()||(bm&&bm.i>=0?String(bm.o[bm.i]||""):"")||(function(){var x=sp==="basketball"?(f.bb||{}):(f.fb||{}),t=String(f.et.pick||x.tip||"");return t==="1"?x.o1:t==="2"?x.o2:t==="X"?x.oX:t==="1X"?x.dcOdds:""})()||""};
-    if(f.bo&&f.bo.on&&hd){var bl=P.home.bo[sp][hd]=P.home.bo[sp][hd]||[];bl.push({lg:cname,t:(f.bo.st==="won"||f.bo.st==="lost")?"FT":String(f.kickoff).slice(11,16),h:f.home,a:f.away,pick:f.bo.pick||"",st:f.bo.st||"pending",sc:f.bo.score||""})}
+    if(f.et&&f.et.on&&hd)P.home.et[sp][hd]={bm:bm,h:f.home,a:f.away,lg:cname,t:lt(f.kickoff),by:f.et.by||"PB Analyst",st:f.et.st||((sp==="basketball"?(f.bb&&f.bb.st):(f.fb&&f.fb.st))==="won"||(sp==="basketball"?(f.bb&&f.bb.st):(f.fb&&f.fb.st))==="lost"?(sp==="basketball"?f.bb.st:f.fb.st):""),reasoning:f.et.reasoning||"",hl:f.et.hl||"",al:f.et.al||"",hc:f.hc||"",ac:f.ac||"",sp:sp,tip:(f.et.pick||(bm&&bm.i>=0?bm.l[bm.i]:"")||(sp==="basketball"?(f.bb&&f.bb.tip):(f.fb&&f.fb.tip))||""),conf:String(f.et.conf||(sp==="basketball"?(f.bb&&f.bb.conf):(f.fb&&f.fb.conf))||"").replace("%",""),score:(sp==="basketball"?(f.bb&&f.bb.score):(f.fb&&f.fb.score))||"",odd:String(f.et.odd||"").trim()||(bm&&bm.i>=0?String(bm.o[bm.i]||""):"")||(function(){var x=sp==="basketball"?(f.bb||{}):(f.fb||{}),t=String(f.et.pick||x.tip||"");return t==="1"?x.o1:t==="2"?x.o2:t==="X"?x.oX:t==="1X"?x.dcOdds:""})()||""};
+    if(f.bo&&f.bo.on&&hd){var bl=P.home.bo[sp][hd]=P.home.bo[sp][hd]||[];bl.push({lg:cname,t:(f.bo.st==="won"||f.bo.st==="lost")?"FT":lt(f.kickoff),h:f.home,a:f.away,pick:f.bo.pick||"",st:f.bo.st||"pending",sc:f.bo.score||""})}
     if(!((f.fb&&f.fb.live)||(f.bb&&f.bb.live)))return;
     if(f.sport==="basketball"){
       var bd=String(f.kickoff||"").slice(0,10), bday=days[bd]; if(!bd)return;
       var b=f.bb||{}, bt=(b.tip||"")+(b.tip&&String(b.spread||"").trim()?" "+String(b.spread).trim():"");   /* tip + handicap shown together, e.g. "1 -6.5" or "2 +10.5" */
-      var bm={lg:lgKey(P,"basketball",f.competition,f.country),t:String(f.kickoff).slice(11,16),h:f.home,a:f.away,
+      var bm={lg:lgKey(P,"basketball",f.competition,f.country),t:lt(f.kickoff),k:f.kickoff,h:f.home,a:f.away,
         o:[b.o1||"",b.o2||""],pk:bt,tip:bt||"-",to:b.tipOdds||"",conf:b.conf||"",spread:b.spread||"",ts:b.totalSide||"",tl:b.totalLine||"",sure:!!b.sure,xp:!!f.xp,xt:f.xt||[],st:b.st||"pending",score:b.score||""};
       (P.byDate.basketball[bd]=P.byDate.basketball[bd]||[]).push(bm);
       if(bday){var bl=P.basketball[bday];bm.featured=bl.length<6;bl.push(bm)}
@@ -108,7 +119,7 @@ function addFx(P,f,days){
     if(f.sport!=="football")return;
     var date=String(f.kickoff||"").slice(0,10), day=days[date]; if(!date)return;
     var v=f.fb||{};
-    var m={lg:lgKey(P,"football",f.competition,f.country),t:String(f.kickoff).slice(11,16),h:f.home,a:f.away,
+    var m={lg:lgKey(P,"football",f.competition,f.country),t:lt(f.kickoff),k:f.kickoff,h:f.home,a:f.away,
       o:[v.o1||"",v.oX||"",v.o2||""],pk:v.tip||"",tip:v.tip||"-",gg:v.btts||"",ou:v.ou||"",conf:v.conf||"",to:v.tipOdds||"",dc:v.dc||"",dco:v.dcOdds||"",cs:v.cs||"",sure:!!v.sure,xp:!!f.xp,xt:f.xt||[],
       st:v.st||"pending",score:v.score||""};
     (P.byDate.football[date]=P.byDate.football[date]||[]).push(m);   /* any date: used by the calendar picker */
@@ -183,6 +194,8 @@ function teamCrest(name,logo,sp,color){
 }
 
 var DAYLABEL={yesterday:"Yesterday",today:"Today",tomorrow:"Tomorrow"};
+/* "2026-10-25" -> "25th October 2026" (used in table banners instead of Yesterday / Today / Tomorrow) */
+function pbDate(ymd){var p=String(ymd||"").split("-");if(p.length!==3)return "";var d=+p[2],M=["January","February","March","April","May","June","July","August","September","October","November","December"],sf=(d%10===1&&d!==11)?"st":(d%10===2&&d!==12)?"nd":(d%10===3&&d!==13)?"rd":"th";return d+sf+" "+M[+p[1]-1]+" "+p[0]}
 
 /* ---------- header menus ---------- */
 var drawer=$("#drawer"), more=$("#more");
@@ -341,7 +354,7 @@ function lgName(id){
 }
 function flagByLabel(lbl){var c=String(lbl||"").split(":")[0].trim(),k,f="";for(k in D.leagues){var l=D.leagues[k];if(l.country===c&&l.flag){f=l.flag;break}}return f||flagOf(c)||""}
 function lgFlag(id){return (D.leagues[id]||{}).flag||""}
-function tipBadge(m){return '<span class="tip '+(m.st==="won"?"won":m.st==="lost"?"lost":"")+'" title="'+esc(m.st)+'">'+esc(m.tip)+'</span>'}
+function tipBadge(m){return '<span class="tip '+(m.st==="won"?"won":m.st==="lost"?"lost":m.st==="postponed"?"pp":"")+'" title="'+esc(m.st)+'">'+esc(m.tip)+'</span>'}
 function ring(p){return '<span class="ring" style="--p:'+(+p)+'"><b>'+(+p).toFixed(1)+'%</b></span>'}
 function groupRows(list,cols,rowFn){
   var out="",last=null;
@@ -358,7 +371,7 @@ function sortByLeague(list){
     var c=lgName(a.lg).localeCompare(lgName(b.lg),undefined,{sensitivity:"base"});
     if(c)return c;
     if(a.lg!==b.lg)return a.lg<b.lg?-1:1;
-    return String(a.t).localeCompare(String(b.t));
+    return String(a.k||a.t).localeCompare(String(b.k||b.t));
   });
 }
 function firstIdx(list,lg){for(var i=0;i<list.length;i++)if(list[i].lg===lg)return i;return 0}
@@ -375,7 +388,7 @@ function tipOdd(m){
   if(m.dc===t&&m.dco)return String(m.dco);
   return "";
 }
-function pkBadge(m){var c=m.st==="won"?"won":m.st==="lost"?"lost":"",o=tipOdd(m),t=esc(m.pk||m.tip||"-");
+function pkBadge(m){var c=m.st==="won"?"won":m.st==="lost"?"lost":m.st==="postponed"?"pp":"",o=tipOdd(m),t=esc(m.pk||m.tip||"-");
   return '<span class="tip'+(o?' tp2':'')+' '+c+'" title="'+esc(m.st)+'">'+(o?'<b>'+t+'</b><i>'+esc(o)+'</i>':t)+'</span>'}
 function dcCell(m){return m.dc?'<td class="kv" data-l="Double Chance"><span class="xp"><b>'+esc(m.dc)+'</b>'+(m.dco?'<i>('+esc(m.dco)+')</i>':'')+'</span></td>':'<td class="kv na" data-l="Double Chance">-</td>'}
 function confCell(m){var n=parseFloat(String(m.conf).replace("%","")),lv=isNaN(n)?"":n<45?" lo":n<=55?" mid":" hi";return m.conf?'<td class="kv" data-l="Confidence"><span class="conf'+lv+'">'+esc(String(m.conf).replace("%",""))+'%</span></td>':'<td class="kv na" data-l="Confidence">-</td>'}
@@ -468,7 +481,7 @@ $$("[data-bigtable]").forEach(function(el){
     var lgBtn=$("[data-lgopen]",el);
     if(lgBtn)lgBtn.innerHTML="🌍 "+(league?esc((lgInfo(league)||{name:"League"}).name):"All Leagues")+" ▾";
     if(propsWrap)propsWrap.hidden=(sport!=="basketball");
-    if(title)title.textContent=expert?(sport==="football"?"⚽ Football":"🏀 Basketball")+" Banker Bet of the Day":(sport==="football"?"⚽ All Football":"🏀 All Basketball")+" Predictions & Tips";
+    if(title)title.textContent=expert?(sport==="football"?"⚽ Football":"🏀 Basketball")+" Banker Bet of the Day":(sport==="football"?"⚽ All Football":"🏀 All Basketball")+" Predictions & Tips \u2014 "+pbDate(customDate?ymdOf(customDate):wat({yesterday:-1,today:0,tomorrow:1}[day]));
     /* the shared date picker (same control as VIP Results): only holds a value while a custom date is chosen */
     var bc=$("[data-bcal]",el);
     if(bc)bc.value=customDate?(customDate.getFullYear()+"-"+("0"+(customDate.getMonth()+1)).slice(-2)+"-"+("0"+customDate.getDate()).slice(-2)):"";
@@ -569,7 +582,7 @@ function showVipDay(label,x){
   el.innerHTML='<div class="vd" role="dialog" aria-modal="true" aria-label="'+label+' VIP picks"><button class="vx" type="button" aria-label="Close">&times;</button>'+
     '<h3>'+label+' VIP picks</h3><div class="vsub">'+esc(d)+'</div><div style="margin:8px 0"><span class="vr '+x.st+'">'+(x.st==="won"?"&#10003; Won":"Lost")+'</span></div>'+
     '<table><thead><tr><th>Match</th><th>Market</th><th>Pick</th></tr></thead><tbody>'+x.legs.map(function(l){
-      return '<tr><td>'+esc(l.home)+' v '+esc(l.away)+'<br><small>'+esc(l.comp||"")+(l.ko?" &middot; "+esc(String(l.ko).slice(11,16)):"")+'</small></td><td>'+esc(l.market)+'</td><td><b>'+esc(l.sel)+'</b> '+(l.res==="won"?'<span style="color:var(--won)">&#10003;</span>':l.res==="lost"?'<span style="color:var(--lost)">&#10005;</span>':l.res==="push"?'<small>(void)</small>':'')+'</td></tr>'}).join("")+
+      return '<tr><td>'+esc(l.home)+' v '+esc(l.away)+'<br><small>'+esc(l.comp||"")+(l.ko?" &middot; "+esc(lt(l.ko)):"")+'</small></td><td>'+esc(l.market)+'</td><td><b>'+esc(l.sel)+'</b> '+(l.res==="won"?'<span style="color:var(--won)">&#10003;</span>':l.res==="lost"?'<span style="color:var(--lost)">&#10005;</span>':l.res==="push"?'<small>(void)</small>':'')+'</td></tr>'}).join("")+
     '</tbody></table><div class="vt">Total odds: '+esc(x.odds)+'</div></div>';
   document.body.appendChild(el);
   function close(){el.remove();document.removeEventListener("keydown",esc_)}
@@ -668,7 +681,7 @@ $$("[data-home]").forEach(function(hero){
       }else{list=D[sport][day]||[];title=DAYLABEL[day]}
     }
     var t=$("[data-slot=title]",sure);
-    t.textContent="Sure "+(sport==="football"?"⚽ Football":"🏀 Basketball")+" Predictions for "+title;
+    t.textContent="Sure "+(sport==="football"?"⚽ Football":"🏀 Basketball")+" Predictions \u2014 "+(pbDate(ymd)||title);
     var all=$("[data-sureall]",sure.parentNode)||$("[data-sureall]");if(all)all.href=sport==="football"?"football-predictions.html":"basketball-predictions.html";
     var short=list.filter(function(m){return m.sure}).slice(0,10);
     $("[data-slot=table]",sure).innerHTML=short.length?(sport==="football"?footballTable(short):basketballTable(short)):'<p class="note center" style="padding:28px 10px">No sure predictions posted for this day yet.</p>';
@@ -679,7 +692,8 @@ $$("[data-home]").forEach(function(hero){
     $$("[data-ssport]",sure).forEach(function(b){b.setAttribute("aria-pressed",String(b.dataset.ssport===sport))});
     $$("[data-hday]",hero).forEach(function(b){b.setAttribute("aria-pressed",String(!customDate&&b.dataset.hday===day))});
   }
-  function drawAll(){putUrl(selYmd(),sport);syncHero();drawET();drawBO();drawVIP();drawSure();window.__pbSport=sport;document.dispatchEvent(new CustomEvent("pb:sport",{detail:sport}));window.__pbDay=selYmd();document.dispatchEvent(new CustomEvent("pb:day",{detail:window.__pbDay}))}
+  function titleDates(){$$(".etbar h2").forEach(function(h){if(!h.dataset.base)h.dataset.base=h.textContent.replace(/\s+\u2014.*$/,"");if(/^(Banker Bet of the Day|Bets of the Day)$/.test(h.dataset.base))h.textContent=h.dataset.base+" \u2014 "+pbDate(selYmd())})}
+  function drawAll(){titleDates();putUrl(selYmd(),sport);syncHero();drawET();drawBO();drawVIP();drawSure();window.__pbSport=sport;document.dispatchEvent(new CustomEvent("pb:sport",{detail:sport}));window.__pbDay=selYmd();document.dispatchEvent(new CustomEvent("pb:day",{detail:window.__pbDay}))}
   $$("[data-ssport]",sure).forEach(function(b){b.addEventListener("click",function(){setSport(b.dataset.ssport)})});
   $$("[data-hday]",hero).forEach(function(b){b.addEventListener("click",function(){
     day=b.dataset.hday;customDate=null;var c=$("[data-hcal]",hero);if(c)c.value="";if(vcal)vcal.value="";
@@ -757,6 +771,7 @@ $$("[data-cat]").forEach(function(el){
   function draw(){
     window.__pbDay=wat({yesterday:-1,today:0,tomorrow:1}[day]);document.dispatchEvent(new CustomEvent("pb:day",{detail:window.__pbDay}));
     $$(".tabs button",el).forEach(function(b){b.setAttribute("aria-pressed",String(b.dataset.day===day))});
+    var ttl=$("[data-slot=title]",el);if(ttl){if(!ttl.dataset.base)ttl.dataset.base=ttl.textContent.replace(/\s*\u2014.*$/,"").replace(/\s*Today\s*$/i,"");ttl.textContent=ttl.dataset.base+" \u2014 "+pbDate(window.__pbDay)}
     var box=$("[data-slot=table]",el);
     if(!C){return}
     var list=((D[sport]&&D[sport][day])||[]).filter(C.ok);
@@ -883,20 +898,21 @@ $$("[data-results]").forEach(function(el){
   var sport=el.dataset.results;
   var list=D[sport].yesterday;
   var won=list.filter(function(m){return m.st==="won"}).length;
-  $("[data-slot=sum]",el).textContent=won+" of "+list.length+" "+sport+" tips won yesterday";
+  $("[data-slot=sum]",el).textContent=won+" of "+list.length+" "+sport+" tips won on "+pbDate(wat(-1));
   function dr(){$("[data-slot=table]",el).innerHTML=sport==="football"?footballTable(list):basketballTable(list)}
   dr();REDRAW.push(dr);
 });
 
 /* ---------- plans ---------- */
 var TIER_ICON={free:"🎯",gold:"🥇"};
-(function(){D.plans.forEach(function(p){if(p.tier==="gold"){p.price="$19.99";p.ngn="\u20a619,999"}})})();
+(function(){D.plans.forEach(function(p){if(p.tier==="gold"){p.price="$5";p.ngn="\u20a62,000";p.per="1 Week";p.perks=["2 to 4 odds VIP tips everyday","Guaranteed 5 wins out of 7 days - any extra lost day is refunded to you","Priority support","VIP lounge access"]}})})();
 function detectCountry(){try{var tz=Intl.DateTimeFormat().resolvedOptions().timeZone||"",l=navigator.language||"";if(tz==="Africa/Lagos"||/-NG$/i.test(l))return "Nigeria"}catch(e){}return ""}
+function isAF(){try{var tz=Intl.DateTimeFormat().resolvedOptions().timeZone||"";return /^Africa\//.test(tz)}catch(e){return false}}
 function isNG(){var c=store("premCountry");return c?c==="Nigeria":detectCountry()==="Nigeria"}
 $$("[data-plans]").forEach(function(el){
   function drawPlans(){el.innerHTML=D.plans.filter(function(p){return p.tier!=="free"}).map(function(p,i){var price=isNG()&&p.ngn?p.ngn:p.price;
-    return '<div class="pcard tier-'+esc(p.tier)+'"><div class="pc-head"><span class="pc-chip">'+(TIER_ICON[p.tier]||"")+' '+esc(p.name)+'</span><span class="pc-sub">'+(p.tier==="free"?"Basic member":"VIP membership")+'</span></div>'+
-      '<div class="pc-price"><b>'+esc(price)+'</b><span>'+(p.tier==="free"?"free forever":"/ month")+'</span></div>'+
+    return '<div class="pcard tier-'+esc(p.tier)+'"><div class="pc-head"><span class="pc-chip">'+(TIER_ICON[p.tier]||"")+' '+esc(p.name)+'</span><span class="pc-sub">'+(p.tier==="free"?"Basic member":"Premium membership")+'</span></div>'+
+      '<div class="pc-price"><b>'+esc(price)+'</b><span>'+(p.tier==="free"?"free forever":"/ week")+'</span></div>'+(p.tier==="free"||isNG()?'':'<p class="pc-alt">'+(isAF()?'Pay 5 USDT or $5 USD weekly':'$5 USD weekly')+'</p>')+(p.tier==="free"?'':'<p class="pc-blurb">Enjoy consistent winnings without sitting in front of a desk and performing hours of manual research.</p>')+
       '<ul class="pc-list">'+p.perks.map(function(k){var no=k.charAt(0)==="!";return '<li class="'+(no?'no':'')+'"><b>'+(no?'&#10005;':'&#10003;')+'</b><span>'+esc(no?k.slice(1):k)+'</span></li>'}).join("")+'</ul>'+
       (p.tier==="free"?'<a class="btn ghost wide" href="predictions.html">Start free</a>':'<a class="btn wide" href="checkout.html?plan='+esc(p.tier)+'">Join '+esc(p.name)+'</a>')+'</div>'}).join("");
   $$("[data-pay]",el).forEach(function(b){b.addEventListener("click",function(){$('[data-paynote="'+b.dataset.pay+'"]',el).hidden=false})})}
@@ -914,6 +930,8 @@ $$("[data-plans]").forEach(function(el){
   sel.insertAdjacentHTML("beforeend",list.map(function(n){return '<option value="'+esc(n)+'">'+esc(n)+'</option>'}).join(""));
   var stored=store("premCountry");
   if(stored&&names[stored])sel.value=stored;else if(detectCountry()&&names[detectCountry()])sel.value=detectCountry();
+  if(window.PB_DRAWPLANS)window.PB_DRAWPLANS();grid.hidden=false; /* plans show straight away, priced for the detected visitor */
+  sel.addEventListener("change",function(){if(sel.value){store("premCountry",sel.value);if(window.PB_DRAWPLANS)window.PB_DRAWPLANS();grid.hidden=false}});
   btn.addEventListener("click",function(){
     if(!sel.value){sel.focus();return}
     store("premCountry",sel.value);
@@ -1103,7 +1121,7 @@ document.addEventListener("click",function(e){
   c.querySelector(".cu-main").addEventListener("click",function(e){if(!open){e.preventDefault();open=true;try{localStorage.setItem("pb.chatClosed","0")}catch(x){}paint()}});
   paint();
   var tg=null;
-  if(document.querySelector("[data-home]")){
+  if(false){/* Telegram bar removed */
     var hid=false;try{hid=+localStorage.getItem("pb.tgHide")>Date.now()}catch(e){}
     if(!hid){
       tg=document.createElement("div");tg.className="tgbar";
@@ -1123,3 +1141,14 @@ document.addEventListener("click",function(e){
   layout();window.addEventListener("resize",layout);setInterval(layout,700);
 })();
 
+
+/* ---------- note under tables: which time zone the kick-off times are in (hidden when the visitor is already on Nigeria time) ---------- */
+(function(){
+  var lagosNow=new Intl.DateTimeFormat("en-GB",{timeZone:"Africa/Lagos",hour:"2-digit",minute:"2-digit",hour12:false}).format(new Date()),
+      myNow=(function(){try{return new Intl.DateTimeFormat("en-GB",{timeZone:RTZ,hour:"2-digit",minute:"2-digit",hour12:false}).format(new Date())}catch(e){return lagosNow}})();
+  if(lagosNow===myNow)return;
+  var local=TZPREF!=="wat";
+  var html='<p class="tznote">'+(local?'Kick-off times are shown in your time zone ('+String(tzLabel()).replace(/[<>&"]/g,"")+'). <a href="#" data-tzsw="wat">Show Nigeria time</a>':'Kick-off times are shown in Nigeria time (WAT). <a href="#" data-tzsw="local">Show my time</a>')+'</p>';
+  Array.prototype.forEach.call(document.querySelectorAll("[data-slot=table]"),function(el){if(!el.previousElementSibling||!el.previousElementSibling.classList.contains("tznote"))el.insertAdjacentHTML("beforebegin",html)});
+  document.addEventListener("click",function(e){var a=e.target.closest&&e.target.closest("[data-tzsw]");if(!a)return;e.preventDefault();try{localStorage.setItem("pb.tz",a.dataset.tzsw)}catch(x){}location.reload()});
+})();

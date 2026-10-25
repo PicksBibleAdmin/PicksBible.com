@@ -84,7 +84,7 @@ async function handler(req, res) {
 
   const from = { email: env.MAIL_FROM || "picks@picksbible.com", name: env.MAIL_FROM_NAME || "PicksBible" };
   const replyTo = { email: env.MAIL_REPLY_TO || "picksbiblesupport@gmail.com", name: "PicksBible Support" };
-  const html = free ? freeHtml(picks) : htmlOf(subject, text, "https://picksbible.com/vip.html");
+  const html = free ? freeHtml(picks) : htmlOf(subject, text, "https://picksbible.com/account.html");
   const plain = free ? "Hello {{params.NAME}},\nOur predictive model is backing these three picks as the best banker bets of today:\n" + picks.map((p, i) => (i + 1) + ". " + p.match + " - " + p.pick).join("\n") + "\nSee all free winning picks: https://picksbible.com/\nUnsubscribe: {{params.UNSUB}}" : text;
   let sent = 0; const failed = [];
   for (let i = 0; i < list.length; i += CHUNK) {

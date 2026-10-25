@@ -5,7 +5,7 @@
 <title>PicksBible Admin</title>
 <link rel="icon" href="img/pb-logo.png">
 <style>
-:root{--bg:#0b0820;--panel:#141032;--panel-2:#1b1642;--line:#2c2660;--cyan:#22d3ee;--cyan-ink:#062a33;--purple:#6d28d9;--text:#eef0ff;--muted:#a3a8d6;--won:#22c55e;--lost:#ef4444;--pend:#f5b301;--r:10px}
+:root{--bg:#0b0820;--panel:#141032;--panel-2:#1b1642;--line:#2c2660;--cyan:#a78bfa;--cyan-ink:#ffffff;--purple:#7c3aed;--text:#eef0ff;--muted:#a3a8d6;--won:#22c55e;--lost:#ef4444;--pend:#f5b301;--r:10px}
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--text);font:15px/1.45 Barlow,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
 .wrap{max-width:1180px;margin:0 auto;padding:0 16px}
@@ -786,10 +786,10 @@ function renderHome(){
       <td class="t">${esc(hhmm(f.kickoff))}</td>
       <td class="tm"><b>${esc(f.home)}</b> v <b>${esc(f.away)}</b><br><small>${f.sport==="football"?"Football":"Basketball"} · ${esc(f.competition)}</small></td>
       <td><label class="sw"><input type="checkbox" data-g="et" data-f="on" ${e.on?"checked":""}><i></i></label></td>
-      <td>${e.on?`${bbCell(f,e)}<textarea data-g="et" data-f="reasoning" rows="3" style="min-width:240px;max-width:320px" placeholder="Why this tip? (new line = new paragraph)">${esc(e.reasoning||"")}</textarea><br><input data-g="et" data-f="by" value="${esc(e.by||"PB Analyst")}" placeholder="By" style="width:140px"><br><input data-g="et" data-f="hl" value="${esc(e.hl||"")}" placeholder="Home logo link" style="width:150px"> <input data-g="et" data-f="al" value="${esc(e.al||"")}" placeholder="Away logo link" style="width:150px"><br><small class="muted">National teams get their flag automatically. For clubs, paste an https image link, or leave blank for a neutral ball icon.</small><br>Result: <select data-g="et" data-f="st"><option value="">pending</option><option value="won" ${e.st==="won"?"selected":""}>won</option><option value="lost" ${e.st==="lost"?"selected":""}>lost</option></select>`:'<span class="muted">-</span>'}</td>
+      <td>${e.on?`${bbCell(f,e)}<textarea data-g="et" data-f="reasoning" rows="3" style="min-width:240px;max-width:320px" placeholder="Why this tip? (new line = new paragraph)">${esc(e.reasoning||"")}</textarea><br><input data-g="et" data-f="by" value="${esc(e.by||"PB Analyst")}" placeholder="By" style="width:140px"><br><input data-g="et" data-f="hl" value="${esc(e.hl||"")}" placeholder="Home logo link" style="width:150px"> <input data-g="et" data-f="al" value="${esc(e.al||"")}" placeholder="Away logo link" style="width:150px"><br><small class="muted">National teams get their flag automatically. For clubs, paste an https image link, or leave blank for a neutral ball icon.</small><br>Result: <select data-g="et" data-f="st"><option value="">pending</option><option value="won" ${e.st==="won"?"selected":""}>won</option><option value="lost" ${e.st==="lost"?"selected":""}>lost</option><option value="postponed" ${e.st==="postponed"?"selected":""}>postponed</option></select>`:'<span class="muted">-</span>'}</td>
       <td><label class="sw"><input type="checkbox" data-g="bo" data-f="on" ${b.on?"checked":""}><i></i></label></td>
       <td>${b.on?`<input data-g="bo" data-f="pick" value="${esc(b.pick||"")}" placeholder="1X" style="width:110px">`:'<span class="muted">-</span>'}</td>
-      <td>${b.on?`<select data-g="bo" data-f="st">${["pending","won","lost"].map(r=>`<option ${(b.st||"pending")===r?"selected":""}>${r}</option>`).join("")}</select>`:'<span class="muted">-</span>'}</td>
+      <td>${b.on?`<select data-g="bo" data-f="st">${["pending","won","lost","postponed"].map(r=>`<option ${(b.st||"pending")===r?"selected":""}>${r}</option>`).join("")}</select>`:'<span class="muted">-</span>'}</td>
       <td>${b.on?`<input class="cs" data-g="bo" data-f="score" value="${esc(b.score||"")}" placeholder="2-1" maxlength="9">`:'<span class="muted">-</span>'}</td></tr>`;
   }).join("") : `<tr><td colspan="8" class="empty">Nothing chosen for this date yet. Choose a match above.</td></tr>`;
   const ym=$("#vpMonth").value||todayStr().slice(0,7), [y,m]=ym.split("-").map(Number), n=new Date(y,m,0).getDate();
@@ -815,10 +815,30 @@ function hbLimitOk(f,g){
   if(n>=lim){ toast(g==="et" ? "Only one Banker Bet of the Day per sport per day. Switch the other one off first." : "Maximum 5 Bets of the day per sport. Switch one off first."); return false; }
   return true;
 }
+/* when a match is switched on as Banker Bet / Bet of the day, carry its table tip over automatically (still fully editable) */
+function carryTip(f,g){
+  const x=(f.sport==="basketball"?bbOf(f):fbOf(f)); let t=String(x.tip||"").trim();
+  if(f.sport==="basketball" && !t){ if(x.spread) t=x.spread; else if(x.totalSide) t=(x.totalSide+" "+(x.totalLine||"")).trim(); }
+  if(!t) return;
+  f[g]=f[g]||{};
+  if(g==="bo"){ if(!f.bo.pick) f.bo.pick=t; return; }
+  if(f.et.mk) return;
+  const T=t.toUpperCase().replace(/\s+/g," "); let m;
+  if(f.sport==="basketball"){
+    if(/^[12]$/.test(T)){ f.et.mk = x.spread?"Spread":"Moneyline"; if(x.spread) f.et.line=String(x.spread).replace(/^[12]\s*/,""); f.et.ours=String(+T-1); }
+    else if((m=T.match(/^(OVER|UNDER)\s*([\d.]+)?/))){ f.et.mk="Total points"; f.et.line=m[2]||String(x.totalLine||""); f.et.ours=m[1]==="OVER"?"0":"1"; }
+  } else {
+    if(/^[1X2]$/.test(T)){ f.et.mk="1X2"; f.et.ours=String("1X2".indexOf(T)); }
+    else if(/^(1X|X2|12)$/.test(T)){ f.et.mk="Double Chance"; f.et.ours=String(["1X","X2","12"].indexOf(T)); }
+    else if(T==="GG"||T==="NG"||T==="YES"||T==="NO"){ f.et.mk="BTTS"; f.et.ours=(T==="GG"||T==="YES")?"0":"1"; }
+    else if((m=T.match(/^(OVER|UNDER)\s*([\d.]+)/))){ f.et.mk="Over/Under goals"; f.et.line=m[2]; f.et.ours=m[1]==="OVER"?"0":"1"; }
+  }
+}
 function hbAdd(id,g){
   const f=db.fixtures.find(x=>x.id===id); if(!f) return;
   if(!hbLimitOk(f,g)) return;
   f[g]=f[g]||{}; f[g].on=true; if(g==="bo" && !f.bo.st) f.bo.st="pending";
+  carryTip(f,g);
   commit(); toast(g==="et"?"Added as Banker Bet of the Day":"Added as Bet of the day");
 }
 $("#hbInv").addEventListener("click", e => { const b=e.target.closest("[data-add]"); if(!b) return; hbAdd(b.closest(".ir").dataset.id,b.dataset.add); hbOpen(false); $("#hbSearch").value=""; });
@@ -842,6 +862,7 @@ $("#hbBody").addEventListener("change", e => {
   f[g] = f[g] || {}; f[g][el.dataset.f] = val;
   if(g==="et" && el.dataset.f==="mk"){ ["line","ours","o0","o1","o2"].forEach(k=>{ delete f.et[k]; }); }
   if(g==="bo" && el.dataset.f==="on" && val && !f.bo.st) f.bo.st="pending";
+  if(el.dataset.f==="on" && val) carryTip(f,g);
   commit();
 });
 $("#vpBody").addEventListener("change", e => {
@@ -1016,8 +1037,8 @@ $("#fStatus").onchange = render;
 const hasTip = f => !!((f.fb&&f.fb.live)||(f.bb&&f.bb.live));
 const tipBox = f => f.sport==="basketball" ? bbOf(f) : fbOf(f);
 const dayOfF = f => String((f&&f.kickoff)||"").slice(0,10);
-const isDone = st => st==="won"||st==="lost";
-const resSel = (val,attrs) => `<select ${attrs}><option value="">pending</option><option value="won" ${val==="won"?"selected":""}>won</option><option value="lost" ${val==="lost"?"selected":""}>lost</option></select>`;
+const isDone = st => st==="won"||st==="lost"||st==="postponed";
+const resSel = (val,attrs) => `<select ${attrs}><option value="">pending</option><option value="won" ${val==="won"?"selected":""}>won</option><option value="lost" ${val==="lost"?"selected":""}>lost</option><option value="postponed" ${val==="postponed"?"selected":""}>postponed</option></select>`;
 const fxById = id => db.fixtures.find(x=>x.id===id);
 /* everything that can still be settled: played in the last 30 days and not yet won / lost */
 function unsettledCount(){

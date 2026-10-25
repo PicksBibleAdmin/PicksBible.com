@@ -235,7 +235,7 @@ main.sp{padding-block:18px 44px}
 .sp-note{font-size:12.5px;color:var(--muted);margin-top:26px;max-width:80ch}
 .sp-foot{border-top:1px solid var(--line);background:#07051a;padding:22px 0;color:var(--muted);font-size:13.5px}.sp-foot a{color:var(--muted)}
 `;
-const NAV = [['/', 'Home'], ['/predictions.html', 'Predictions'], ['/football-predictions.html', 'Football'], ['/basketball-predictions.html', 'Basketball'], ['/expert-tips.html', 'Expert Tips'], ['/blog.html', 'Blog'], ['/premium.html', 'VIP']];
+const NAV = [['/', 'Home'], ['/predictions.html', 'Predictions'], ['/football-predictions.html', 'Football'], ['/basketball-predictions.html', 'Basketball'], ['/expert-tips.html', 'Banker Bet of the Day'], ['/blog.html', 'Blog'], ['/premium.html', 'VIP']];
 const POPULAR = [
   ['/over-2-5-goals-predictions-today', 'Over 2.5 goals prediction today'], ['/btts-predictions-today', 'BTTS prediction today'], ['/correct-score-predictions-today', 'Correct score tips for today'],
   ['/double-chance-predictions-today', 'Double chance'], ['/sure-predictions-today', 'Sure prediction for today'], ['/nba-predictions-today', 'NBA picks and predictions'],
