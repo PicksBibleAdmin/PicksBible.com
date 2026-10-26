@@ -21,7 +21,7 @@ const isEmail = e => typeof e === "string" && e.length < 120 && /^[^\s@]+@[^\s@]
 const SHELL_TOP = `<!doctype html><html><body style="margin:0;background:#f2f2f7;padding:24px 12px;font-family:Arial,Helvetica,sans-serif">
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr><td align="center">
 <table role="presentation" width="100%" style="max-width:520px;background:#ffffff;border-radius:16px;overflow:hidden" cellpadding="0" cellspacing="0">
-<tr><td style="background:#141032;padding:18px 24px;color:#ffffff;font-size:20px;font-weight:bold">Picks<span style="color:#22d3ee">Bible</span></td></tr>`;
+<tr><td style="background:#141032;padding:18px 24px;color:#ffffff;font-size:20px;font-weight:bold"><img src="https://picksbible.com/img/pb-logo.png" width="44" height="32" alt="" style="vertical-align:middle;border:0;margin-right:10px"><span style="vertical-align:middle">Picks<span style="color:#22d3ee">Bible</span></span></td></tr>`;
 const FOOT = `<tr><td style="padding:16px 24px 22px;color:#777;font-size:12px;line-height:1.5">You get this because you signed up at PicksBible.com. Predictions are not guarantees; bet responsibly. Reply to this email if you need help.<br>
 <a href="{{params.UNSUB}}" style="color:#777">Unsubscribe</a></td></tr>
 </table></td></tr></table></body></html>`;
@@ -31,7 +31,7 @@ const button = (link, color) => link && link.url ? `<p style="margin:22px 0 8px"
 
 /* a plain message: title, body, optional button */
 function htmlOf(title, body, link) {
-  return SHELL_TOP + `<tr><td style="padding:26px 24px 10px"><h1 style="margin:0 0 14px;font-size:22px;color:#111">${esc(title)}</h1>${paras(body)}${button(link, "#1a1a1a")}</td></tr>` + FOOT;
+  return SHELL_TOP + `<tr><td style="padding:26px 24px 10px"><h1 style="margin:0 0 14px;font-size:22px;color:#111">${esc(title)}</h1>${paras(body)}${button(link, "#dc2626")}</td></tr>` + FOOT;
 }
 
 /* free picks: title, optional body, picks with editable tip and numeric odds, optional button */
@@ -41,7 +41,7 @@ function freeHtml(picks, body, link, title) {
   return SHELL_TOP + `<tr><td style="padding:26px 24px 6px">${title ? `<h1 style="margin:0 0 14px;font-size:22px;color:#111">${esc(title)}</h1>` : ""}<p style="margin:0 0 12px;font-size:17px;color:#111">Hello {{params.NAME}},</p>
 ${paras(body)}
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0">${items}</table>
-${button(link, "#16a34a")}</td></tr>` + FOOT;
+${button(link, "#dc2626")}</td></tr>` + FOOT;
 }
 const cleanLink = l => {
   const url = String((l && l.url) || "").trim();
