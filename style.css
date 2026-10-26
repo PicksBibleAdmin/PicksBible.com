@@ -1207,10 +1207,14 @@ table.pt.bw.lgbars.cat{display:table!important}
 .hdates .hchat svg,.vchat svg{color:#16a34a;fill:#16a34a}
 .hdates .hchat:hover,.vchat:hover{background:#eef1f6}
 
-/* Banker Bet button: grey until settled, green when won (grey stays for lost) */
-.etlock,.etlock:hover{background:linear-gradient(180deg,#9aa0b5,#6b7088);border:1.5px solid #b7bccd;color:#fff;box-shadow:none}
-.etlock:hover{background:linear-gradient(180deg,#a7adc0,#767b92)}
-.etlock .lockico{background:#3b3f55;color:#d8dbe8;box-shadow:0 0 0 4px #ffffff18}.etlock .locktxt{color:#fff}
+/* Banker Bet button: amber until settled, green when won, grey only when lost */
+.etlock,.etlock:hover{background:linear-gradient(180deg,var(--gold1),var(--gold2) 60%,var(--gold3));border:1.5px solid #ffe08a;color:var(--goldink);box-shadow:0 6px 18px #f5b30133}
+.etlock:hover{background:linear-gradient(180deg,#ffe08a,#ffc42e 60%,#e3a400)}
+.etlock .lockico{background:var(--goldink);color:var(--gold1);box-shadow:0 0 0 4px #2a1a0022}.etlock .locktxt{color:var(--goldink)}
+.etlock.lost,.etlock.lost:hover{background:linear-gradient(180deg,#9aa0b5,#6b7088);border-color:#b7bccd;color:#fff;box-shadow:none}
+.etlock.lost .lockico{background:#3b3f55;color:#d8dbe8;box-shadow:0 0 0 4px #ffffff18}.etlock.lost .locktxt{color:#fff}
+/* collapsed Chat Us (mobile): white circle with the green logo, same as the approved pill */
+.chatus.min{background:#fff}.chatus.min .cu-main{color:#16a34a}
 .etlock.won,.etlock.won:hover{background:linear-gradient(180deg,#4ade80,#16a34a);border-color:#86efac;color:#04220f;box-shadow:0 6px 18px #22c55e33}
 .etlock.won .lockico{background:#04220f;color:#86efac;box-shadow:0 0 0 4px #04220f22}.etlock.won .locktxt{color:#04220f}
 
