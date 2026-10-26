@@ -14,6 +14,9 @@
     "Over/Under":      ["Over 1.5", "Over 2.5", "Over 3.5", "Under 2.5", "Under 3.5"],
     "Home Over/Under": ["Over 0.5", "Over 1.5", "Under 1.5"],
     "Away Over/Under": ["Over 0.5", "Over 1.5", "Under 1.5"],
+    "Player Prop":     ["LeBron James Over 25.5 Points", "Nikola Jokic Over 10.5 Rebounds", "Stephen Curry Over 4.5 3-Pointers Made", "Player Over 5.5 Assists"],
+    "Spread":          ["Home -6.5", "Away +6.5"],
+    "Total Points":    ["Over 220.5", "Under 220.5"],
     "Handicap":        ["Home -1", "Home -1.5", "Home +1", "Away +1", "Away +1.5", "Away -1"]
   };
   const MAXLEGS = 8;

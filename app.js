@@ -87,16 +87,19 @@ function addProp(P,p){
 }
 /* Banker Bet market: the analyst picks a market, types the odds for every option and marks which one is ours.
    Returns {m:market, l:[option labels], o:[odds], i:index of our selection or -1}, or null when no market was chosen. */
-var BB_OPTS={"1X2":["1","X","2"],"Double Chance":["1X","X2","12"],"BTTS":["Yes","No"],"Over/Under goals":["Over","Under"],"Moneyline":["1","2"],"Spread":["1","2"],"Total points":["Over","Under"]};
+var BB_OPTS={"1X2":["1","X","2"],"Double Chance":["1X","X2","12"],"BTTS":["Yes","No"],"Over/Under goals":["Over","Under"],"Moneyline":["1","2"],"Spread":["1","2"],"Total points":["Over","Under"],"Player Prop":["Over","Under"]};
 function etBM(f){
   var e=f&&f.et; if(!e||!e.mk||!BB_OPTS[e.mk])return null;
   var base=BB_OPTS[e.mk], line=String(e.line||"").trim(), n=parseFloat(line), l=base.slice();
-  if(line&&(e.mk==="Over/Under goals"||e.mk==="Total points"))l=base.map(function(x){return x+" "+line});
+  if(line&&(e.mk==="Over/Under goals"||e.mk==="Total points"||e.mk==="Player Prop"))l=base.map(function(x){return x+" "+line});
   if(e.mk==="Spread"&&line&&!isNaN(n)){var sg=function(v){return (v>0?"+":"")+v};l=["1 "+sg(n),"2 "+sg(-n)]}
   var x=(f.sport==="basketball"?f.bb:f.fb)||{}, auto=e.mk==="1X2"?[x.o1,x.oX,x.o2]:e.mk==="Moneyline"?[x.o1,x.o2]:[];
   var o=base.map(function(_,i){return String(e["o"+i]||auto[i]||"").trim()});
   var i=parseInt(e.ours,10); if(isNaN(i)||i<0||i>=base.length)i=-1;
-  return {m:e.mk,l:l,o:o,i:i};
+  /* "Our selection" not chosen in the admin: read it from the table tip (1 / 2 / X / Over ...) so the pick still shows its market and line */
+  if(i<0&&e.mk!=="Player Prop"){var tk=String(x.tip||"").trim().split(/\s+/)[0].toUpperCase();if(tk)for(var j=0;j<base.length;j++)if(base[j].toUpperCase()===tk){i=j;break}}
+  var pp=e.mk==="Player Prop"?(String(e.player||"").trim()+" "+String(e.stat||"").trim()).trim():"";
+  return {m:e.mk,l:l,o:o,i:i,pp:pp,sel:(i>=0?(e.mk==="Player Prop"?(String(e.player||"").trim()+" "+l[i]+" "+String(e.stat||"").trim()).trim():l[i]):"")};
 }
 /* one fixture -> every list it belongs to (tables, expert tips, bets of the day). Used for the live document and for archived days. */
 function addFx(P,f,days){
@@ -159,7 +162,7 @@ function loadDay(ymd,cb){
 /* "ready" = the date's data is here; "wait" = it is being fetched (redraw is called when it arrives) */
 function dayGate(ymd,redraw){
   /* older days: ALWAYS fetch the day archive (a few Bets-of-the-day matches already in the live document must not stop the rest loading) */
-  if(ymd>=wat(-1)||ymd<wat(-30))return "ready";
+  if(ymd>=wat(-1)||ymd<"2024-01-01")return "ready";
   var st=DAYST[ymd]; if(st==="done")return "ready"; if(st==="loading")return "wait";
   DAYST[ymd]="loading"; loadDay(ymd,function(){DAYST[ymd]="done";redraw()});
   return "wait";
@@ -451,7 +454,7 @@ $$("[data-featured]").forEach(function(el){
 });
 
 /* keep the chosen date (and sport) in the address bar so a refresh or shared link returns to the same view */
-function urlDay(){var v=new URLSearchParams(location.search).get("date");if(!/^\d{4}-\d{2}-\d{2}$/.test(v||""))return null;if(v<wat(-30)||v>wat(30))return null;return v}
+function urlDay(){var v=new URLSearchParams(location.search).get("date");if(!/^\d{4}-\d{2}-\d{2}$/.test(v||""))return null;if(v<"2024-01-01"||v>wat(30))return null;return v}
 function urlSport(){var v=new URLSearchParams(location.search).get("sp");return v==="basketball"||v==="football"?v:null}
 function putUrl(ymd,sp){try{var u=new URL(location.href);if(ymd&&ymd!==wat(0))u.searchParams.set("date",ymd);else u.searchParams.delete("date");if(sp)u.searchParams.set("sp",sp);history.replaceState(null,"",u.pathname+u.search+u.hash)}catch(e){}}
 function applyUrlDay(st){var v=urlDay();if(!v)return;if(v===wat(-1))st.day="yesterday";else if(v===wat(0))st.day="today";else if(v===wat(1))st.day="tomorrow";else{var p=v.split("-");st.custom=new Date(+p[0],+p[1]-1,+p[2])}}
@@ -533,7 +536,7 @@ $$("[data-bigtable]").forEach(function(el){
 
   /* date picker: the same control as VIP Results on the home page. Pick any date, not just yesterday/today/tomorrow */
   var bcal=$("[data-bcal]",el);
-  if(bcal){bcal.min=wat(-30);bcal.max=wat(30)}
+  if(bcal){bcal.min="2024-01-01";bcal.max=wat(30)}
   if(bcal)bcal.addEventListener("change",function(){
     if(!bcal.value){customDate=null;draw();return}
     var v=bcal.value, p=v.split("-");
@@ -702,7 +705,7 @@ $$("[data-home]").forEach(function(hero){
     day=b.dataset.hday;customDate=null;var c=$("[data-hcal]",hero);if(c)c.value="";if(vcal)vcal.value="";
     vip.toYmd(selYmd());drawAll()})});
   var cal=$("[data-hcal]",hero);
-  if(cal){cal.min=wat(-30);cal.max=wat(30)}
+  if(cal){cal.min="2024-01-01";cal.max=wat(30)}
   if(cal)cal.addEventListener("change",function(){
     if(!cal.value){customDate=null}else{var p=cal.value.split("-");customDate=new Date(+p[0],+p[1]-1,+p[2]);vip.to(customDate);if(vcal)vcal.value=cal.value}
     drawAll()});
@@ -727,13 +730,13 @@ $$("[data-analysis]").forEach(function(el){
   var paras=String(v.reasoning||"").split(/\n+/).map(function(t){return t.trim()}).filter(Boolean);
   var cn=parseFloat(v.conf), clv=isNaN(cn)?"":cn<45?"Low":cn<=55?"Medium":"High", ccl=isNaN(cn)?"":cn<45?"lo":cn<=55?"mid":"hi";
   var done=v.st==="won"||v.st==="lost", ft=done&&v.score?esc(v.score):"";
-  var bm=v.bm, hasBM=bm&&bm.i>=0, selTxt=hasBM?bm.m+" - "+bm.l[bm.i]:(v.tip||"");
+  var bm=v.bm, hasBM=bm&&bm.i>=0, selTxt=hasBM?bm.m+" - "+(bm.sel||bm.l[bm.i]):(v.tip||"");
   var dateTxt=new Date(ymd+"T12:00:00Z").toLocaleDateString("en-GB",{weekday:"long",day:"numeric",month:"long",year:"numeric",timeZone:"UTC"});
   var shortDate=new Date(ymd+"T12:00:00Z").toLocaleDateString("en-GB",{day:"numeric",month:"short",year:"numeric",timeZone:"UTC"});
   var title=v.h+" vs "+v.a+" Prediction, Betting Tips, Stats and Odds";
   try{document.title=title+" | "+shortDate+" | PicksBible"}catch(_){}
   var oddsHtml="";
-  if(bm){oddsHtml='<div class="bbo n'+bm.l.length+'">'+bm.l.map(function(lb,i){return '<div class="bbt'+(i===bm.i?" ours":"")+'"><small>'+esc(lb)+'</small><b>'+(bm.o[i]?esc(bm.o[i]):"-")+'</b></div>'}).join("")+'</div>'}
+  if(bm){oddsHtml=(bm.pp?'<p class="note" style="margin:0 0 8px"><b>'+esc(bm.pp)+'</b></p>':"")+'<div class="bbo n'+bm.l.length+'">'+bm.l.map(function(lb,i){return '<div class="bbt'+(i===bm.i?" ours":"")+'"><small>'+esc(lb)+'</small><b>'+(bm.o[i]?esc(bm.o[i]):"-")+'</b></div>'}).join("")+'</div>'}
   else if(v.odd){oddsHtml='<div class="bbo n1"><div class="bbt ours"><small>'+esc(v.tip)+'</small><b>'+esc(v.odd)+'</b></div></div>'}
   else oddsHtml='<p class="note" style="margin:0">Odds not posted yet.</p>';
   el.innerHTML=
@@ -745,7 +748,7 @@ $$("[data-analysis]").forEach(function(el){
    '<h1>'+esc(title)+' | '+esc(shortDate)+'</h1>'+
    '<p class="bbintro">'+esc(v.h)+' welcome '+esc(v.a)+' in the '+esc(v.lg)+' on '+esc(dateTxt)+', with our prediction model identifying '+(selTxt?'<b>'+esc(selTxt)+'</b>':'our selection')+' as the best betting opportunity for this fixture.</p></div>'+
    '<section class="bbbox"><div class="bbbar"><span>Banker Bet of the Day</span>'+(done?'<em class="bbres '+v.st+'">'+(v.st==="won"?"&#10003; Won":"Lost")+'</em>':'<em class="bbres pend">Pending</em>')+'</div>'+
-   '<div class="bbin"><div class="bbl"><span class="bbk">Our Best Bet</span><h2>'+(hasBM?'<span class="mk">'+esc(bm.m)+'</span><span class="dash"> - </span><span class="sl">'+esc(bm.l[bm.i])+'</span>':(selTxt?'<span class="sl">'+esc(selTxt)+'</span>':'<span class="na">Not posted yet</span>'))+'</h2>'+
+   '<div class="bbin"><div class="bbl"><span class="bbk">Our Best Bet</span><h2>'+(hasBM?'<span class="mk">'+esc(bm.m)+'</span><span class="dash"> - </span><span class="sl">'+esc(bm.sel||bm.l[bm.i])+'</span>':(selTxt?'<span class="sl">'+esc(selTxt)+'</span>':'<span class="na">Not posted yet</span>'))+'</h2>'+
    (paras.length?paras.map(function(t){return '<p>'+esc(t)+'</p>'}).join(""):'<p class="note">The analyst reasoning for this bet has not been written yet.</p>')+
    '<p class="note by">Banker Bet by <b>'+esc(v.by)+'</b> &middot; '+(sp==="football"?"&#9917; Football":"&#127936; Basketball")+'</p></div>'+
    '<div class="bbr"><div class="bbcard"><span class="bbk">Market Odds</span>'+oddsHtml+'</div>'+

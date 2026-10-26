@@ -353,6 +353,16 @@ tr.lghead td{background:#ffffff0d;padding:10px 8px;border-bottom:1px solid var(-
       <button class="btn danger" id="wipe">Erase all</button>
     </div>
   </div>
+  <div class="card">
+    <h2>Publish check</h2>
+    <p class="note">The public site only shows matches whose <b>Live</b> switch is on, and every past day is kept forever as its own archive page. This lists every day that has matches with a tip that are NOT Live, so you can see why they are missing from the site.</p>
+    <div class="row">
+      <button class="btn" id="pcVerify">Verify old days on the site</button>
+      <button class="btn ghost" id="pcRun">Check Live switches</button>
+      <button class="btn ghost" id="pcRepub">Republish everything to the site now</button>
+    </div>
+    <div id="pcOut" class="note" style="margin-top:10px"></div>
+  </div>
 </section>
 </div>
 </div>
@@ -446,19 +456,28 @@ const Store = {
       /* ARCHIVE: one small document per past day (2 to 30 days back) so visitors can open any of the last 30 days
          without making the live document too big. Only days whose content changed are written again. */
       const watA = o => { const t = new Date(new Intl.DateTimeFormat("en-CA",{timeZone:"Africa/Lagos"}).format(new Date())+"T12:00:00Z"); t.setUTCDate(t.getUTCDate()+o); return t.toISOString().slice(0,10); };
-      const arch = {}, archP = {}; for(let i=2;i<=30;i++){ arch[watA(-i)] = []; archP[watA(-i)] = []; }
+      if(!this.lastDays){ try{ this.lastDays = JSON.parse(localStorage.getItem("pb.archHash")||"{}"); }catch(e){ this.lastDays = {}; } }
+      const arch = {}, archP = {}, newestArch = watA(-2); /* every day from 2 days ago back to the OLDEST match you have: no 30-day limit */
+      for(const f of db.fixtures){ const k=String(f.kickoff||"").slice(0,10); if(k && k<=newestArch){ arch[k]=[]; archP[k]=[]; } }
+      for(const p of db.props){ const f=db.fixtures.find(x=>x.id===p.fixtureId), k=String((f&&f.kickoff)||p.kickoff||"").slice(0,10); if(k && k<=newestArch){ arch[k]=arch[k]||[]; archP[k]=archP[k]||[]; } }
+      Object.keys(this.lastDays||{}).forEach(k=>{ if(k<=newestArch && !arch[k]){ arch[k]=[]; archP[k]=[]; } });
       db.fixtures.filter(f=>liveOf("fixtures",f)).forEach(f=>{ const k=String(f.kickoff||"").slice(0,10); if(arch[k]) arch[k].push(this.docOf("fixtures",f)); });
       db.props.filter(r=>liveOf("props",r)).forEach(r=>{ const d=this.docOf("props",r), k=String(d.kickoff||"").slice(0,10); if(archP[k]) archP[k].push(d); });
-      this.lastDays = this.lastDays || {};
+      const hsh = s => { let h=5381; for(let i=0;i<s.length;i++) h=((h<<5)+h+s.charCodeAt(i))|0; return s.length+":"+h; };
       const liveIds = new Set(snap.fixtures.map(f=>f.id)); let archivedOnly = 0;
-      for(const k of Object.keys(arch)){
+      const archFail = [];
+      for(const k of Object.keys(arch).sort().reverse()){
         const list = arch[k].sort((a,b)=>String(a.kickoff).localeCompare(String(b.kickoff)));
         archivedOnly += list.filter(f=>!liveIds.has(f.id)).length;
         const plist = archP[k];
-        if(!list.length && !plist.length){ if(this.lastDays[k]){ await this.fs.collection("public").doc("day-"+k).delete(); delete this.lastDays[k]; } continue; }
-        const j = JSON.stringify([list,plist]);
-        if(this.lastDays[k] !== j){ await this.fs.collection("public").doc("day-"+k).set({day:k, fixtures:list, props:plist, updatedAt:new Date().toISOString()}); this.lastDays[k] = j; }
+        try{
+          if(!list.length && !plist.length){ if(this.lastDays[k]){ await this.fs.collection("public").doc("day-"+k).delete(); delete this.lastDays[k]; } continue; }
+          const body = JSON.parse(JSON.stringify({day:k, fixtures:list, props:plist})); /* drops any undefined value, which Firestore refuses */
+          const j = hsh(JSON.stringify(body));
+          if(this.lastDays[k] !== j){ body.updatedAt = new Date().toISOString(); await this.fs.collection("public").doc("day-"+k).set(body); this.lastDays[k] = j; try{ localStorage.setItem("pb.archHash", JSON.stringify(this.lastDays)); }catch(e){} }
+        }catch(err){ console.error("archive day "+k, err); archFail.push(k+" ("+(err.code||err.message)+")"); }   /* one bad day never blocks the other days */
       }
+      try{ localStorage.setItem("pb.archHash", JSON.stringify(this.lastDays)); }catch(e){}
       /* tell the editor exactly what the public site will show (it only shows yesterday / today / tomorrow, Nigerian time) */
       const wat = o => { const t = new Date(new Intl.DateTimeFormat("en-CA",{timeZone:"Africa/Lagos"}).format(new Date())+"T12:00:00Z"); t.setUTCDate(t.getUTCDate()+o); return t.toISOString().slice(0,10); };
       const dayOf = r => String(r.kickoff||"").slice(0,10);
@@ -466,8 +485,9 @@ const Store = {
       const showPr = snap.props.length;
       const liveFx = db.fixtures.filter(f=>liveOf("fixtures",f)).length, livePr = db.props.filter(r=>liveOf("props",r)).length;
       const hidden = (liveFx-showFx-archivedOnly)+(livePr-showPr);
+      if(archFail.length){ this.setSync("Saved, but "+archFail.length+" old day(s) could NOT be published: "+archFail.slice(0,3).join(", ")+" – open Data > Publish check",true); toast("Some old days failed to publish"); return; }
       this.setSync("Saved ✓ · on the site now: "+showFx+" match"+(showFx===1?"":"es")+" (any date)"+", "+showPr+" prop"+(showPr===1?"":"s")
-        + (hidden>0 ? " · "+hidden+" Live item"+(hidden===1?"":"s")+" NOT shown: matches need a kickoff date (not older than 30 days); props follow the match date" : ""), hidden>0);
+        + (hidden>0 ? " · "+hidden+" Live item"+(hidden===1?"":"s")+" NOT shown: matches need a kickoff date; props follow the match date" : ""), hidden>0);
     }catch(e){
       console.error(e); this.setSync("NOT SAVED – "+(e.code||e.message),true); toast("Could not save: "+(e.code||e.message));
     }
@@ -748,13 +768,14 @@ $("#hbDate").value = todayStr(); $("#vpMonth").value = todayStr().slice(0,7);
 
 /* Banker Bet market picker: market, line, odds for EVERY option, and which option is ours (that one is highlighted on the page) */
 const BB_MK = { football:{ "1X2":["1","X","2"], "Double Chance":["1X","X2","12"], "BTTS":["Yes","No"], "Over/Under goals":["Over","Under"] },
-                basketball:{ "Moneyline":["1","2"], "Spread":["1","2"], "Total points":["Over","Under"] } };
+                basketball:{ "Moneyline":["1","2"], "Spread":["1","2"], "Total points":["Over","Under"], "Player Prop":["Over","Under"] } };
 function bbCell(f,e){
   const defs = BB_MK[f.sport] || BB_MK.football, base = defs[e.mk], x = (f.sport==="basketball"?f.bb:f.fb) || {};
-  const needLine = e.mk==="Over/Under goals" || e.mk==="Total points" || e.mk==="Spread";
+  const needLine = e.mk==="Over/Under goals" || e.mk==="Total points" || e.mk==="Spread" || e.mk==="Player Prop";
   const auto = e.mk==="1X2" ? [x.o1,x.oX,x.o2] : e.mk==="Moneyline" ? [x.o1,x.o2] : [];
   let h = `<b>Market:</b> <select data-g="et" data-f="mk"><option value="">Choose a market</option>${Object.keys(defs).map(k=>`<option ${e.mk===k?"selected":""}>${k}</option>`).join("")}</select>`;
-  if(needLine) h += ` <b>Line:</b> <input data-g="et" data-f="line" value="${esc(e.line||"")}" placeholder="${e.mk==="Spread"?"-6.5":e.mk==="Total points"?"220.5":"2.5"}" style="width:80px" maxlength="7" title="${e.mk==="Spread"?"Handicap for team 1, e.g. -6.5 (team 2 gets +6.5 automatically)":"The goals or points line, e.g. 2.5"}">`;
+  if(e.mk==="Player Prop") h += `<br><b>Player:</b> <input data-g="et" data-f="player" value="${esc(e.player||"")}" placeholder="e.g. LeBron James" style="width:170px" maxlength="60"> <b>Stat:</b> <input data-g="et" data-f="stat" list="ppStats" value="${esc(e.stat||"")}" placeholder="Points" style="width:130px" maxlength="30"><datalist id="ppStats"><option>Points</option><option>Rebounds</option><option>Assists</option><option>3-Pointers Made</option><option>Pts + Reb + Ast</option><option>Pts + Reb</option><option>Pts + Ast</option><option>Reb + Ast</option><option>Steals</option><option>Blocks</option></datalist><br>`;
+  if(needLine) h += ` <b>Line:</b> <input data-g="et" data-f="line" value="${esc(e.line||"")}" placeholder="${e.mk==="Spread"?"-6.5":e.mk==="Total points"?"220.5":e.mk==="Player Prop"?"24.5":"2.5"}" style="width:80px" maxlength="7" title="${e.mk==="Spread"?"Handicap for team 1, e.g. -6.5 (team 2 gets +6.5 automatically)":"The goals or points line, e.g. 2.5"}">`;
   if(base){
     const lab = base.map((o,i)=> e.mk==="Spread" ? (e.line&&!isNaN(parseFloat(e.line)) ? o+" "+(i===0?parseFloat(e.line):-parseFloat(e.line)).toString().replace(/^(\d)/,"+$1") : o) : (needLine&&e.line ? o+" "+e.line : o));
     h += `<br><small class="muted">Type the market odds for every option, then choose which one is OURS:</small><br>` +
@@ -860,7 +881,7 @@ $("#hbBody").addEventListener("change", e => {
     if(n>=lim){ toast(g==="et" ? "Only one Banker Bet of the Day per sport per day. Untick the other one first." : "Maximum 5 Bets of the day per sport. Untick one first."); el.checked=false; return; }
   }
   f[g] = f[g] || {}; f[g][el.dataset.f] = val;
-  if(g==="et" && el.dataset.f==="mk"){ ["line","ours","o0","o1","o2"].forEach(k=>{ delete f.et[k]; }); }
+  if(g==="et" && el.dataset.f==="mk"){ ["line","ours","o0","o1","o2","player","stat"].forEach(k=>{ delete f.et[k]; }); }
   if(g==="bo" && el.dataset.f==="on" && val && !f.bo.st) f.bo.st="pending";
   if(el.dataset.f==="on" && val) carryTip(f,g);
   commit();
@@ -1177,5 +1198,54 @@ try{
 <script src="admin-vip.js"></script>
 <script src="admin-hub.js"></script>
 <script src="admin-expert.js"></script>
-<script src="admin-settle.js"></script>
+<script src="admin-settle.js">
+/* ---------- Publish check: which days have tipped matches that are not Live, switch them Live, republish everything ---------- */
+(function(){
+  const boxOf = f => f.sport==="basketball" ? f.bb : f.fb;
+  const liveable = f => { const b=boxOf(f); return !!(b && (b.tip||b.pick)); };
+  function setLive(f){ f[f.sport==="basketball"?"bb":"fb"].live = true; }
+  function run(){
+    const days = {};
+    db.fixtures.forEach(f=>{ if(!liveable(f)) return; const k=String(f.kickoff||"").slice(0,10); if(!k) return; const d=days[k]=days[k]||{n:0,off:0}; d.n++; if(!liveOf("fixtures",f)) d.off++; });
+    const bad = Object.keys(days).filter(k=>days[k].off).sort().reverse();
+    const out = $("#pcOut");
+    if(!bad.length){ out.innerHTML = "Every match that has a tip is Live. Nothing is being held back."+(Object.keys(days).length?" ("+Object.keys(days).length+" days checked.)":""); return; }
+    out.innerHTML = "<b>"+bad.reduce((s,k)=>s+days[k].off,0)+" matches with a tip are NOT Live</b>, across "+bad.length+" day(s):<br>" +
+      bad.slice(0,60).map(k=>esc(k)+": "+days[k].off+" of "+days[k].n+" not Live <button class='btn ghost' style='padding:2px 10px;font-size:12px' data-pclive='"+esc(k)+"'>Make Live</button>").join("<br>") +
+      "<br><br><button class='btn' id='pcAll'>Make ALL of these Live</button>";
+  }
+  async function verify(){
+    const out=$("#pcOut"); out.textContent="Reading the public site… (this reads one page per day)";
+    const wat0=new Intl.DateTimeFormat("en-CA",{timeZone:"Africa/Lagos"}).format(new Date()), lim=new Date(wat0+"T12:00:00Z"); lim.setUTCDate(lim.getUTCDate()-2); const newest=lim.toISOString().slice(0,10);
+    const mine={}; db.fixtures.forEach(f=>{ if(!liveOf("fixtures",f)) return; const k=String(f.kickoff||"").slice(0,10); if(k&&k<=newest) mine[k]=(mine[k]||0)+1; });
+    const days=Object.keys(mine).sort().reverse(), bad=[];
+    for(const k of days){
+      try{ const s=await Store.fs.collection("public").doc("day-"+k).get(); const n=s.exists?((s.data().fixtures||[]).length):-1; if(n!==mine[k]) bad.push({k,have:n,want:mine[k]}); }
+      catch(e){ bad.push({k,have:"error "+(e.code||e.message),want:mine[k]}); }
+    }
+    if(!bad.length){ out.innerHTML="<b>All "+days.length+" old days on the site match the admin.</b> If a date still looks wrong on the website, hard-refresh the page (Ctrl+F5)."; return; }
+    out.innerHTML="<b>"+bad.length+" day(s) on the site do NOT match the admin:</b><br>"+bad.slice(0,60).map(b=>esc(b.k)+": admin has "+b.want+" Live, site has "+(b.have===-1?"NOTHING":esc(b.have))).join("<br>")+"<br><br><button class='btn' id='pcFix'>Publish these days now</button>";
+    $("#pcFix").onclick=async()=>{
+      let ok=0,fail=[];
+      for(const b of bad){
+        try{
+          const list=db.fixtures.filter(f=>liveOf("fixtures",f)&&String(f.kickoff||"").slice(0,10)===b.k).map(f=>Store.docOf("fixtures",f)).sort((x,y)=>String(x.kickoff).localeCompare(String(y.kickoff)));
+          const plist=db.props.filter(r=>liveOf("props",r)).map(r=>Store.docOf("props",r)).filter(d=>String(d.kickoff||"").slice(0,10)===b.k);
+          const body=JSON.parse(JSON.stringify({day:b.k,fixtures:list,props:plist,updatedAt:new Date().toISOString()}));
+          await Store.fs.collection("public").doc("day-"+b.k).set(body); ok++;
+        }catch(e){ fail.push(b.k+": "+(e.code||e.message)); }
+      }
+      out.innerHTML=ok+" day(s) published."+(fail.length?"<br><b>Failed:</b><br>"+fail.map(esc).join("<br>"):" Open an old date on the site (Ctrl+F5) to check.");
+    };
+  }
+  $("#pcRun").onclick = run;
+  $("#pcVerify").onclick = verify;
+  $("#pcOut").addEventListener("click", e=>{
+    const b=e.target.closest("[data-pclive]"), all=e.target.closest("#pcAll"); if(!b && !all) return;
+    let c=0; db.fixtures.forEach(f=>{ if(!liveable(f) || liveOf("fixtures",f)) return; if(b && String(f.kickoff||"").slice(0,10)!==b.dataset.pclive) return; setLive(f); c++; });
+    Store.save(); toast(c+" match"+(c===1?"":"es")+" switched to Live"); run();
+  });
+  $("#pcRepub").onclick = () => { Store.lastSnap = null; Store.lastDays = {}; try{ localStorage.removeItem("pb.archHash"); }catch(e){} Store.save(); toast("Republishing everything…"); };
+})();
+</script>
 </body></html>
