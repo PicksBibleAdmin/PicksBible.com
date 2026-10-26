@@ -87,8 +87,8 @@
   </div>
   <div id="fpSpec" hidden style="margin-top:10px"><label>Tick the customers (<span id="fpSpecN">0</span> ticked)</label><input id="fpSpecQ" placeholder="Search name or email"><div id="fpSpecL" style="max-height:220px;overflow:auto;border:1px solid var(--line);border-radius:10px;padding:6px 10px;margin-top:6px"></div></div>
   <div id="fpPicks"></div>
-  <label style="margin-top:6px">Email subject</label><input id="fpSubj" maxlength="150" value="Our model's best banker bets today">
-  <label style="margin-top:10px">Heading inside the email (optional)</label><input id="fpTitle" maxlength="150" placeholder="e.g. Gold has won 6 of its last 7 days">
+  <label style="margin-top:6px">Email subject</label><input id="fpSubj" maxlength="150" value="Our model's best banker bets today"><div class="emj" data-for="fpSubj" style="margin-top:4px">${["🎁","🔥","✅","💰","⚽","🏀","🏆","👑","⚡","📈"].map(e => `<button type="button" class="btn ghost sm" style="padding:2px 8px" data-e="${e}">${e}</button>`).join(" ")}</div>
+  <label style="margin-top:10px">Heading inside the email (optional)</label><input id="fpTitle" maxlength="150" placeholder="e.g. Gold has won 6 of its last 7 days"><div class="emj" data-for="fpTitle" style="margin-top:4px">${["🎁","🔥","✅","💰","⚽","🏀","🏆","👑","⚡","📈"].map(e => `<button type="button" class="btn ghost sm" style="padding:2px 8px" data-e="${e}">${e}</button>`).join(" ")}</div>
   <label style="margin-top:10px">Message above the picks (optional)</label><textarea id="fpBody" rows="3" maxlength="1500" placeholder="e.g. Our model is backing these picks today:"></textarea>
   <div class="row" style="margin-top:10px">
     <div><label>Button / link</label><select id="fpLink"><option value="none">No link</option><option value="home">Homepage (free picks)</option><option value="vip">VIP page (Premium)</option><option value="dash">Dashboard</option><option value="signup">Sign-up / finish registration</option><option value="custom">Custom web address</option></select></div>
@@ -108,7 +108,7 @@
     <div><label>Send to</label><select id="bcAud"><option value="paid">Paid users (Gold)</option><option value="leads">Free users - no account set up</option><option value="freeacc">Free users - account set up</option><option value="freeall">Free users - all combined</option><option value="specific">Specific customers (tick them)</option><option value="all" selected>All users</option></select></div>
   </div>
   <div id="bcSpec" hidden style="margin-top:10px"><label>Tick the customers (<span id="bcSpecN">0</span> ticked)</label><input id="bcSpecQ" placeholder="Search name or email"><div id="bcSpecL" style="max-height:220px;overflow:auto;border:1px solid var(--line);border-radius:10px;padding:6px 10px;margin-top:6px"></div></div>
-  <label style="margin-top:10px">Message title</label><input id="bcTitle" maxlength="120">
+  <label style="margin-top:10px">Message title</label><input id="bcTitle" maxlength="120"><div class="emj" data-for="bcTitle" style="margin-top:4px">${["🎁","🔥","✅","💰","⚽","🏀","🏆","👑","⚡","📈"].map(e => `<button type="button" class="btn ghost sm" style="padding:2px 8px" data-e="${e}">${e}</button>`).join(" ")}</div>
   <label style="margin-top:10px">Message body</label><textarea id="bcBody" rows="4" maxlength="1000"></textarea>
   <div class="row" style="margin-top:10px">
     <div><label>Button / link</label><select id="bcLink"><option value="none">No link</option><option value="home">Homepage (free picks)</option><option value="vip">VIP page (Premium)</option><option value="dash">Dashboard</option><option value="signup">Sign-up / finish registration</option><option value="custom">Custom web address</option></select></div>
@@ -429,6 +429,7 @@
   }
 
   function wire() {
+    document.addEventListener("click", e => { const b = e.target.closest(".emj [data-e]"); if (!b) return; const i = document.getElementById(b.closest(".emj").dataset.for); i.value = (i.value + " " + b.dataset.e).trim(); i.focus(); });
     $("#hubFl").onclick = e => { const b = e.target.closest("[data-f]"); if (b) { filter = b.dataset.f; paint(); } };
     $("#hubQ").oninput = e => { q = e.target.value.trim().toLowerCase(); paint(); };
     $("#hubRef").onclick = () => refresh(); $("#hubCsv").onclick = csv; $("#bcSend").onclick = send; $("#acGo").onclick = activate; $("#hubRemind").onclick = remind; $("#fpSend").onclick = sendFree; wireLink("fp"); wireLink("bc"); $("#fpAud").onchange = () => { specDraw("fp"); freeInfo(); }; $("#fpSkip").onchange = freeInfo; $("#bcAud").onchange = () => specDraw("bc");
