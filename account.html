@@ -348,7 +348,9 @@
     var tier=UD.tier==="gold"?"gold":"free", on=active(UD);
     feedUn.push(fs.collection("broadcasts").where("audience","array-contains",tier).onSnapshot(function(s){BC=[];s.forEach(function(d){BC.push(d.data())});NERR="";drawNotes()},function(e){try{console.error("broadcasts",e)}catch(_){}NERR=(e&&e.code)||"error";drawNotes()}));
     feedUn.push(fs.collection("notes").where("to","==",user.uid).onSnapshot(function(s){NT=[];s.forEach(function(d){NT.push(d.data())});drawNotes()},function(){}));
-    feedUn.push(fs.collection("gifts").where("active","==",true).onSnapshot(function(s){GIFTS=[];s.forEach(function(d){GIFTS.push(d.data())});GIFTS.sort(function(a,b){return String(b.createdAt).localeCompare(String(a.createdAt))});drawGifts()},function(e){GIFTS=[];drawGifts(e&&e.code)}));
+    var GA=[],GB=[],GE="";function mergeG(){var m={};GA.concat(GB).forEach(function(g){m[g.createdAt+"|"+g.name]=g});GIFTS=Object.keys(m).map(function(k){return m[k]}).sort(function(a,b){return String(b.createdAt).localeCompare(String(a.createdAt))});drawGifts(GE)}
+    feedUn.push(fs.collection("gifts").where("active","==",true).where("audience","==","all").onSnapshot(function(s){GA=[];s.forEach(function(d){GA.push(d.data())});GE="";mergeG()},function(e){GA=[];GE=(e&&e.code)||"error";mergeG()}));
+    feedUn.push(fs.collection("gifts").where("active","==",true).where("to","array-contains",user.uid).onSnapshot(function(s){GB=[];s.forEach(function(d){GB.push(d.data())});mergeG()},function(){GB=[];mergeG()}));
     if(on)feedUn.push(fs.collection("vip_feed").where("audience","array-contains","gold").onSnapshot(function(s){FEED=[];s.forEach(function(d){FEED.push(d.data())});drawVip()},function(){}));
     else FEED=[];
   }
