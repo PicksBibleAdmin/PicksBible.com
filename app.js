@@ -64,6 +64,7 @@ function lgKey(P,sport,comp,country){
   return key;
 }
 function applyLive(P,live){
+  P.__ids={};
   var days={}; days[wat(-1)]="yesterday"; days[wat(0)]="today"; days[wat(1)]="tomorrow";
   P.football={yesterday:[],today:[],tomorrow:[]};
   P.basketball={yesterday:[],today:[],tomorrow:[]};
@@ -99,6 +100,7 @@ function etBM(f){
 }
 /* one fixture -> every list it belongs to (tables, expert tips, bets of the day). Used for the live document and for archived days. */
 function addFx(P,f,days){
+  if(f&&f.id){P.__ids=P.__ids||{};if(P.__ids[f.id])return;P.__ids[f.id]=1} /* the same match is never added twice (live document + archive day) */
   {
     var hd=String(f.kickoff||"").slice(0,10), sp=f.sport==="basketball"?"basketball":"football";
     var cname=(function(){var c=String(f.country||""),k=String(f.competition||"");if(!c)return k;if(k.toLowerCase().indexOf(c.toLowerCase())===0)k=k.slice(c.length).replace(/^[\s:\-\u00b7]+/,"");return c+": "+k})();
@@ -156,7 +158,8 @@ function loadDay(ymd,cb){
 }
 /* "ready" = the date's data is here; "wait" = it is being fetched (redraw is called when it arrives) */
 function dayGate(ymd,redraw){
-  if(dayHas(ymd)||ymd>=wat(-1)||ymd<wat(-30))return "ready";
+  /* older days: ALWAYS fetch the day archive (a few Bets-of-the-day matches already in the live document must not stop the rest loading) */
+  if(ymd>=wat(-1)||ymd<wat(-30))return "ready";
   var st=DAYST[ymd]; if(st==="done")return "ready"; if(st==="loading")return "wait";
   DAYST[ymd]="loading"; loadDay(ymd,function(){DAYST[ymd]="done";redraw()});
   return "wait";
