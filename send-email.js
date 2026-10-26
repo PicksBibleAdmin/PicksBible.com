@@ -18,34 +18,37 @@ const CHUNK = 100;
 const esc = s => String(s == null ? "" : s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 const isEmail = e => typeof e === "string" && e.length < 120 && /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(e);
 
-function htmlOf(title, body, link) {
-  const paras = String(body).split(/\n+/).map(p => `<p style="margin:0 0 14px;font-size:16px;line-height:1.5;color:#1a1a1a">${esc(p)}</p>`).join("");
-  return `<!doctype html><html><body style="margin:0;background:#f2f2f7;padding:24px 12px;font-family:Arial,Helvetica,sans-serif">
+const SHELL_TOP = `<!doctype html><html><body style="margin:0;background:#f2f2f7;padding:24px 12px;font-family:Arial,Helvetica,sans-serif">
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr><td align="center">
 <table role="presentation" width="100%" style="max-width:520px;background:#ffffff;border-radius:16px;overflow:hidden" cellpadding="0" cellspacing="0">
-<tr><td style="background:#141032;padding:18px 24px;color:#ffffff;font-size:20px;font-weight:bold">Picks<span style="color:#22d3ee">Bible</span></td></tr>
-<tr><td style="padding:26px 24px 10px"><h1 style="margin:0 0 14px;font-size:22px;color:#111">${esc(title)}</h1>${paras}
-<p style="margin:22px 0"><a href="${esc(link)}" style="background:#1a1a1a;color:#ffffff;text-decoration:none;padding:13px 24px;border-radius:999px;font-weight:bold;display:inline-block">Open your VIP dashboard</a></p></td></tr>
-<tr><td style="padding:14px 24px 22px;color:#777;font-size:12px">You get this email because you have a PicksBible account. Reply to this email if you need help.<br>PicksBible.com</td></tr>
-</table></td></tr></table></body></html>`;
-}
-
-/* the free daily email: model's top picks, one button to the homepage, and a per-person unsubscribe link */
-function freeHtml(picks) {
-  const items = picks.map((p, i) => `<tr><td style="padding:12px 0;border-bottom:1px solid #eee"><div style="font-size:12px;color:#777;margin-bottom:3px">${esc(p.meta || "")}</div>
-<div style="font-size:17px;font-weight:bold;color:#111">${i + 1}. ${esc(p.match)}</div><div style="font-size:16px;color:#16a34a;font-weight:bold;margin-top:3px">${esc(p.pick)}</div></td></tr>`).join("");
-  return `<!doctype html><html><body style="margin:0;background:#f2f2f7;padding:24px 12px;font-family:Arial,Helvetica,sans-serif">
-<table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr><td align="center">
-<table role="presentation" width="100%" style="max-width:520px;background:#ffffff;border-radius:16px;overflow:hidden" cellpadding="0" cellspacing="0">
-<tr><td style="background:#141032;padding:18px 24px;color:#ffffff;font-size:20px;font-weight:bold">Picks<span style="color:#22d3ee">Bible</span></td></tr>
-<tr><td style="padding:26px 24px 6px"><p style="margin:0 0 12px;font-size:17px;color:#111">Hello {{params.NAME}},</p>
-<p style="margin:0 0 14px;font-size:16px;line-height:1.5;color:#1a1a1a">Our predictive model is backing these three picks as the best banker bets of today:</p>
-<table role="presentation" width="100%" cellpadding="0" cellspacing="0">${items}</table>
-<p style="margin:24px 0 8px;text-align:center"><a href="https://picksbible.com/" style="background:#16a34a;color:#ffffff;text-decoration:none;padding:14px 26px;border-radius:999px;font-weight:bold;display:inline-block">See all free winning picks</a></p></td></tr>
-<tr><td style="padding:16px 24px 22px;color:#777;font-size:12px;line-height:1.5">You get this because you signed up at PicksBible.com. Predictions are not guarantees; bet responsibly.<br>
+<tr><td style="background:#141032;padding:18px 24px;color:#ffffff;font-size:20px;font-weight:bold">Picks<span style="color:#22d3ee">Bible</span></td></tr>`;
+const FOOT = `<tr><td style="padding:16px 24px 22px;color:#777;font-size:12px;line-height:1.5">You get this because you signed up at PicksBible.com. Predictions are not guarantees; bet responsibly. Reply to this email if you need help.<br>
 <a href="{{params.UNSUB}}" style="color:#777">Unsubscribe</a></td></tr>
 </table></td></tr></table></body></html>`;
+const paras = body => String(body || "").split(/\n+/).filter(p => p.trim()).map(p => `<p style="margin:0 0 14px;font-size:16px;line-height:1.5;color:#1a1a1a">${esc(p)}</p>`).join("");
+/* optional button: link = {url, label}; no link = no button */
+const button = (link, color) => link && link.url ? `<p style="margin:22px 0 8px"><a href="${esc(link.url)}" style="background:${color};color:#ffffff;text-decoration:none;padding:13px 24px;border-radius:999px;font-weight:bold;display:inline-block">${esc(link.label || "Open PicksBible")}</a></p>` : "";
+
+/* a plain message: title, body, optional button */
+function htmlOf(title, body, link) {
+  return SHELL_TOP + `<tr><td style="padding:26px 24px 10px"><h1 style="margin:0 0 14px;font-size:22px;color:#111">${esc(title)}</h1>${paras(body)}${button(link, "#1a1a1a")}</td></tr>` + FOOT;
 }
+
+/* free picks: title, optional body, picks with editable tip and numeric odds, optional button */
+function freeHtml(picks, body, link, title) {
+  const items = picks.map((p, i) => `<tr><td style="padding:12px 0;border-bottom:1px solid #eee"><div style="font-size:12px;color:#777;margin-bottom:3px">${esc(p.meta || "")}</div>
+<div style="font-size:17px;font-weight:bold;color:#111">${i + 1}. ${esc(p.match)}</div><div style="font-size:16px;color:#16a34a;font-weight:bold;margin-top:3px">${esc(p.pick)}${p.odds ? ` <span style="color:#111">@ ${esc(p.odds)}</span>` : ""}</div></td></tr>`).join("");
+  return SHELL_TOP + `<tr><td style="padding:26px 24px 6px">${title ? `<h1 style="margin:0 0 14px;font-size:22px;color:#111">${esc(title)}</h1>` : ""}<p style="margin:0 0 12px;font-size:17px;color:#111">Hello {{params.NAME}},</p>
+${paras(body)}
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0">${items}</table>
+${button(link, "#16a34a")}</td></tr>` + FOOT;
+}
+const cleanLink = l => {
+  const url = String((l && l.url) || "").trim();
+  if (!/^https:\/\/[^\s"<>]{3,380}$/.test(url)) return null;
+  return { url, label: String((l && l.label) || "").trim().slice(0, 40) || "Open PicksBible" };
+};
+const oddsOf = v => { const n = parseFloat(String(v == null ? "" : v).replace(",", ".")); return n > 1 && n < 1000 ? n.toFixed(2) : ""; };
 
 async function verifyAdmin(token, env) {
   if (!token) return null;
@@ -70,9 +73,11 @@ async function handler(req, res) {
 
   const b = typeof req.body === "string" ? JSON.parse(req.body || "{}") : (req.body || {});
   const free = b.mode === "free";
-  const subject = String(b.subject || "").trim().slice(0, 150), text = free ? "free picks" : String(b.text || "").trim().slice(0, 2000);
-  if (!subject || !text) return res.status(400).json({ error: "subject and text are required" });
-  const picks = free ? (Array.isArray(b.picks) ? b.picks : []).slice(0, 3).map(p => ({ match: String(p.match || "").slice(0, 120), pick: String(p.pick || "").slice(0, 120), meta: String(p.meta || "").slice(0, 120) })).filter(p => p.match && p.pick) : [];
+  const subject = String(b.subject || "").trim().slice(0, 150), text = String(b.text || "").trim().slice(0, 2000);
+  if (!subject || (!free && !text)) return res.status(400).json({ error: "subject and text are required" });
+  const link = cleanLink(b.link);
+  const heading = String(b.title || "").trim().slice(0, 150);
+  const picks = free ? (Array.isArray(b.picks) ? b.picks : []).slice(0, 5).map(p => ({ match: String(p.match || "").slice(0, 120), pick: String(p.pick || "").slice(0, 120), meta: String(p.meta || "").slice(0, 120), odds: oddsOf(p.odds) })).filter(p => p.match && p.pick) : [];
   if (free && !picks.length) return res.status(400).json({ error: "add at least one pick" });
   const seen = new Set(), list = [];
   (Array.isArray(b.recipients) ? b.recipients : []).forEach(x => {
@@ -84,8 +89,8 @@ async function handler(req, res) {
 
   const from = { email: env.MAIL_FROM || "picks@picksbible.com", name: env.MAIL_FROM_NAME || "PicksBible" };
   const replyTo = { email: env.MAIL_REPLY_TO || "picksbiblesupport@gmail.com", name: "PicksBible Support" };
-  const html = free ? freeHtml(picks) : htmlOf(subject, text, "https://picksbible.com/account.html");
-  const plain = free ? "Hello {{params.NAME}},\nOur predictive model is backing these three picks as the best banker bets of today:\n" + picks.map((p, i) => (i + 1) + ". " + p.match + " - " + p.pick).join("\n") + "\nSee all free winning picks: https://picksbible.com/\nUnsubscribe: {{params.UNSUB}}" : text;
+  const html = free ? freeHtml(picks, text, link, heading) : htmlOf(heading || subject, text, link);
+  const plain = (free ? "Hello {{params.NAME}},\n" + (text ? text + "\n" : "") + picks.map((p, i) => (i + 1) + ". " + p.match + " - " + p.pick + (p.odds ? " @ " + p.odds : "")).join("\n") : text) + (link ? "\n" + link.label + ": " + link.url : "") + "\nUnsubscribe: {{params.UNSUB}}";
   let sent = 0; const failed = [];
   for (let i = 0; i < list.length; i += CHUNK) {
     const part = list.slice(i, i + CHUNK);
@@ -99,4 +104,4 @@ async function handler(req, res) {
   return res.status(failed.length && !sent ? 502 : 200).json({ sent, failed });
 }
 module.exports = handler;
-module.exports._test = { htmlOf, freeHtml, isEmail, verifyAdmin };
+module.exports._test = { htmlOf, freeHtml, cleanLink, oddsOf, isEmail, verifyAdmin };

@@ -19,18 +19,18 @@
   const MAXLEGS = 8;
   /* shared email helper (also used by the Customers tab): the server checks the admin login, then sends through Brevo */
   window.PBMail = window.PBMail || {
-    async send(recipients, subject, text) {
+    async send(recipients, subject, text, extra) {
       if (!recipients.length) return { sent: 0, failed: [], note: "no recipients" };
       const token = await Store.auth.currentUser.getIdToken();
-      const r = await fetch("/api/send-email", { method: "POST", headers: { "Content-Type": "application/json", Authorization: "Bearer " + token }, body: JSON.stringify({ subject, text, recipients }) });
+      const r = await fetch("/api/send-email", { method: "POST", headers: { "Content-Type": "application/json", Authorization: "Bearer " + token }, body: JSON.stringify(Object.assign({ subject, text, recipients }, extra || {})) });
       let j = {}; try { j = await r.json(); } catch (_) {}
       if (!r.ok && !j.sent) throw new Error(j.error || ("email service error " + r.status));
       return j;
     },
     /* the free daily email: picks = [{match, pick, meta}], recipients = [{email, name, unsub}] */
-    async sendFree(recipients, subject, picks) {
+    async sendFree(recipients, subject, picks, extra) {
       const token = await Store.auth.currentUser.getIdToken();
-      const r = await fetch("/api/send-email", { method: "POST", headers: { "Content-Type": "application/json", Authorization: "Bearer " + token }, body: JSON.stringify({ mode: "free", subject, picks, recipients }) });
+      const r = await fetch("/api/send-email", { method: "POST", headers: { "Content-Type": "application/json", Authorization: "Bearer " + token }, body: JSON.stringify(Object.assign({ mode: "free", subject, picks, recipients }, extra || {})) });
       let j = {}; try { j = await r.json(); } catch (_) {}
       if (!r.ok && !j.sent) throw new Error(j.error || ("email service error " + r.status));
       return j;

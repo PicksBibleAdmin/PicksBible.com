@@ -78,13 +78,24 @@
 
 <div class="card">
   <h2>Free picks email</h2>
-  <p class="note">Sent to free members and everyone on the email list (popup and checkout), never to active VIP members and never to people who unsubscribed. Pick up to 3 matches from any match on the chosen day.</p>
+  <p class="note">Compose the whole email: heading, message, up to 5 picks (edit the match, our pick and the odds as you like), and choose whether to include a link. Never sent to active VIP members or people who unsubscribed.</p>
   <div class="row" style="margin-bottom:10px">
+    <div><label>Send to</label><select id="fpAud"><option value="paid">Paid users (Gold)</option><option value="leads">Free users - no account set up</option><option value="freeacc">Free users - account set up</option><option value="freeall" selected>Free users - all combined</option><option value="specific">Specific customers (tick them)</option><option value="all">All users</option></select></div>
     <div><label>Matches from</label><input type="date" id="fpDate"></div>
-    <div style="flex:1;min-width:260px" class="cb"><label>Add a match (max 3)</label><input id="fpSearch" autocomplete="off" placeholder="Click to open the list, or type a team or league"><div class="cbl" id="fpList" hidden></div></div>
+    <div style="flex:1;min-width:260px" class="cb"><label>Add a match (max 5)</label><input id="fpSearch" autocomplete="off" placeholder="Click to open the list, or type a team or league"><div class="cbl" id="fpList" hidden></div></div>
+    <div style="align-self:flex-end"><button type="button" class="btn ghost" id="fpCustom">+ Custom pick</button></div>
   </div>
+  <div id="fpSpec" hidden style="margin-top:10px"><label>Tick the customers (<span id="fpSpecN">0</span> ticked)</label><input id="fpSpecQ" placeholder="Search name or email"><div id="fpSpecL" style="max-height:220px;overflow:auto;border:1px solid var(--line);border-radius:10px;padding:6px 10px;margin-top:6px"></div></div>
   <div id="fpPicks"></div>
   <label style="margin-top:6px">Email subject</label><input id="fpSubj" maxlength="150" value="Our model's best banker bets today">
+  <label style="margin-top:10px">Heading inside the email (optional)</label><input id="fpTitle" maxlength="150" placeholder="e.g. Gold has won 6 of its last 7 days">
+  <label style="margin-top:10px">Message above the picks (optional)</label><textarea id="fpBody" rows="3" maxlength="1500" placeholder="e.g. Our model is backing these picks today:"></textarea>
+  <div class="row" style="margin-top:10px">
+    <div><label>Button / link</label><select id="fpLink"><option value="none">No link</option><option value="home">Homepage (free picks)</option><option value="vip">VIP page (Premium)</option><option value="dash">Dashboard</option><option value="signup">Sign-up / finish registration</option><option value="custom">Custom web address</option></select></div>
+    <div style="flex:1;min-width:180px"><label>Button text</label><input id="fpLbl" maxlength="40" placeholder="e.g. Finish registration"></div>
+    <div style="flex:2;min-width:220px" id="fpUrlW" hidden><label>Web address (https://...)</label><input id="fpUrl" placeholder="https://picksbible.com/..."></div>
+  </div>
+  <label style="display:flex;gap:8px;align-items:center;text-transform:none;font-size:14px;color:var(--text);margin-top:10px"><input type="checkbox" id="fpSkip" checked style="width:auto"> Skip people who already got a free email today</label>
   <p class="note" id="fpInfo" style="margin-top:10px"></p>
   <button type="button" class="btn" id="fpSend">Send free picks email</button>
   <p class="note" id="fpRes" style="margin-top:10px"></p>
@@ -92,12 +103,18 @@
 
 <div class="card">
   <h2>Send a message</h2>
-  <p class="note">Appears in each member's notifications on the site, and can also be emailed (Brevo free plan: up to 300 emails a day).</p>
+  <p class="note">Registered members also get it in their notifications on the site. People on the email list who have not registered yet can only be reached by email. Brevo free plan: up to 300 emails a day.</p>
   <div class="row" style="margin-bottom:10px">
-    <div><label>Send to</label><select id="bcAud"><option value="all">All members</option><option value="free">Free members</option><option value="paid">Paid members (Gold)</option></select></div>
+    <div><label>Send to</label><select id="bcAud"><option value="paid">Paid users (Gold)</option><option value="leads">Free users - no account set up</option><option value="freeacc">Free users - account set up</option><option value="freeall">Free users - all combined</option><option value="specific">Specific customers (tick them)</option><option value="all" selected>All users</option></select></div>
   </div>
-  <label>Message title</label><input id="bcTitle" maxlength="120">
+  <div id="bcSpec" hidden style="margin-top:10px"><label>Tick the customers (<span id="bcSpecN">0</span> ticked)</label><input id="bcSpecQ" placeholder="Search name or email"><div id="bcSpecL" style="max-height:220px;overflow:auto;border:1px solid var(--line);border-radius:10px;padding:6px 10px;margin-top:6px"></div></div>
+  <label style="margin-top:10px">Message title</label><input id="bcTitle" maxlength="120">
   <label style="margin-top:10px">Message body</label><textarea id="bcBody" rows="4" maxlength="1000"></textarea>
+  <div class="row" style="margin-top:10px">
+    <div><label>Button / link</label><select id="bcLink"><option value="none">No link</option><option value="home">Homepage (free picks)</option><option value="vip">VIP page (Premium)</option><option value="dash">Dashboard</option><option value="signup">Sign-up / finish registration</option><option value="custom">Custom web address</option></select></div>
+    <div style="flex:1;min-width:180px"><label>Button text</label><input id="bcLbl" maxlength="40" placeholder="e.g. Finish registration"></div>
+    <div style="flex:2;min-width:220px" id="bcUrlW" hidden><label>Web address (https://...)</label><input id="bcUrl" placeholder="https://picksbible.com/..."></div>
+  </div>
   <label style="display:flex;gap:8px;align-items:center;text-transform:none;font-size:14px;color:var(--text);margin-top:10px"><input type="checkbox" id="bcMail" checked style="width:auto"> Also send by email</label>
   <p class="note" id="bcRes" style="margin-top:10px"></p>
   <button type="button" class="btn" id="bcSend">Send message</button>
@@ -119,7 +136,7 @@
       l.forEach(d => leads.push(Object.assign({ id: d.id }, d.data())));
       users.sort((a, b) => String(b.createdAt).localeCompare(String(a.createdAt)));
       leads.sort((a, b) => String(b.createdAt).localeCompare(String(a.createdAt)));
-      loaded = true; paint(); freeInfo();
+      loaded = true; paint(); freeInfo(); specDraw("fp"); specDraw("bc");
     } catch (e) { if (!quiet) $("#hubNote").textContent = "Could not load (" + (e.code || e.message) + "). Make sure the new Firestore rules are published."; }
   }
   /* popup/exit/checkout signups who have not yet chosen a password: they are free members too, shown in the same list */
@@ -159,22 +176,36 @@
     $("#hubNote").textContent = rows.length + " member" + (rows.length === 1 ? "" : "s") + " shown.";
     if (filter === "leads") {
       $("#hubHead").innerHTML = "<tr><th>Joined</th><th>Name</th><th>Email</th><th>WhatsApp</th><th>Source</th><th>Plan tried</th><th>Member?</th><th>Emails</th></tr>";
-      $("#hubBody").innerHTML = rows.length ? rows.map(l => `<tr><td>${esc(String(l.createdAt || "").slice(0, 10))}</td><td>${esc(nameOf(l))}</td><td>${esc(l.email)}</td><td>${esc(l.whatsapp || "")}</td><td>${esc(l.source || "")}</td><td>${esc(l.plan || "")}</td><td>${l.member ? "Yes" : "-"}</td><td>${l.unsub ? "Unsubscribed" : "On"}</td></tr>`).join("") : '<tr><td colspan="8" class="empty">Nobody here yet.</td></tr>';
+      $("#hubBody").innerHTML = rows.length ? rows.map(l => `<tr><td>${esc(String(l.createdAt || "").slice(0, 10))}</td><td>${esc(nameOf(l))}</td><td>${esc(l.email)}</td><td>${esc(l.whatsapp || "")}</td><td>${esc(l.source || "")}</td><td>${esc(l.plan || "")}</td><td>${l.member ? "Yes" : "-"}</td><td>${l.unsub ? "Unsubscribed" : "On"} <button type="button" class="btn danger sm delLeadId" data-i="${esc(l.id)}">Delete</button></td></tr>`).join("") : '<tr><td colspan="8" class="empty">Nobody here yet.</td></tr>';
       return;
     }
     $("#hubHead").innerHTML = "<tr><th>Joined</th><th>Name</th><th>Email</th><th>WhatsApp</th><th>Plan</th><th>Active until</th><th>Actions</th></tr>";
     $("#hubBody").innerHTML = rows.length ? rows.map(u => {
       const on = isPaid(u), ex = isExpired(u), dl = daysLeft(u);
-      if (u.pending) return `<tr><td>${esc(String(u.createdAt || "").slice(0, 10))}</td><td>${esc(nameOf(u))}</td><td>${esc(u.email)}</td><td>${esc(u.whatsapp)}</td><td><span class="pill">Free</span></td><td>-</td><td><small class="muted">Gave email${u.source ? " (" + esc(u.source) + ")" : ""}, has not set a password yet${u.unsub ? ". Unsubscribed" : ""}</small></td></tr>`;
+      if (u.pending) return `<tr><td>${esc(String(u.createdAt || "").slice(0, 10))}</td><td>${esc(nameOf(u))}</td><td>${esc(u.email)}</td><td>${esc(u.whatsapp)}</td><td><span class="pill">Free</span></td><td>-</td><td><small class="muted">Gave email${u.source ? " (" + esc(u.source) + ")" : ""}, has not set a password yet${u.unsub ? ". Unsubscribed" : ""}</small> <button type="button" class="btn danger sm delLead" data-e="${esc(u.email)}">Delete</button></td></tr>`;
       const pill = `<span class="pill ${on ? u.tier : ex ? "exp" : ""}">${ex ? TIERS[u.tier] + " (expired)" : TIERS[u.tier] || "Free"}</span>`;
       return `<tr data-id="${esc(u.id)}"><td>${esc(String(u.createdAt || "").slice(0, 10))}</td><td>${esc(nameOf(u))}</td><td>${esc(u.email)}</td><td>${esc(waOf(u))}</td><td>${pill}</td><td>${esc(u.paidUntil || "-")}${on ? " <small class='muted'>(" + dl + " day" + (dl === 1 ? "" : "s") + " left)</small>" : ""}</td>
         <td><div class="act"><select class="mpT"><option value="gold">Gold</option></select>
         <select class="mpD"><option value="30">30 days</option><option value="7">7 days</option><option value="90">90 days</option><option value="365">1 year</option></select>
         <button type="button" class="btn sm mpGo">${on ? "Extend" : "Mark paid"}</button>
         ${on ? `<input class="dl" type="number" min="0" max="3650" value="${dl}" title="Days left"><button type="button" class="btn ghost sm mpSet">Set days left</button>` : ""}
-        ${(on || ex) ? '<button type="button" class="btn ghost sm mpFree">Set free</button>' : ""}</div></td></tr>`;
+        ${(on || ex) ? '<button type="button" class="btn ghost sm mpFree">Set free</button>' : ""}<button type="button" class="btn danger sm delUser">Delete</button></div></td></tr>`;
     }).join("") : '<tr><td colspan="7" class="empty">No members match.</td></tr>';
     rows.forEach(u => { const tr = document.querySelector(`#hubBody tr[data-id="${CSS.escape(u.id)}"]`); if (tr && u.tier === "gold") tr.querySelector(".mpT").value = u.tier; });
+  }
+
+  /* ---------- delete (test emails, duplicates) ---------- */
+  async function delRecords(coll, recs, email) {
+    if (!recs.length) return;
+    const isU = coll === "users", paid = isU && recs[0] && isPaid(recs[0]);
+    if (!confirm("Delete " + (email || "this record") + " from the list?" + (paid ? "\n\nWARNING: this is a PAID member." : "") + (isU ? "\n\nThis removes their member record and plan. Their login stays in Firebase > Authentication until you delete it there." : "") + "\n\nThis cannot be undone.")) return;
+    try {
+      await Promise.all(recs.map(r => Store.fs.collection(coll).doc(r.id).delete()));
+      if (isU) { const ml = leads.filter(l => String(l.email || "").toLowerCase() === String(email || "").toLowerCase()); await Promise.all(ml.map(l => Store.fs.collection("leads").doc(l.id).delete())); leads = leads.filter(l => !ml.includes(l)); }
+      const gone = new Set(recs.map(r => r.id));
+      if (isU) users = users.filter(u => !gone.has(u.id)); else leads = leads.filter(l => !gone.has(l.id));
+      toast("Deleted " + (email || "")); paint(); freeInfo(); specDraw("fp"); specDraw("bc");
+    } catch (err) { toast("Could not delete: " + (err.code || err.message)); }
   }
 
   /* ---------- plans ---------- */
@@ -258,8 +289,9 @@
     if (f.sport === "basketball") { const sp = v.spread ? " (" + (/^[+-]/.test(String(v.spread).trim()) ? "" : "+") + String(v.spread).trim() + ")" : ""; return t === "1" ? f.home + " to win" + sp : t === "2" ? f.away + " to win" + sp : ""; }
     return ({ "1": f.home + " to win", "X": "Draw", "2": f.away + " to win", "1X": f.home + " or draw", "X1": f.home + " or draw", "X2": f.away + " or draw", "2X": f.away + " or draw", "12": f.home + " or " + f.away + " to win" })[t] || "";
   };
+  const oddsFx = f => { const v = (f.sport === "basketball" ? f.bb : f.fb) || {}, n = parseFloat(String(v.odds || "").replace(",", ".")); return n > 1 ? n.toFixed(2) : ""; };
   function fpDraw() {
-    $("#fpPicks").innerHTML = picks.map((p, i) => `<div class="pk" data-i="${i}"><div><b>${esc(p.match)}</b><br><small class="muted">${esc(p.meta)}</small></div><input class="fpp" value="${esc(p.pick)}" placeholder="Our pick, e.g. Celtic to win" maxlength="120"><button type="button" class="btn danger sm fpx">Remove</button></div>`).join("") || '<p class="note">No matches chosen yet.</p>';
+    $("#fpPicks").innerHTML = picks.map((p, i) => `<div class="pk" data-i="${i}" style="display:flex;gap:6px;flex-wrap:wrap;align-items:flex-end;margin-bottom:8px"><div style="flex:2;min-width:180px"><label>Match</label><input class="fpm" value="${esc(p.match)}" maxlength="120"></div><div style="flex:1;min-width:130px"><label>Info (league, time)</label><input class="fpi" value="${esc(p.meta)}" maxlength="120"></div><div style="flex:2;min-width:170px"><label>Our pick</label><input class="fpp" value="${esc(p.pick)}" placeholder="e.g. Celtic to win" maxlength="120"></div><div style="width:84px"><label>Odds</label><input class="fpo" value="${esc(p.odds || "")}" placeholder="1.85" inputmode="decimal" maxlength="7"></div><button type="button" class="btn danger sm fpx">Remove</button></div>`).join("") || '<p class="note">No picks yet. Add a match from the list, or press + Custom pick.</p>';
     freeInfo();
   }
   function fpOptions(text) {
@@ -268,55 +300,85 @@
       .sort((a, b) => String(a.kickoff).localeCompare(String(b.kickoff))).slice(0, 150);
   }
   function fpOpen() {
-    if (picks.length >= 3) { $("#fpList").hidden = true; return; }
+    if (picks.length >= 5) { $("#fpList").hidden = true; return; }
     const l = fpOptions($("#fpSearch").value);
     $("#fpList").innerHTML = l.length ? l.map(f => `<div data-id="${esc(f.id)}">${f.sport === "basketball" ? "🏀" : "⚽"} ${esc(f.home)} v ${esc(f.away)} <small>· ${esc(f.competition || "")} · ${esc(String(f.kickoff).slice(11, 16))}</small></div>`).join("") : '<div class="muted">No matches on this date.</div>';
     $("#fpList").hidden = false;
   }
-  /* who gets the free email: free + expired members, plus email-list signups; no active VIP members, no unsubscribed, no duplicates */
-  function freeAudience() {
-    const today = todayStr(), seen = new Set(), out = [];
-    users.filter(isPaid).forEach(u => seen.add((u.email || "").toLowerCase()));
-    const add = (coll, d) => {
-      const e = String(d.email || "").toLowerCase();
-      if (!e || seen.has(e)) return; seen.add(e);
-      if (d.unsub) return;
-      out.push({ coll, d, email: e, name: first(d), done: d.freeSent === today });
-    };
-    users.forEach(u => { if (!isPaid(u)) add("users", u); });
-    leads.forEach(l => add("leads", l));
+  /* audiences. "account" = registered; "no account" = gave an email in a popup/checkout but never registered */
+  const sel = { fp: new Set(), bc: new Set() };
+  const regEmails = () => new Set(users.map(u => (u.email || "").toLowerCase()));
+  function everyone() {   /* every member, registered or not, as one list */
+    const have = regEmails(), out = users.map(u => ({ key: "u:" + u.id, coll: "users", d: u, email: String(u.email || "").toLowerCase(), name: first(u), label: (nameOf(u) || "(no name)") + " - " + (u.email || "") + (isPaid(u) ? " [Gold]" : " [Free, account]") }));
+    leads.forEach(l => { const e = String(l.email || "").toLowerCase(); if (e && !have.has(e)) out.push({ key: "l:" + l.id, coll: "leads", d: l, email: e, name: first(l), label: (nameOf(l) || "(no name)") + " - " + l.email + " [Free, no account]" }); });
     return out;
+  }
+  function audience(key, chosen) {
+    const today = todayStr(), seen = new Set(), out = [], all = everyone();
+    const kind = x => x.coll === "leads" ? "lead" : isPaid(x.d) ? "paid" : "free";
+    const want = { paid: ["paid"], freeacc: ["free"], leads: ["lead"], freeall: ["free", "lead"], all: ["paid", "free", "lead"] }[key];
+    all.filter(x => key === "specific" ? chosen && chosen.has(x.key) : want.includes(kind(x))).sort((a, b) => (kind(a) === "paid" ? 0 : 1) - (kind(b) === "paid" ? 0 : 1)).forEach(x => {
+      if (!x.email || seen.has(x.email) || x.d.unsub) return; seen.add(x.email);
+      out.push(Object.assign({ tier: kind(x), done: x.d.freeSent === today }, x));
+    });
+    return out;
+  }
+  const freeAudience = () => audience($("#fpAud").value, sel.fp);
+  /* the tick-list for "Specific customers" */
+  function specDraw(p) {
+    const box = $("#" + p + "Spec"), on = $("#" + p + "Aud").value === "specific"; box.hidden = !on; if (!on) return;
+    const qq = $("#" + p + "SpecQ").value.trim().toLowerCase();
+    $("#" + p + "SpecL").innerHTML = everyone().filter(x => !qq || x.label.toLowerCase().includes(qq)).slice(0, 200).map(x => `<label style="display:flex;gap:8px;align-items:center;text-transform:none;font-size:13px;color:var(--text);margin:3px 0"><input type="checkbox" data-k="${esc(x.key)}" style="width:auto"${sel[p].has(x.key) ? " checked" : ""}> ${esc(x.label)}${x.d.unsub ? " (unsubscribed - will be skipped)" : ""}</label>`).join("") || '<small class="muted">Nobody found.</small>';
+    $("#" + p + "SpecN").textContent = sel[p].size;
   }
   function freeInfo() {
     if (!loaded) { $("#fpInfo").textContent = "Loading the list..."; return; }
-    const a = freeAudience(), todo = a.filter(x => !x.done);
+    const a = freeAudience(), skip = $("#fpSkip").checked, todo = skip ? a.filter(x => !x.done) : a;
     $("#fpInfo").textContent = a.length + " people can receive this. " + (a.length - todo.length) + " already got today's free email. " + Math.min(todo.length, 300) + " will be sent now (Brevo free plan: 300 emails a day" + (todo.length > 300 ? ", press Send again tomorrow for the rest" : "") + ").";
+  }
+  /* link choices shared by both cards */
+  const LINKS = { home: [SITE + "/", "See all free picks"], vip: [SITE + "/premium.html", "See the VIP packages"], dash: [SITE + "/account.html", "Open your dashboard"], signup: [SITE + "/account.html#signup", "Finish your registration"] };
+  function linkOf(p) {
+    const t = $("#" + p + "Link").value; if (t === "none") return null;
+    const lab = $("#" + p + "Lbl").value.trim();
+    if (t === "custom") { const u = $("#" + p + "Url").value.trim(); if (!/^https:\/\/\S{3,}$/.test(u)) throw new Error("Custom web address must start with https://"); return { url: u, label: lab || "Open link" }; }
+    return { url: LINKS[t][0], label: lab || LINKS[t][1] };
+  }
+  function wireLink(p) {
+    const sel = $("#" + p + "Link");
+    sel.onchange = () => { $("#" + p + "UrlW").hidden = sel.value !== "custom"; $("#" + p + "Lbl").placeholder = LINKS[sel.value] ? LINKS[sel.value][1] : "Button text"; $("#" + p + "Lbl").disabled = sel.value === "none"; };
+    sel.onchange();
+  }
+  /* give every recipient a private unsubscribe key (once), so their unsubscribe link cannot be guessed by anyone else */
+  async function prepRec(todo) {
+    let batch = Store.fs.batch(), n = 0; const jobs = [];
+    todo.forEach(x => { if (!x.d.unsubToken) { x.d.unsubToken = token(); batch.update(Store.fs.collection(x.coll).doc(x.d.id), { unsubToken: x.d.unsubToken }); if (++n >= 400) { jobs.push(batch.commit()); batch = Store.fs.batch(); n = 0; } } });
+    if (n) jobs.push(batch.commit()); await Promise.all(jobs);
+    return todo.map(x => ({ email: x.email, name: x.name, unsub: SITE + "/unsubscribe.html?c=" + (x.coll === "users" ? "u" : "l") + "&i=" + encodeURIComponent(x.d.id) + "&t=" + x.d.unsubToken }));
   }
   async function sendFree() {
     const out = t => { $("#fpRes").textContent = t; };
-    const chosen = picks.map(p => ({ match: p.match, pick: p.pick.trim(), meta: p.meta })).filter(p => p.pick);
-    if (!chosen.length) return out("Choose at least one match and fill in our pick for it.");
-    if (chosen.length !== picks.length) return out("Fill in our pick for every chosen match, or remove it.");
+    const chosen = picks.map(p => ({ match: p.match.trim(), pick: p.pick.trim(), meta: p.meta.trim(), odds: String(p.odds || "").trim() }));
+    if (!chosen.length) return out("Add at least one pick.");
+    if (chosen.some(p => !p.match || !p.pick)) return out("Fill in the match and our pick for every row, or remove the row.");
+    if (chosen.some(p => p.odds && !(parseFloat(p.odds.replace(",", ".")) > 1))) return out("Odds must be a number above 1, for example 1.85 (or leave it empty).");
+    let link; try { link = linkOf("fp"); } catch (e) { return out(e.message); }
     if (!loaded) await refresh(true);
-    const todo = freeAudience().filter(x => !x.done).slice(0, 300);
-    if (!todo.length) return out("Nobody left to send to today.");
-    if (!confirm("Send today's free picks email to " + todo.length + " people?")) return;
+    const skip = $("#fpSkip").checked, todo = freeAudience().filter(x => !skip || !x.done).slice(0, 300);
+    if (!todo.length) return out("Nobody left to send to.");
+    if (!confirm("Send this free picks email to " + todo.length + " people?")) return;
     $("#fpSend").disabled = true; out("Preparing...");
     try {
-      /* give every recipient a private unsubscribe key (once), so their unsubscribe link cannot be guessed by anyone else */
-      let batch = Store.fs.batch(), n = 0; const jobs = [];
-      todo.forEach(x => { if (!x.d.unsubToken) { x.d.unsubToken = token(); batch.update(Store.fs.collection(x.coll).doc(x.d.id), { unsubToken: x.d.unsubToken }); if (++n >= 400) { jobs.push(batch.commit()); batch = Store.fs.batch(); n = 0; } } });
-      if (n) jobs.push(batch.commit()); await Promise.all(jobs);
-      const rec = todo.map(x => ({ email: x.email, name: x.name, unsub: SITE + "/unsubscribe.html?c=" + (x.coll === "users" ? "u" : "l") + "&i=" + encodeURIComponent(x.d.id) + "&t=" + x.d.unsubToken }));
+      const rec = await prepRec(todo);
       out("Sending to " + rec.length + "...");
-      const m = await PBMail.sendFree(rec, $("#fpSubj").value.trim() || "Our model's best banker bets today", chosen);
+      const m = await PBMail.sendFree(rec, $("#fpSubj").value.trim() || "Our model's best banker bets today", chosen, { title: $("#fpTitle").value.trim(), text: $("#fpBody").value.trim(), link });
       const ok = m.sent || 0;
       if (ok) {
         const mark = todo.slice(0, ok === rec.length ? rec.length : 0);   /* if only part of a batch failed we cannot tell who, so do not mark anyone */
         let b = Store.fs.batch(), c = 0; const js = [];
         mark.forEach(x => { b.update(Store.fs.collection(x.coll).doc(x.d.id), { freeSent: todayStr() }); x.d.freeSent = todayStr(); if (++c >= 400) { js.push(b.commit()); b = Store.fs.batch(); c = 0; } });
         if (c) js.push(b.commit()); await Promise.all(js);
-        try { await Store.fs.collection("broadcasts").doc("free-" + Date.now().toString(36)).set({ kind: "free", audience: ["free"], title: "Today's free picks are live", body: "Our model's best banker bets for today are on the PicksBible homepage.", createdAt: new Date().toISOString(), delivered: ok }); } catch (_) {}
+        if (todo.some(x => x.coll === "users")) try { await Store.fs.collection("broadcasts").doc("free-" + Date.now().toString(36)).set({ kind: "free", audience: ["free"], title: $("#fpTitle").value.trim() || "Today's free picks are live", body: $("#fpBody").value.trim() || "Our model's best banker bets for today are on the PicksBible homepage.", createdAt: new Date().toISOString(), delivered: ok }); } catch (_) {}
       }
       out("Emailed " + ok + " of " + rec.length + " people." + (m.failed && m.failed.length ? " Some failed: " + (m.failed[0].detail || m.failed[0].status || "") : ""));
       freeInfo();
@@ -333,32 +395,50 @@
     const blob = new Blob([out.map(r => r.map(esq).join(",")).join("\n")], { type: "text/csv" });
     const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = "picksbible-" + filter + "-" + todayStr() + ".csv"; document.body.appendChild(a); a.click(); a.remove();
   }
-  const AUD = { all: ["free", "gold"], free: ["free"], paid: ["gold"], gold: ["gold"] };
   async function send() {
-    const title = $("#bcTitle").value.trim(), body = $("#bcBody").value.trim(), key = $("#bcAud").value;
+    const title = $("#bcTitle").value.trim(), body = $("#bcBody").value.trim(), key = $("#bcAud").value, res = t => { $("#bcRes").textContent = t; };
     if (!title || !body) return toast("Fill in the title and the message");
+    let link; try { link = linkOf("bc"); } catch (e) { return res(e.message); }
     if (!loaded) await refresh(true);
-    const aud = AUD[key], today = todayStr();
-    const elig = users.filter(u => aud.includes(u.tier) && (u.tier === "free" || (u.paidUntil && u.paidUntil >= today))), n = elig.length;
+    const list = audience(key, sel.bc), members = list.filter(x => x.coll === "users"), isLeads = !members.length;
+    const wantMail = $("#bcMail").checked || isLeads;
+    if (!list.length) return res("Nobody matches that audience.");
+    if (!confirm("Send this message to " + list.length + " " + (list.length === 1 ? "person" : "people") + (wantMail ? " (by email)" : " (notification only)") + "?")) return;
     $("#bcSend").disabled = true;
     try {
-      await Store.fs.collection("broadcasts").doc("msg-" + Date.now().toString(36)).set({ kind: "message", audience: aud, title, body, delivered: n, createdAt: new Date().toISOString() });
-      let res = "Delivered to " + n + " member" + (n === 1 ? "" : "s") + " (platform notification).";
-      if ($("#bcMail").checked && n) {
-        try { const m = await PBMail.send(elig.filter(u => u.email).map(u => ({ email: u.email, name: first(u) })), title, body); res += " Emailed " + m.sent + " of " + n + (m.failed && m.failed.length ? " (some failed)" : "") + "."; }
-        catch (err) { res += " Email NOT sent: " + (err.message || err); }
+      let out = "";
+      if (members.length) {
+        /* one dashboard notification per registered member (so specific ticks and tiers are exact) */
+        const now = new Date().toISOString(); let b = Store.fs.batch(), c = 0; const js = [];
+        members.forEach(x => { b.set(Store.fs.collection("notes").doc(), { to: x.d.id, title, body, createdAt: now }); if (++c >= 400) { js.push(b.commit()); b = Store.fs.batch(); c = 0; } });
+        if (c) js.push(b.commit()); await Promise.all(js);
+        out = "Notification delivered to " + members.length + " registered member" + (members.length === 1 ? "" : "s") + ". ";
       }
-      $("#bcRes").textContent = res;
+      if (wantMail) {
+        const todo = list.slice(0, 300);
+        try {
+          const rec = await prepRec(todo);
+          const m = await PBMail.send(rec, title, body, { link });
+          out += "Emailed " + m.sent + " of " + rec.length + (m.failed && m.failed.length ? " (some failed)" : "") + "." + (list.length > 300 ? " " + (list.length - 300) + " more left: press Send again tomorrow." : "");
+        } catch (err) { out += "Email NOT sent: " + (err.message || err); }
+      }
+      res(out);
       $("#bcTitle").value = ""; $("#bcBody").value = "";
-    } catch (e) { $("#bcRes").textContent = "Could not send (" + (e.code || e.message) + ")."; }
+    } catch (e) { res("Could not send (" + (e.code || e.message) + ")."); }
     $("#bcSend").disabled = false;
   }
 
   function wire() {
     $("#hubFl").onclick = e => { const b = e.target.closest("[data-f]"); if (b) { filter = b.dataset.f; paint(); } };
     $("#hubQ").oninput = e => { q = e.target.value.trim().toLowerCase(); paint(); };
-    $("#hubRef").onclick = () => refresh(); $("#hubCsv").onclick = csv; $("#bcSend").onclick = send; $("#acGo").onclick = activate; $("#hubRemind").onclick = remind; $("#fpSend").onclick = sendFree;
+    $("#hubRef").onclick = () => refresh(); $("#hubCsv").onclick = csv; $("#bcSend").onclick = send; $("#acGo").onclick = activate; $("#hubRemind").onclick = remind; $("#fpSend").onclick = sendFree; wireLink("fp"); wireLink("bc"); $("#fpAud").onchange = () => { specDraw("fp"); freeInfo(); }; $("#fpSkip").onchange = freeInfo; $("#bcAud").onchange = () => specDraw("bc");
+    ["fp", "bc"].forEach(p => { $("#" + p + "SpecQ").oninput = () => specDraw(p); $("#" + p + "SpecL").addEventListener("change", e => { const k = e.target.dataset.k; if (!k) return; e.target.checked ? sel[p].add(k) : sel[p].delete(k); $("#" + p + "SpecN").textContent = sel[p].size; if (p === "fp") freeInfo(); }); });
+    $("#fpCustom").onclick = () => { if (picks.length < 5) { picks.push({ id: "", match: "", meta: "", pick: "", odds: "" }); fpDraw(); } };
     $("#hubBody").addEventListener("click", e => {
+      const c = e.target.classList;
+      if (c.contains("delLead")) return delRecords("leads", leads.filter(l => String(l.email || "").toLowerCase() === e.target.dataset.e.toLowerCase()), e.target.dataset.e);
+      if (c.contains("delLeadId")) return delRecords("leads", leads.filter(l => l.id === e.target.dataset.i), (leads.find(l => l.id === e.target.dataset.i) || {}).email);
+      if (c.contains("delUser")) { const u = users.find(x => x.id === e.target.closest("tr").dataset.id); return u && delRecords("users", [u], u.email); }
       const tr = e.target.closest("tr"); if (!tr || !tr.dataset.id) return;
       if (e.target.classList.contains("mpGo")) setPlan(tr.dataset.id, tr.querySelector(".mpT").value, +tr.querySelector(".mpD").value);
       if (e.target.classList.contains("mpFree")) setPlan(tr.dataset.id, "free", 0);
@@ -368,11 +448,11 @@
     $("#fpSearch").onfocus = $("#fpSearch").onclick = fpOpen; $("#fpSearch").oninput = fpOpen;
     $("#fpList").addEventListener("click", e => {
       const o = e.target.closest("[data-id]"); if (!o) return;
-      const f = db.fixtures.find(x => x.id === o.dataset.id); if (!f || picks.length >= 3) return;
-      picks.push({ id: f.id, match: f.home + " v " + f.away, meta: (f.competition || "") + (f.kickoff ? " · " + String(f.kickoff).slice(11, 16) : ""), pick: lbl(f) });
+      const f = db.fixtures.find(x => x.id === o.dataset.id); if (!f || picks.length >= 5) return;
+      picks.push({ id: f.id, match: f.home + " v " + f.away, meta: (f.competition || "") + (f.kickoff ? " · " + String(f.kickoff).slice(11, 16) : ""), pick: lbl(f), odds: oddsFx(f) });
       $("#fpSearch").value = ""; $("#fpList").hidden = true; fpDraw();
     });
-    $("#fpPicks").addEventListener("input", e => { if (e.target.classList.contains("fpp")) picks[+e.target.closest(".pk").dataset.i].pick = e.target.value; });
+    $("#fpPicks").addEventListener("input", e => { const c = e.target.classList, p = e.target.closest(".pk"); if (!p) return; const o = picks[+p.dataset.i]; if (c.contains("fpp")) o.pick = e.target.value; else if (c.contains("fpm")) o.match = e.target.value; else if (c.contains("fpi")) o.meta = e.target.value; else if (c.contains("fpo")) o.odds = e.target.value; });
     $("#fpPicks").addEventListener("click", e => { if (e.target.classList.contains("fpx")) { picks.splice(+e.target.closest(".pk").dataset.i, 1); fpDraw(); } });
     document.addEventListener("click", e => { if (!e.target.closest("#tab-hub .cb")) $("#fpList").hidden = true; });
     fpDraw();
