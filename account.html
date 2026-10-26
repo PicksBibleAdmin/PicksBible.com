@@ -129,6 +129,7 @@
   <aside class="ac-side" aria-label="Account menu">
     <a data-t="dashboard" href="#dashboard">&#127968; Dashboard</a>
     <a data-t="vip-picks" href="#vip-picks">&#11088; VIP Picks</a>
+    <a data-t="bet-gifts" href="#bet-gifts">&#127873; Bet Gifts <span class="ct" id="aGiftCt" hidden>1</span></a>
     <a data-t="results" href="#results">&#128202; Results &amp; History</a>
     <a data-t="settings" href="#settings">&#9881;&#65039; Account Settings</a>
     <a data-t="notifications" href="#notifications">&#128276; Notifications <span class="ct" id="aCt" hidden></span></a>
@@ -149,6 +150,11 @@
         <div class="f"><label for="vDate" style="margin-top:0">Pick date</label><input id="vDate" type="date"></div></div>
       <div class="ac-stat" style="grid-template-columns:1fr 1.6fr"><div><small>Your membership</small><b id="vMem" style="font-size:16px">Free Member</b></div><div><small>Viewing</small><b id="vView" style="font-size:16px"></b></div></div>
       <div id="vBody"><p class="note">Loading...</p></div>
+    </section>
+
+    <section data-p="bet-gifts" hidden>
+      <div class="ac-bar"><div class="hd" style="margin:0"><div class="eb">PicksBible Member Rewards</div><h1>&#127873; Bet Gifts</h1><p>Free packages reserved for registered members as a thank-you from us.</p></div></div>
+      <div id="gBody"><p class="note">Loading...</p></div>
     </section>
 
     <section data-p="results" hidden>
@@ -207,7 +213,7 @@
   var $=function(s,r){return (r||document).querySelector(s)}, $$=function(s,r){return Array.prototype.slice.call((r||document).querySelectorAll(s))};
   var esc=function(s){return String(s==null?"":s).replace(/[&<>"']/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]})};
   firebase.initializeApp({apiKey:"AIzaSyBBnSFHx_z1YWwOXz6sdKOSzelTIuvusa8",authDomain:"picksbible-7fa7f.firebaseapp.com",projectId:"picksbible-7fa7f",appId:"1:670341631512:web:7478818fbb53b5cec6fd6d"});
-  var UDERR="", auth=firebase.auth(), fs=firebase.firestore(), mode="up", unsubs=[], U=null, UD={tier:"free"}, LIVE=null, FEED=[], BC=[], NT=[];
+  var UDERR="", auth=firebase.auth(), fs=firebase.firestore(), mode="up", unsubs=[], U=null, UD={tier:"free"}, LIVE=null, FEED=[], BC=[], NT=[], GIFTS=[];
   var ERR={"auth/invalid-credential":"Wrong email or password.","auth/wrong-password":"Wrong email or password.","auth/user-not-found":"Wrong email or password.","auth/email-already-in-use":"This email already has an account. Log in instead.","auth/weak-password":"Password must be at least 6 characters.","auth/invalid-email":"That email address is not valid.","auth/too-many-requests":"Too many attempts. Wait a few minutes.","auth/network-request-failed":"No connection. Try again."};
   var WAT=function(off){var d=new Date(Date.now()+(off||0)*864e5);return new Intl.DateTimeFormat("en-CA",{timeZone:"Africa/Lagos"}).format(d)};
   var dLong=function(y){return new Date(y+"T12:00:00Z").toLocaleDateString("en-GB",{weekday:"long",day:"numeric",month:"long",year:"numeric",timeZone:"UTC"})};
@@ -245,12 +251,12 @@
   try{var pf=JSON.parse(sessionStorage.getItem("pb.prefill")||"null");if(pf){$("#aName").value=pf.n||"";$("#aEmail").value=pf.e||"";sessionStorage.removeItem("pb.prefill");PREF=true}}catch(_){}
 
   /* ---------- member area ---------- */
-  var TABS=["dashboard","vip-picks","results","settings","notifications","support"];
+  var TABS=["dashboard","vip-picks","bet-gifts","results","settings","notifications","support"];
   function route(){
     var h=location.hash.replace("#","");if(TABS.indexOf(h)<0)h="dashboard";
     $$("[data-p]").forEach(function(s){s.hidden=s.dataset.p!==h});
     $$(".ac-side a[data-t]").forEach(function(a){a.className=a.dataset.t===h?"on":""});
-    var names={dashboard:"Dashboard","vip-picks":"VIP Picks",results:"Results & History",settings:"Account Settings",notifications:"Notifications",support:"Support Center"};
+    var names={dashboard:"Dashboard","vip-picks":"VIP Picks","bet-gifts":"Bet Gifts",results:"Results & History",settings:"Account Settings",notifications:"Notifications",support:"Support Center"};
     document.title=names[h]+" | PicksBible";window.scrollTo(0,0);
   }
   window.addEventListener("hashchange",fromHash);
@@ -314,6 +320,16 @@
     body.innerHTML='<div class="ac-box"><h2>No Gold package yet</h2><p class="note" style="margin-top:0">Nothing has been published for '+esc(dLong(ymd))+' yet. Check back later, or pick another date.</p></div>';
   }
 
+  /* ----- Bet Gifts: packages we give registered members as a thank-you ----- */
+  function drawGifts(err){
+    var ct=$("#aGiftCt");if(ct)ct.hidden=!GIFTS.length;ct&&(ct.textContent=GIFTS.length);
+    $("#gBody").innerHTML=GIFTS.length?GIFTS.map(function(g){
+      return '<div class="ac-pkg"><div class="ac-ph"><div><div class="k">&#127873; Bet Gift &middot; for VIP members, unlocked for you</div><h3>'+esc(g.name||"Bet Gift")+'</h3><small>'+(g.legs||[]).length+' selection'+((g.legs||[]).length===1?"":"s")+' &middot; '+esc(dShort(g.ymd||WAT(0)))+'</small></div><div class="ac-odds"><small>Total odds</small><b>'+esc(g.odds||"-")+'</b>'+(g.st?'<div><span class="ac-res '+esc(g.st)+'">'+(g.st==="won"?"Won":"Lost")+'</span></div>':'')+'</div></div>'+
+        (g.note?'<p class="note" style="margin:10px 0">'+esc(g.note)+'</p>':'')+
+        '<div style="overflow-x:auto"><table><tr><th>Match</th><th>Market</th><th>Pick</th></tr>'+legRows(g.legs)+'</table></div></div>'}).join(""):
+      '<div class="ac-box"><h2>'+(err?"Could not load your gifts":"No Bet Gift right now")+'</h2><p class="note" style="margin-top:0">'+(err?"Please refresh the page. If this keeps happening, message support.":"New gifts for registered members appear here. We will notify you when one is ready.")+'</p></div>';
+  }
+
   /* ----- results & history (settled packages only) ----- */
   var rFrom=$("#rFrom"),rTo=$("#rTo");rFrom.value=WAT(-30);rTo.value=WAT(0);rFrom.onchange=rTo.onchange=function(){drawResults()};
   function drawResults(){
@@ -332,6 +348,7 @@
     var tier=UD.tier==="gold"?"gold":"free", on=active(UD);
     feedUn.push(fs.collection("broadcasts").where("audience","array-contains",tier).onSnapshot(function(s){BC=[];s.forEach(function(d){BC.push(d.data())});NERR="";drawNotes()},function(e){try{console.error("broadcasts",e)}catch(_){}NERR=(e&&e.code)||"error";drawNotes()}));
     feedUn.push(fs.collection("notes").where("to","==",user.uid).onSnapshot(function(s){NT=[];s.forEach(function(d){NT.push(d.data())});drawNotes()},function(){}));
+    feedUn.push(fs.collection("gifts").where("active","==",true).onSnapshot(function(s){GIFTS=[];s.forEach(function(d){GIFTS.push(d.data())});GIFTS.sort(function(a,b){return String(b.createdAt).localeCompare(String(a.createdAt))});drawGifts()},function(e){GIFTS=[];drawGifts(e&&e.code)}));
     if(on)feedUn.push(fs.collection("vip_feed").where("audience","array-contains","gold").onSnapshot(function(s){FEED=[];s.forEach(function(d){FEED.push(d.data())});drawVip()},function(){}));
     else FEED=[];
   }
