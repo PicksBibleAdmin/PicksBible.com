@@ -140,7 +140,7 @@
 
     <section data-p="dashboard">
       <div class="hd"><h1 id="dHi">Welcome back!</h1><p>Here's what's happening with your PicksBible account today.</p></div>
-      <div class="ac-box"><h2>Today's predictions</h2><p class="note" style="margin-top:0">Open all of today's free football and basketball predictions. Use your browser's back button to return here.</p>
+      <div class="ac-box"><h2>Today's predictions</h2><p class="note" style="margin-top:0">View all of today's free predictions in football and basketball.</p>
         <div class="ac-btns"><a class="ac-btn" href="predictions.html">Today's Predictions</a><a class="ac-btn ghost" href="football-predictions.html">&#9917; Football</a><a class="ac-btn ghost" href="basketball-predictions.html">&#127936; Basketball</a></div></div>
     </section>
 
@@ -207,7 +207,7 @@
   var $=function(s,r){return (r||document).querySelector(s)}, $$=function(s,r){return Array.prototype.slice.call((r||document).querySelectorAll(s))};
   var esc=function(s){return String(s==null?"":s).replace(/[&<>"']/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]})};
   firebase.initializeApp({apiKey:"AIzaSyBBnSFHx_z1YWwOXz6sdKOSzelTIuvusa8",authDomain:"picksbible-7fa7f.firebaseapp.com",projectId:"picksbible-7fa7f",appId:"1:670341631512:web:7478818fbb53b5cec6fd6d"});
-  var auth=firebase.auth(), fs=firebase.firestore(), mode="up", unsubs=[], U=null, UD={tier:"free"}, LIVE=null, FEED=[], BC=[], NT=[];
+  var UDERR="", auth=firebase.auth(), fs=firebase.firestore(), mode="up", unsubs=[], U=null, UD={tier:"free"}, LIVE=null, FEED=[], BC=[], NT=[];
   var ERR={"auth/invalid-credential":"Wrong email or password.","auth/wrong-password":"Wrong email or password.","auth/user-not-found":"Wrong email or password.","auth/email-already-in-use":"This email already has an account. Log in instead.","auth/weak-password":"Password must be at least 6 characters.","auth/invalid-email":"That email address is not valid.","auth/too-many-requests":"Too many attempts. Wait a few minutes.","auth/network-request-failed":"No connection. Try again."};
   var WAT=function(off){var d=new Date(Date.now()+(off||0)*864e5);return new Intl.DateTimeFormat("en-CA",{timeZone:"Africa/Lagos"}).format(d)};
   var dLong=function(y){return new Date(y+"T12:00:00Z").toLocaleDateString("en-GB",{weekday:"long",day:"numeric",month:"long",year:"numeric",timeZone:"UTC"})};
@@ -273,7 +273,7 @@
     if(TABS.indexOf(location.hash.replace("#",""))<0)history.replaceState(null,"","#dashboard");
     route();
     $("#sEmail").value=user.email||"";
-    unsubs.push(fs.collection("users").doc(user.uid).onSnapshot(function(d){UD=d.exists?d.data():{tier:"free"};paintUser();listen(user)},function(){}));
+    unsubs.push(fs.collection("users").doc(user.uid).onSnapshot(function(d){UD=d.exists?d.data():{tier:"free"};paintUser();listen(user)},function(e){try{console.error("membership",e)}catch(_){}UDERR=(e&&e.code)||"error";paintUser()}));
     fs.collection("public").doc("live").get().then(function(d){LIVE=d.exists?d.data():{};drawVip();drawResults()},function(){LIVE={};drawVip();drawResults()});
   });
 
@@ -284,6 +284,8 @@
     $("#aPlan").innerHTML=on?'<span class="crown">👑</span><b>Gold VIP</b><small>Active until '+esc(UD.paidUntil)+' ('+left+' day'+(left===1?"":"s")+' left).</small><a class="ac-btn ghost" href="premium.html" style="width:100%;box-sizing:border-box">Renew plan</a>':
       '<span class="crown">👑</span><b>Free Member</b><small>'+(UD.tier==="gold"?"Your Gold plan has expired.":"Upgrade to unlock today’s premium selections.")+'</small><a class="ac-btn gold" href="premium.html" style="width:100%;box-sizing:border-box">'+(UD.tier==="gold"?"Renew to Gold":"Upgrade to Gold")+'</a>';
     $("#vMem").textContent=on?"Gold VIP":"Free Member";
+    if(UDERR){$("#aPlan").insertAdjacentHTML("beforeend",'<small style="color:#ff8a8a;display:block;margin-top:8px">We could not read your membership ('+esc(UDERR)+'). If you have paid, message support.</small>')}
+    if(U&&U.email){$("#aPlan").insertAdjacentHTML("beforeend",'<small style="display:block;margin-top:8px;opacity:.75">Signed in as '+esc(U.email)+'</small>')}
     $("#sName").value=UD.name||"";$("#sCountry").value=UD.country||"";$("#sWa").value=UD.whatsapp||"";
     drawVip();
   }
@@ -302,7 +304,7 @@
       if(f){body.innerHTML=fullPkg(ymd,f.legs||[],f.odds,f.st);return}
       if(pub&&pub.legs){body.innerHTML=fullPkg(ymd,pub.legs,pub.odds,pub.st);return}
       body.innerHTML='<div class="ac-box"><h2>No Gold package yet</h2><p class="note" style="margin-top:0">Nothing has been published for '+esc(dLong(ymd))+' yet. We will notify you when it goes live.</p></div>';return}
-    if(pub&&pub.legs){body.innerHTML='<div class="ac-box"><h2>This package is settled</h2><p class="note" style="margin-top:0">Settled packages are open to everyone. <a href="#results">See it in Results &amp; History</a>.</p></div>';return}
+    if(pub&&pub.legs){body.innerHTML=fullPkg(ymd,pub.legs,pub.odds,pub.st);return}  /* settled day: everyone sees the picks and results right here */
     if(pub&&pub.teaser){
       var t=pub.teaser,g=t.g||{},extra=Math.max(0,(t.n||1)-1);
       body.innerHTML='<div class="ac-pkg"><div class="ac-ph"><div><div class="k">Gold package</div><h3>2–3 Odds Picks</h3><small>'+esc(t.n)+' selection'+(t.n===1?"":"s")+'</small></div><div class="ac-odds"><small>Total odds</small><b>'+esc(pub.odds||"-")+'</b></div></div>'+
@@ -328,20 +330,20 @@
   function listen(user){
     feedUn.forEach(function(u){u()});feedUn=[];
     var tier=UD.tier==="gold"?"gold":"free", on=active(UD);
-    feedUn.push(fs.collection("broadcasts").where("audience","array-contains",tier).onSnapshot(function(s){BC=[];s.forEach(function(d){BC.push(d.data())});drawNotes()},function(){}));
+    feedUn.push(fs.collection("broadcasts").where("audience","array-contains",tier).onSnapshot(function(s){BC=[];s.forEach(function(d){BC.push(d.data())});NERR="";drawNotes()},function(e){try{console.error("broadcasts",e)}catch(_){}NERR=(e&&e.code)||"error";drawNotes()}));
     feedUn.push(fs.collection("notes").where("to","==",user.uid).onSnapshot(function(s){NT=[];s.forEach(function(d){NT.push(d.data())});drawNotes()},function(){}));
     if(on)feedUn.push(fs.collection("vip_feed").where("audience","array-contains","gold").onSnapshot(function(s){FEED=[];s.forEach(function(d){FEED.push(d.data())});drawVip()},function(){}));
     else FEED=[];
   }
   unsubs.push(function(){feedUn.forEach(function(u){u()});feedUn=[]});
-  var seen=0;try{seen=+localStorage.getItem("pb.noteSeen")||0}catch(_){}
+  var NERR="",seen=0;try{seen=+localStorage.getItem("pb.noteSeen")||0}catch(_){}
   var ALL=[];
   function drawNotes(){
     ALL=BC.concat(NT).sort(function(a,b){return String(b.createdAt).localeCompare(String(a.createdAt))}).slice(0,50);
     var un=ALL.filter(function(n){return Date.parse(n.createdAt)>seen}).length;
     $("#nUn").textContent=un;$("#nTot").textContent=ALL.length;$("#aCt").hidden=!un;$("#aCt").textContent=un;
     $("#nList").innerHTML=ALL.length?ALL.map(function(n){var nw=Date.parse(n.createdAt)>seen;return '<div class="ac-nt'+(nw?' new':'')+'"><b>'+esc(n.title)+'</b><br>'+esc(n.body)+'<br><small>'+esc(String(n.createdAt).slice(0,16).replace("T"," "))+' UTC</small></div>'}).join(""):
-      '<p class="note">No notifications yet. Premium and account updates will appear here.</p><p><a class="ac-btn" href="#dashboard">Return to Dashboard</a></p>';
+      '<p class="note">'+(NERR?'We could not load your notifications ('+esc(NERR)+'). Please refresh, or message support.':'No notifications yet. Premium and account updates will appear here.')+'</p><p><a class="ac-btn" href="#dashboard">Return to Dashboard</a></p>';
   }
   $("#nRead").onclick=function(){if(ALL.length){seen=Date.parse(ALL[0].createdAt);try{localStorage.setItem("pb.noteSeen",String(seen))}catch(_){}}drawNotes()};
 
