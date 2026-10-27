@@ -77,8 +77,9 @@
 </div>
 
 <div class="card">
-  <h2>Free picks email</h2>
-  <p class="note">Compose the whole email: heading, message, up to 5 picks (edit the match, our pick and the odds as you like), and choose whether to include a link. Never sent to active VIP members or people who unsubscribed.</p>
+  <h2>Email composer (picks optional)</h2>
+  <p class="note">Compose the whole email: heading, message, up to 5 picks (or none, for a plain message such as a sign-up reminder) (edit the match, our pick and the odds as you like), and choose whether to include a link. Never sent to active VIP members or people who unsubscribed.</p>
+  <div class="row" style="margin-bottom:10px"><div><label>Start from a template</label><select id="fpTpl"><option value="">Blank</option><option value="picks">Free picks of the day</option><option value="signup">Finish sign-up + VIP Bet Gift</option></select></div></div>
   <div class="row" style="margin-bottom:10px">
     <div><label>Send to</label><select id="fpAud"><option value="paid">Paid users (Gold)</option><option value="leads">Free users - no account set up</option><option value="freeacc">Free users - account set up</option><option value="freeall" selected>Free users - all combined</option><option value="specific">Specific customers (tick them)</option><option value="all">All users</option></select></div>
     <div><label>Matches from</label><input type="date" id="fpDate"></div>
@@ -97,7 +98,7 @@
   </div>
   <label style="display:flex;gap:8px;align-items:center;text-transform:none;font-size:14px;color:var(--text);margin-top:10px"><input type="checkbox" id="fpSkip" checked style="width:auto"> Skip people who already got a free email today</label>
   <p class="note" id="fpInfo" style="margin-top:10px"></p>
-  <button type="button" class="btn" id="fpSend">Send free picks email</button>
+  <button type="button" class="btn" id="fpSend">Send email</button>
   <p class="note" id="fpRes" style="margin-top:10px"></p>
 </div>
 
@@ -356,29 +357,31 @@
     if (n) jobs.push(batch.commit()); await Promise.all(jobs);
     return todo.map(x => ({ email: x.email, name: x.name, unsub: SITE + "/unsubscribe.html?c=" + (x.coll === "users" ? "u" : "l") + "&i=" + encodeURIComponent(x.d.id) + "&t=" + x.d.unsubToken }));
   }
+  /* a short campaign label (date + words of the title) so Brevo can group the stats */
+  const tagOf = t => todayStr() + "-" + String(t || "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 24);
   async function sendFree() {
     const out = t => { $("#fpRes").textContent = t; };
     const chosen = picks.map(p => ({ match: p.match.trim(), pick: p.pick.trim(), meta: p.meta.trim(), odds: String(p.odds || "").trim() }));
-    if (!chosen.length) return out("Add at least one pick.");
+    if (!chosen.length && !$("#fpBody").value.trim()) return out("Add at least one pick, or write a message above the picks.");
     if (chosen.some(p => !p.match || !p.pick)) return out("Fill in the match and our pick for every row, or remove the row.");
     if (chosen.some(p => p.odds && !(parseFloat(p.odds.replace(",", ".")) > 1))) return out("Odds must be a number above 1, for example 1.85 (or leave it empty).");
     let link; try { link = linkOf("fp"); } catch (e) { return out(e.message); }
     if (!loaded) await refresh(true);
-    const skip = $("#fpSkip").checked, todo = freeAudience().filter(x => !skip || !x.done).slice(0, 300);
+    const skip = $("#fpSkip").checked && chosen.length > 0, todo = freeAudience().filter(x => !skip || !x.done).slice(0, 300);
     if (!todo.length) return out("Nobody left to send to.");
-    if (!confirm("Send this free picks email to " + todo.length + " people?")) return;
+    if (!confirm("Send this email to " + todo.length + " people?")) return;
     $("#fpSend").disabled = true; out("Preparing...");
     try {
       const rec = await prepRec(todo);
       out("Sending to " + rec.length + "...");
-      const m = await PBMail.sendFree(rec, $("#fpSubj").value.trim() || "Our model's best banker bets today", chosen, { title: $("#fpTitle").value.trim(), text: $("#fpBody").value.trim(), link });
+      const m = await PBMail.sendFree(rec, $("#fpSubj").value.trim() || "Our model's best banker bets today", chosen, { title: $("#fpTitle").value.trim(), text: $("#fpBody").value.trim(), link, tag: tagOf($("#fpSubj").value) });
       const ok = m.sent || 0;
       if (ok) {
-        const mark = todo.slice(0, ok === rec.length ? rec.length : 0);   /* if only part of a batch failed we cannot tell who, so do not mark anyone */
+        const mark = chosen.length ? todo.slice(0, ok === rec.length ? rec.length : 0) : [];   /* if only part of a batch failed we cannot tell who, so do not mark anyone */
         let b = Store.fs.batch(), c = 0; const js = [];
         mark.forEach(x => { b.update(Store.fs.collection(x.coll).doc(x.d.id), { freeSent: todayStr() }); x.d.freeSent = todayStr(); if (++c >= 400) { js.push(b.commit()); b = Store.fs.batch(); c = 0; } });
         if (c) js.push(b.commit()); await Promise.all(js);
-        if (todo.some(x => x.coll === "users")) try { await Store.fs.collection("broadcasts").doc("free-" + Date.now().toString(36)).set({ kind: "free", audience: ["free"], title: $("#fpTitle").value.trim() || "Today's free picks are live", body: $("#fpBody").value.trim() || "Our model's best banker bets for today are on the PicksBible homepage.", createdAt: new Date().toISOString(), delivered: ok }); } catch (_) {}
+        if (chosen.length && todo.some(x => x.coll === "users")) try { await Store.fs.collection("broadcasts").doc("free-" + Date.now().toString(36)).set({ kind: "free", audience: ["free"], title: $("#fpTitle").value.trim() || "Today's free picks are live", body: $("#fpBody").value.trim() || "Our model's best banker bets for today are on the PicksBible homepage.", createdAt: new Date().toISOString(), delivered: ok }); } catch (_) {}
       }
       out("Emailed " + ok + " of " + rec.length + " people." + (m.failed && m.failed.length ? " Some failed: " + (m.failed[0].detail || m.failed[0].status || "") : ""));
       freeInfo();
@@ -418,8 +421,8 @@
         const todo = list.slice(0, 300);
         try {
           const rec = await prepRec(todo);
-          const m = await PBMail.send(rec, title, body, { link });
-          out += "Emailed " + m.sent + " of " + rec.length + (m.failed && m.failed.length ? " (some failed)" : "") + "." + (list.length > 300 ? " " + (list.length - 300) + " more left: press Send again tomorrow." : "");
+          const m = await PBMail.send(rec, title, body, { link, tag: tagOf(title) });
+          out += "Brevo accepted " + m.sent + " of " + rec.length + (m.failed && m.failed.length ? " (" + (m.failed[0].detail || m.failed[0].status || "some failed") + ")" : "") + "." + (list.length > 300 ? " " + (list.length - 300) + " more left: press Send again tomorrow." : "");
         } catch (err) { out += "Email NOT sent: " + (err.message || err); }
       }
       res(out);
@@ -428,7 +431,12 @@
     $("#bcSend").disabled = false;
   }
 
+  const TPL = {
+    picks: { aud: "freeall", subj: "Our model's best banker bets today", title: "", body: "Our model is backing these picks today:", link: "home", lbl: "" },
+    signup: { aud: "leads", subj: "Finish signing up to claim your VIP Bet Gift \uD83C\uDF81", title: "Your VIP Bet Gift is waiting \uD83C\uDF81", body: "You shared your email with PicksBible but never finished creating your member account.\nFinish in under a minute and you unlock a Bet Gift: a VIP package reserved for our VIP members, free for you.\nSign up with the same email you gave us, then open Bet Gifts in your dashboard.", link: "signup", lbl: "Claim my Bet Gift" }
+  };
   function wire() {
+    $("#fpTpl").onchange = () => { const t = TPL[$("#fpTpl").value]; if (!t) return; $("#fpAud").value = t.aud; $("#fpSubj").value = t.subj; $("#fpTitle").value = t.title; $("#fpBody").value = t.body; $("#fpLink").value = t.link; $("#fpLbl").value = t.lbl; $("#fpLink").onchange(); specDraw("fp"); freeInfo(); if ($("#fpTpl").value === "signup") { picks = []; fpDraw(); } };
     document.addEventListener("click", e => { const b = e.target.closest(".emj [data-e]"); if (!b) return; const i = document.getElementById(b.closest(".emj").dataset.for); i.value = (i.value + " " + b.dataset.e).trim(); i.focus(); });
     $("#hubFl").onclick = e => { const b = e.target.closest("[data-f]"); if (b) { filter = b.dataset.f; paint(); } };
     $("#hubQ").oninput = e => { q = e.target.value.trim().toLowerCase(); paint(); };
