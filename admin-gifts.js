@@ -5,14 +5,23 @@
   "use strict";
   const $ = s => document.querySelector(s);
   const MK = {
-    "1X2": ["Home Win", "Draw", "Away Win", "Home or Draw", "Away or Draw", "Home or Away"],
+    "1X2": ["Home Win", "Draw", "Away Win"],
+    "Double Chance": ["Home or Draw", "Away or Draw", "Home or Away"],
+    "Draw No Bet": ["Home (Draw No Bet)", "Away (Draw No Bet)"],
     "BTTS": ["Yes", "No"],
-    "Over/Under": ["Over 1.5", "Over 2.5", "Over 3.5", "Under 2.5", "Under 3.5"],
+    "Over/Under": ["Over 0.5", "Over 1.5", "Over 2.5", "Over 3.5", "Under 1.5", "Under 2.5", "Under 3.5", "Under 4.5"],
+    "Home Over/Under": ["Home Over 0.5", "Home Over 1.5", "Home Over 2.5", "Home Under 0.5", "Home Under 1.5", "Home Under 2.5"],
+    "Away Over/Under": ["Away Over 0.5", "Away Over 1.5", "Away Over 2.5", "Away Under 0.5", "Away Under 1.5", "Away Under 2.5"],
+    "Handicap": ["Home -1", "Home -1.5", "Home +1", "Home +1.5", "Away +1", "Away +1.5", "Away -1", "Away -1.5"],
+    "Corners": ["Over 8.5", "Over 9.5", "Over 10.5", "Under 9.5", "Under 10.5", "Under 11.5"],
+    "Cards": ["Over 3.5", "Over 4.5", "Under 4.5", "Under 5.5"],
     "Moneyline": ["Home Win", "Away Win"],
-    "Spread": ["Home -6.5", "Away +6.5"],
-    "Total Points": ["Over 220.5", "Under 220.5"],
-    "Player Prop": ["LeBron James Over 25.5 Points", "Nikola Jokic Over 10.5 Rebounds"],
-    "Handicap": ["Home -1", "Home +1", "Away +1", "Away -1"]
+    "Spread": ["Home -6.5", "Home -3.5", "Home +3.5", "Away +6.5", "Away -3.5", "Away +10.5"],
+    "Total Points": ["Over 210.5", "Over 220.5", "Over 230.5", "Under 210.5", "Under 220.5", "Under 230.5"],
+    "Home Team Total": ["Home Over 105.5", "Home Over 110.5", "Home Under 110.5"],
+    "Away Team Total": ["Away Over 105.5", "Away Over 110.5", "Away Under 110.5"],
+    "Player Prop": ["LeBron James Over 25.5 Points", "Nikola Jokic Over 10.5 Rebounds", "Stephen Curry Over 4.5 3-Pointers Made"],
+    "Other": ["(type your own selection)"]
   };
   const MAXLEGS = 8, empty = () => ({ fid: "", market: "", sel: "" });
   let gifts = [], users = [], chosen = new Set(), legs = [empty()], editId = null, loaded = false;
@@ -62,7 +71,7 @@
     $("#bgSpecL").addEventListener("change", e => { const k = e.target.dataset.k; if (!k) return; e.target.checked ? chosen.add(k) : chosen.delete(k); $("#bgSpecN").textContent = chosen.size; });
     $("#bgLegs").addEventListener("change", e => {
       const row = e.target.closest(".leg"); if (!row) return; const l = legs[+row.dataset.i];
-      if (e.target.classList.contains("gf")) l.fid = e.target.value;
+      if (e.target.classList.contains("gf")) { const f = fxOn().find(x => fxLab(x) === e.target.value); l.fid = f ? f.id : ""; if (!f) e.target.value = ""; }
       if (e.target.classList.contains("gm")) { l.market = e.target.value; l.sel = ""; drawLegs(); }
       if (e.target.classList.contains("gs")) l.sel = e.target.value;
     });
@@ -73,14 +82,16 @@
   }
 
   const fxOn = () => (db.fixtures || []).filter(f => String(f.kickoff || "").slice(0, 10) === $("#bgDate").value && f.home && f.away).sort((a, b) => String(a.kickoff).localeCompare(String(b.kickoff)));
+  const fxLab = f => (f.sport === "basketball" ? "🏀 " : "⚽ ") + f.home + " v " + f.away + " · " + (f.competition || "") + " · " + String(f.kickoff).slice(11, 16);
+  const labOf = id => { const f = (db.fixtures || []).find(x => x.id === id); return f ? fxLab(f) : ""; };
   function drawLegs() {
     const list = fxOn();
     $("#bgLegs").innerHTML = legs.map((l, i) => {
-      const fo = list.map(f => `<option value="${esc(f.id)}" ${l.fid === f.id ? "selected" : ""}>${f.sport === "basketball" ? "🏀" : "⚽"} ${esc(f.home)} v ${esc(f.away)} · ${esc(f.competition || "")} · ${esc(String(f.kickoff).slice(11, 16))}</option>`).join("");
+      const fo = list.map(f => `<option value="${esc(fxLab(f))}"></option>`).join("");
       const mk = Object.keys(MK).map(m => `<option ${l.market === m ? "selected" : ""}>${m}</option>`).join("");
       const dl = l.market ? MK[l.market].map(s => `<option value="${esc(s)}">`).join("") : "";
       return `<div class="leg" data-i="${i}"><div class="row" style="gap:10px;align-items:flex-end;flex-wrap:wrap">
-        <div style="flex:3;min-width:240px"><label>Match</label><select class="gf"><option value="">Choose a match on this date</option>${fo}</select></div>
+        <div style="flex:3;min-width:240px"><label>Match (click, or type a team or league to search)</label><input class="gf" list="bgfx${i}" value="${esc(labOf(l.fid))}" placeholder="Search matches on this date..." autocomplete="off"><datalist id="bgfx${i}">${fo}</datalist></div>
         <div style="flex:1;min-width:130px"><label>Market</label><select class="gm"><option value="">Market</option>${mk}</select></div>
         <div style="flex:2;min-width:180px"><label>Selection</label><input class="gs" list="bgdl${i}" value="${esc(l.sel)}" placeholder="${l.market ? "e.g. " + esc(MK[l.market][0]) : "Choose a market first"}"><datalist id="bgdl${i}">${dl}</datalist></div>
         <button type="button" class="btn danger sm gx">Remove</button></div></div>`;
