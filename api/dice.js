@@ -5,7 +5,7 @@
  *   Free members:                6 rolls a day in total (the 3 visitor rolls count, so 3 extra after signing up).
  *   The day resets at midnight Lagos time.
  *
- * Every roll is written to dice_log so the admin can watch rolls live. A prize won by a visitor is saved
+ * Every spin is written to dice_log so the admin can watch rolls live. A prize won by a visitor is saved
  * with a claim code and is attached to their account when they sign up (action "claim").
  *
  * Needs ONE Vercel environment variable (Project > Settings > Environment Variables):
@@ -33,11 +33,10 @@ const getInt = (f, k) => parseInt((f && f[k] && f[k].integerValue) || "0", 10);
 const getStr = (f, k) => (f && f[k] && f[k].stringValue) || "";
 
 /* prize ladder, rarest first. The jackpot odds are deliberately not shown on the site. */
-function drawPrize(firstOfDay, streak) {
-  if (crypto.randomInt(25000000) === 0) return { id: "jackpot", name: "the $1,000 JACKPOT" };
-  if (crypto.randomInt(2000) === 0) return { id: "vip7", name: "1 week of free VIP" };
-  if (crypto.randomInt(500) === 0) return { id: "vip1", name: "a free VIP day" };
-  if (crypto.randomInt(4) === 0 || (firstOfDay && streak > 0 && streak % 7 === 0)) return { id: "pick", name: "a bonus pick" };
+function drawPrize() {
+  if (crypto.randomInt(50000000) === 0) return { id: "jackpot", name: "the $1,000 JACKPOT" };
+  if (crypto.randomInt(50000) === 0) return { id: "vip7", name: "1 week of free VIP" };
+  if (crypto.randomInt(5000) === 0) return { id: "vip1", name: "a free VIP day" };
   return null;
 }
 function faces(prize) {
@@ -120,7 +119,7 @@ module.exports = async function handler(req, res) {
       const w2 = await patch("dice_guest/" + today + "_i_" + ih, { n: int(getInt(nd && nd.fields, "n") + 1), day: str(today) }, nd);
       if (!w2.ok) return res.status(429).json({ error: "busy" });
     }
-    const prize = drawPrize(firstOfDay, streak), [d1, d2] = faces(prize);
+    const prize = drawPrize(), [d1, d2] = faces(prize);
     const n = used + 1;
     /* the precondition makes two simultaneous rolls impossible: the second write is rejected */
     let w;
