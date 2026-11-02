@@ -4,6 +4,7 @@
 <meta name="robots" content="noindex,nofollow">
 <title>PicksBible Admin</title>
 <link rel="icon" href="img/pb-logo.png">
+<script>try{if(localStorage.getItem("pb.theme")==="light")document.documentElement.setAttribute("data-theme","light")}catch(e){}</script>
 <style>
 :root{--bg:#0b0820;--panel:#141032;--panel-2:#1b1642;--line:#2c2660;--cyan:#22d3ee;--cyan-ink:#062a33;--purple:#6d28d9;--text:#eef0ff;--muted:#a3a8d6;--won:#22c55e;--lost:#ef4444;--pend:#f5b301;--r:10px}
 *{box-sizing:border-box}
@@ -29,6 +30,13 @@ input:focus,select:focus,textarea:focus{outline:2px solid var(--cyan);outline-of
 .btn.danger{background:transparent;color:var(--lost);border:1px solid var(--lost)}
 .btn.sm{padding:5px 10px;font-size:13px}
 .inv{position:absolute;left:0;right:0;top:100%;z-index:20;max-height:320px;overflow:auto;border:1px solid var(--line);border-radius:10px;background:#120f2e;box-shadow:0 12px 30px #000a;margin-top:4px}.hbseg{display:flex;border:1px solid var(--line);border-radius:999px;overflow:hidden;background:var(--bg)}.hbseg button{flex:1;border:0;background:transparent;color:var(--muted);padding:10px 16px;font:inherit;font-weight:700;cursor:pointer}.hbseg button[aria-pressed=true]{background:#e9fbff;color:var(--cyan-ink)}.hbseg button.bb[aria-pressed=true]{background:#fff1e0;color:#7c2d12}.inv .ih{position:sticky;top:0;background:#1a1740;padding:6px 12px;font-size:12px;font-weight:700;color:var(--muted,#9aa)}.inv .ir{display:flex;align-items:center;gap:10px;padding:6px 12px;border-top:1px solid var(--line);font-size:13px}.inv .ir .m{flex:1}.inv .ir .t{width:48px;font-weight:700}.inv .ir.done{opacity:.5}.inv .em{padding:14px;color:var(--muted,#9aa)}
+/* light mode (sun/moon button in the header; same choice as the website) */
+html[data-theme="light"]{--bg:#dfe3ee;--panel:#eceff6;--panel-2:#e1e5f0;--line:#c3c9dc;--text:#1b2140;--muted:#525b80;--cyan:#0e7490;--cyan-ink:#fff;--purple:#6d28d9;--won:#15803d;--lost:#b91c1c;--pend:#a16207;color-scheme:light}
+html[data-theme="light"] .inv{background:#f4f6fb;box-shadow:0 12px 30px #1b214033}
+html[data-theme="light"] nav.tabs button[aria-selected=true]{color:#fff}
+html[data-theme="light"] .btn.ghost{color:var(--text)}
+html[data-theme="light"] .note{background:var(--panel-2)}
+#themeBtn{width:36px;height:36px;border-radius:50%;border:1px solid var(--line);background:var(--panel-2);color:var(--text);font-size:16px;cursor:pointer;padding:0}
 .btn[disabled]{opacity:.45;cursor:not-allowed}
 .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
 .row.end{justify-content:flex-end;margin-top:12px}
@@ -132,6 +140,7 @@ tr.lghead td{background:#ffffff0d;padding:10px 8px;border-bottom:1px solid var(-
 <header><div class="wrap">
   <img src="img/pb-logo.png" alt="">
   <h1>PicksBible Admin <small id="stats"></small> <small id="sync" class="muted"></small></h1>
+  <button type="button" id="themeBtn" aria-label="Switch light or dark mode"></button>
   <button class="btn ghost sm" id="logout">Sign out</button>
 </div></header>
 
@@ -552,7 +561,7 @@ async function onSignedIn(user){
 /* ============ TABS ============ */
 function showTab(name){
   document.querySelectorAll("nav.tabs button").forEach(b=>b.setAttribute("aria-selected", b.dataset.tab===name));
-  ["fixtures","fbtable","bbtable","bbprops","home","results","vip","hub","gifts","xtips","picks","published","data"].forEach(t=>{ const el=$("#tab-"+t); if(el) el.hidden = t!==name; });
+  ["fixtures","fbtable","bbtable","bbprops","home","results","vip","hub","gifts","live","xtips","picks","published","data"].forEach(t=>{ const el=$("#tab-"+t); if(el) el.hidden = t!==name; });
   { const vb=document.querySelector(".viewbar"); if(vb) vb.style.display = ["fixtures","fbtable","bbtable","bbprops"].includes(name) ? "" : "none"; }   /* the Showing / search bar does not apply to the Results tab */
 }
 document.querySelectorAll("nav.tabs button").forEach(b=>b.onclick=()=>{ if(b.dataset.tab==="picks") resetPick(); showTab(b.dataset.tab); });
@@ -1196,8 +1205,11 @@ try{
 </script>
 <script src="admin-csv-import.js"></script>
 <script src="admin-vip.js"></script>
+<script>(function(){var r=document.documentElement,b=document.getElementById("themeBtn");function paint(){var l=r.getAttribute("data-theme")==="light";b.textContent=l?"\u263E":"\u2600";b.title=l?"Dark mode":"Light mode"}
+b.onclick=function(){var l=r.getAttribute("data-theme")==="light";if(l)r.removeAttribute("data-theme");else r.setAttribute("data-theme","light");try{localStorage.setItem("pb.theme",l?"dark":"light")}catch(e){}paint()};paint()})();</script>
 <script src="admin-hub.js"></script>
 <script src="admin-gifts.js"></script>
+<script src="admin-live.js"></script>
 <script src="admin-expert.js"></script>
 <script src="admin-settle.js">
 /* ---------- Publish check: which days have tipped matches that are not Live, switch them Live, republish everything ---------- */

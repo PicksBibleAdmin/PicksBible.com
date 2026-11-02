@@ -1158,3 +1158,14 @@ document.addEventListener("click",function(e){
   Array.prototype.forEach.call(document.querySelectorAll("[data-slot=table]"),function(el){if(!el.previousElementSibling||!el.previousElementSibling.classList.contains("tznote"))el.insertAdjacentHTML("beforebegin",html)});
   document.addEventListener("click",function(e){var a=e.target.closest&&e.target.closest("[data-tzsw]");if(!a)return;e.preventDefault();try{localStorage.setItem("pb.tz",a.dataset.tzsw)}catch(x){}location.reload()});
 })();
+
+/* ---------- light / dark switch (button in the header; choice remembered) ---------- */
+(function(){
+  var root=document.documentElement, b=document.createElement("button");b.type="button";b.className="themebtn";
+  function paint(){var l=root.getAttribute("data-theme")==="light";b.textContent=l?"\u263E":"\u2600";b.setAttribute("aria-label",l?"Switch to dark mode":"Switch to light mode");b.title=l?"Dark mode":"Light mode"}
+  b.onclick=function(){var l=root.getAttribute("data-theme")==="light";if(l)root.removeAttribute("data-theme");else root.setAttribute("data-theme","light");try{localStorage.setItem("pb.theme",l?"dark":"light")}catch(_){}paint()};
+  paint();
+  /* the account page rewrites the header buttons after login, so put the switch back whenever it is removed */
+  function put(){var ab=document.querySelector(".authbtns");if(ab&&b.parentNode!==ab)ab.insertBefore(b,ab.firstChild)}
+  put();var ab0=document.querySelector(".authbtns");if(ab0&&window.MutationObserver)new MutationObserver(put).observe(ab0,{childList:true});
+})();

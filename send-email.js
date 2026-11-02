@@ -21,7 +21,7 @@ const isEmail = e => typeof e === "string" && e.length < 120 && /^[^\s@]+@[^\s@]
 const SHELL_TOP = `<!doctype html><html><body style="margin:0;background:#f2f2f7;padding:24px 12px;font-family:Arial,Helvetica,sans-serif">
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr><td align="center">
 <table role="presentation" width="100%" style="max-width:520px;background:#ffffff;border-radius:16px;overflow:hidden" cellpadding="0" cellspacing="0">
-<tr><td style="background:#141032;padding:18px 24px;color:#ffffff;font-size:20px;font-weight:bold">Picks<span style="color:#22d3ee">Bible</span></td></tr>`;
+<tr><td style="background:#141032;padding:18px 24px;color:#ffffff;font-size:20px;font-weight:bold"><img src="https://picksbible.com/img/pb-logo.png" width="44" height="32" alt="" style="vertical-align:middle;border:0;margin-right:10px"><span style="vertical-align:middle">Picks<span style="color:#22d3ee">Bible</span></span></td></tr>`;
 const FOOT = `<tr><td style="padding:16px 24px 22px;color:#777;font-size:12px;line-height:1.5">You get this because you signed up at PicksBible.com. Predictions are not guarantees; bet responsibly. Reply to this email if you need help.<br>
 <a href="{{params.UNSUB}}" style="color:#777">Unsubscribe</a></td></tr>
 </table></td></tr></table></body></html>`;
@@ -31,7 +31,7 @@ const button = (link, color) => link && link.url ? `<p style="margin:22px 0 8px"
 
 /* a plain message: title, body, optional button */
 function htmlOf(title, body, link) {
-  return SHELL_TOP + `<tr><td style="padding:26px 24px 10px"><h1 style="margin:0 0 14px;font-size:22px;color:#111">${esc(title)}</h1>${paras(body)}${button(link, "#1a1a1a")}</td></tr>` + FOOT;
+  return SHELL_TOP + `<tr><td style="padding:26px 24px 10px"><h1 style="margin:0 0 14px;font-size:22px;color:#111">${esc(title)}</h1>${paras(body)}${button(link, "#dc2626")}</td></tr>` + FOOT;
 }
 
 /* free picks: title, optional body, picks with editable tip and numeric odds, optional button */
@@ -40,8 +40,8 @@ function freeHtml(picks, body, link, title) {
 <div style="font-size:17px;font-weight:bold;color:#111">${i + 1}. ${esc(p.match)}</div><div style="font-size:16px;color:#16a34a;font-weight:bold;margin-top:3px">${esc(p.pick)}${p.odds ? ` <span style="color:#111">@ ${esc(p.odds)}</span>` : ""}</div></td></tr>`).join("");
   return SHELL_TOP + `<tr><td style="padding:26px 24px 6px">${title ? `<h1 style="margin:0 0 14px;font-size:22px;color:#111">${esc(title)}</h1>` : ""}<p style="margin:0 0 12px;font-size:17px;color:#111">Hello {{params.NAME}},</p>
 ${paras(body)}
-<table role="presentation" width="100%" cellpadding="0" cellspacing="0">${items}</table>
-${button(link, "#16a34a")}</td></tr>` + FOOT;
+${picks.length ? `<table role="presentation" width="100%" cellpadding="0" cellspacing="0">${items}</table>` : ""}
+${button(link, "#dc2626")}</td></tr>` + FOOT;
 }
 const cleanLink = l => {
   const url = String((l && l.url) || "").trim();
@@ -76,9 +76,10 @@ async function handler(req, res) {
   const subject = String(b.subject || "").trim().slice(0, 150), text = String(b.text || "").trim().slice(0, 2000);
   if (!subject || (!free && !text)) return res.status(400).json({ error: "subject and text are required" });
   const link = cleanLink(b.link);
+  const tag = String(b.tag || "").replace(/[^A-Za-z0-9_-]/g, "").slice(0, 40);
   const heading = String(b.title || "").trim().slice(0, 150);
   const picks = free ? (Array.isArray(b.picks) ? b.picks : []).slice(0, 5).map(p => ({ match: String(p.match || "").slice(0, 120), pick: String(p.pick || "").slice(0, 120), meta: String(p.meta || "").slice(0, 120), odds: oddsOf(p.odds) })).filter(p => p.match && p.pick) : [];
-  if (free && !picks.length) return res.status(400).json({ error: "add at least one pick" });
+  if (free && !picks.length && !text) return res.status(400).json({ error: "add at least one pick or write a message" });
   const seen = new Set(), list = [];
   (Array.isArray(b.recipients) ? b.recipients : []).forEach(x => {
     const e = String((x && x.email) || "").trim().toLowerCase();
@@ -95,10 +96,16 @@ async function handler(req, res) {
   for (let i = 0; i < list.length; i += CHUNK) {
     const part = list.slice(i, i + CHUNK);
     /* messageVersions: every person gets their own email, nobody sees anyone else's address */
-    const payload = { sender: from, replyTo, subject, htmlContent: html, textContent: plain, messageVersions: part.map(p => ({ to: [p.name ? { email: p.email, name: p.name } : { email: p.email }], params: { NAME: p.name || "there", UNSUB: p.unsub || "https://picksbible.com/unsubscribe.html" } })) };
+    const payload = Object.assign({ sender: from, replyTo, subject, htmlContent: html, textContent: plain, messageVersions: part.map(p => ({ to: [p.name ? { email: p.email, name: p.name } : { email: p.email }], params: { NAME: p.name || "there", UNSUB: p.unsub || "https://picksbible.com/unsubscribe.html" } })) }, tag ? { tags: [tag] } : {});
     try {
       const r = await fetch("https://api.brevo.com/v3/smtp/email", { method: "POST", headers: { "api-key": env.BREVO_API_KEY, "Content-Type": "application/json", accept: "application/json" }, body: JSON.stringify(payload) });
-      if (r.ok) sent += part.length; else { const t = await r.text(); failed.push({ n: part.length, status: r.status, detail: t.slice(0, 300) }); }
+      if (r.ok) {
+        /* Brevo answers with one message id per accepted email: count those, so "sent" is what Brevo really took */
+        let ids = null; try { const j = await r.json(); if (j && Array.isArray(j.messageIds)) ids = j.messageIds.length; else if (j && j.messageId) ids = 1; } catch (_) {}
+        const n = ids == null ? part.length : Math.min(ids, part.length);
+        sent += n;
+        if (n < part.length) failed.push({ n: part.length - n, detail: "Brevo accepted only " + n + " of " + part.length + " in this batch (the rest were skipped, e.g. blocklisted or invalid addresses)" });
+      } else { const t = await r.text(); failed.push({ n: part.length, status: r.status, detail: t.slice(0, 300) }); }
     } catch (e) { failed.push({ n: part.length, detail: String(e.message || e) }); }
   }
   return res.status(failed.length && !sent ? 502 : 200).json({ sent, failed });

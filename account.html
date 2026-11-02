@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Log In or Sign Up Free | PicksBible</title><meta name="description" content="Create a free PicksBible account or log in to your dashboard for daily picks, results alerts and VIP plans."><meta name="robots" content="noindex,follow"><link rel="canonical" href="https://picksbible.com/account.html"><meta property="og:title" content="Log In or Sign Up Free | PicksBible"><meta property="og:image" content="https://picksbible.com/img/pb-logo.png"><meta name="theme-color" content="#0b0820"><link rel="icon" href="img/pb-logo.png"><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700;800&family=Saira+Condensed:wght@600;700&display=swap"><link rel="stylesheet" href="style.css">
-<script src="data.js"></script></head><body>
+<script>try{if(localStorage.getItem("pb.theme")==="light")document.documentElement.setAttribute("data-theme","light")}catch(e){}</script><script src="data.js"></script></head><body>
 <header class="top"><div class="wrap">
 <button class="iconbtn menu-toggle" type="button" data-open="drawer" aria-label="Open menu"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
 <a class="brand" href="/" aria-label="PicksBible home"><img src="img/pb-logo.png" alt="PicksBible logo" width="61" height="44"><span>Picks<b>Bible</b></span></a>
@@ -95,6 +95,16 @@
   .ac-plan{display:none}
   .ac-stat{grid-template-columns:1fr 1fr}.ac-sup{grid-template-columns:1fr}.ac .two{grid-template-columns:1fr}
 }
+/* light mode (the sun/moon button in the header) */
+html[data-theme="light"] .ac-plan,html[data-theme="light"] .ac-ph,html[data-theme="light"] .ac-pkg details[open]>summary{background:#e1e5f0}
+html[data-theme="light"] .ac-ph .k,html[data-theme="light"] [style*="#ffd75e"]{color:#8a5a00!important}
+html[data-theme="light"] .ac-hid{background:#fdf1cf;border-color:#d9a21b;color:#6b4a00}html[data-theme="light"] .ac-hid small{color:#7a6420}
+html[data-theme="light"] .ac-dark{background:#dbe6fb;border-color:#b3c6ee;color:#1b2a5a}html[data-theme="light"] .ac-dark small{color:#43527f}
+html[data-theme="light"] .ac-res{background:#8f98bb}html[data-theme="light"] .ac-res.lost{background:#c0536a}
+html[data-theme="light"] .ac .msg.err{color:#b42318}html[data-theme="light"] .ac .msg.ok{color:#117a43}
+html[data-theme="light"] .ac-l li:before{background:#cfeedd;color:#117a43}
+html[data-theme="light"] .ac-side a.on{background:#cfe6ee;color:#0b5c72}
+html[data-theme="light"] .ac-card{box-shadow:0 12px 30px #1b214022}
 </style>
 <main class="ac">
 <!-- ============ LOG IN / SIGN UP ============ -->
@@ -274,6 +284,9 @@
       if(PREF)$("#aSub").textContent="One last step: choose a password to finish your free account.";
       return}
     try{localStorage.setItem("pb.member","1")}catch(_){}
+    /* count this member as active today (one tiny write per day per browser) */
+    (function(){try{var d=new Intl.DateTimeFormat("en-CA",{timeZone:"Africa/Lagos"}).format(new Date()),k="pb.act."+user.uid;if(localStorage.getItem(k)===d)return;
+      fs.collection("activity").doc(d+"_"+user.uid).set({uid:user.uid,email:user.email||"",ymd:d,at:new Date().toISOString(),n:1}).then(function(){try{localStorage.setItem(k,d)}catch(_){}},function(){})}catch(_){}})();
     if(ab)ab.innerHTML='<a class="lgn" href="account.html#login">My Account</a>';
     $("#aAuth").hidden=true;$("#aHome").hidden=false;
     if(TABS.indexOf(location.hash.replace("#",""))<0)history.replaceState(null,"","#dashboard");

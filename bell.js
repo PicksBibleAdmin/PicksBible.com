@@ -17,6 +17,9 @@
       un.forEach(function (u) { u(); }); un = [];
       var old = document.getElementById("pbBell"); if (old) old.remove();
       if (!user) { try { localStorage.removeItem("pb.member"); } catch (_) {} return; }
+    /* count this member as active today (one tiny write per day per browser) */
+    (function(){try{var d=new Intl.DateTimeFormat("en-CA",{timeZone:"Africa/Lagos"}).format(new Date()),k="pb.act."+user.uid;if(localStorage.getItem(k)===d)return;
+      fs.collection("activity").doc(d+"_"+user.uid).set({uid:user.uid,email:user.email||"",ymd:d,at:new Date().toISOString(),n:1}).then(function(){try{localStorage.setItem(k,d)}catch(_){}},function(){})}catch(_){}})();
       un.push(fs.collection("users").doc(user.uid).onSnapshot(function (d) {
         var u = d.exists ? d.data() : { tier: "free" };
         var paid = u.tier === "gold" && u.paidUntil && u.paidUntil >= new Date().toISOString().slice(0, 10);
