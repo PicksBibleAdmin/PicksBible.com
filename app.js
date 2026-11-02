@@ -1170,7 +1170,7 @@ document.addEventListener("click",function(e){
   function wantLight(){var l=isDay();try{var c=localStorage.getItem("pb.theme"),u=+localStorage.getItem("pb.themeUntil")||0;if((c==="light"||c==="dark")&&Date.now()<u)l=c==="light"}catch(_){}return l}
   function apply(l){if(l)root.setAttribute("data-theme","light");else root.removeAttribute("data-theme");paint()}
   function paint(){var l=root.getAttribute("data-theme")==="light";
-    b.innerHTML='<span class="ti">'+(l?"☾":"☀")+'</span><span class="tl">'+(l?"Dark mode":"Light mode")+'</span>';
+    b.innerHTML='<span class="ti">'+(l?"☾":"☀")+'</span><span class="tl">'+(l?"Dark":"Light")+'<span class="tm"> mode</span></span>';
     b.setAttribute("aria-label",l?"Switch to dark mode":"Switch to light mode");b.title=l?"Switch to dark mode":"Switch to light mode"}
   b.onclick=function(){var l=root.getAttribute("data-theme")!=="light";apply(l);try{localStorage.setItem("pb.theme",l?"light":"dark");localStorage.setItem("pb.themeUntil",String(nextSwitch()))}catch(_){}};
   apply(wantLight());

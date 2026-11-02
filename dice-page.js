@@ -56,7 +56,7 @@
     gift.className = "dgift"; gift.innerHTML = ""; pair.classList.remove("away"); acts.innerHTML = ""; say("");
   }
   function confetti(box, n) {
-    var cols = ["#22d3ee", "#fbbf24", "#8b5cf6", "#ffffff", "#67e8f9", "#fde68a"], h = "";
+    var cols = ["#3b82f6", "#f9a01b", "#7a4bb5", "#ffffff", "#93c5fd", "#e9d5ff"], h = "";
     for (var k = 0; k < n; k++) {
       var a = Math.random() * Math.PI * 2, d = 70 + Math.random() * 130;
       h += '<i class="cf" style="--c:' + cols[k % cols.length] + ";--dx:" + (Math.cos(a) * d).toFixed(0) + "px;--dy:" + (Math.sin(a) * d - 60).toFixed(0) + "px;--r:" + Math.floor(Math.random() * 720 - 360) + 'deg;animation-delay:' + (Math.random() * 0.15).toFixed(2) + 's"></i>';
