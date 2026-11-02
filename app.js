@@ -738,7 +738,7 @@ $$("[data-analysis]").forEach(function(el){
   var oddsHtml="";
   if(bm){oddsHtml=(bm.pp?'<p class="note" style="margin:0 0 8px"><b>'+esc(bm.pp)+'</b></p>':"")+'<div class="bbo n'+bm.l.length+'">'+bm.l.map(function(lb,i){return '<div class="bbt'+(i===bm.i?" ours":"")+'"><small>'+esc(lb)+'</small><b>'+(bm.o[i]?esc(bm.o[i]):"-")+'</b></div>'}).join("")+'</div>'}
   else if(v.odd){oddsHtml='<div class="bbo n1"><div class="bbt ours"><small>'+esc(v.tip)+'</small><b>'+esc(v.odd)+'</b></div></div>'}
-  else oddsHtml='<p class="note" style="margin:0">Odds not posted yet.</p>';
+  else oddsHtml='';
   el.innerHTML=
    '<div class="bbhero"><div class="crumbs"><a href="/">Home</a> &rsaquo; <a href="/">Banker Bet of the Day</a> &rsaquo; '+esc(v.h)+' vs '+esc(v.a)+'</div>'+
    '<p class="bbcomp">'+esc(v.lg)+' <i>&bull;</i> '+esc(dateTxt)+'</p>'+
@@ -748,11 +748,11 @@ $$("[data-analysis]").forEach(function(el){
    '<h1>'+esc(title)+' | '+esc(shortDate)+'</h1>'+
    '<p class="bbintro">'+esc(v.h)+' welcome '+esc(v.a)+' in the '+esc(v.lg)+' on '+esc(dateTxt)+', with our prediction model identifying '+(selTxt?'<b>'+esc(selTxt)+'</b>':'our selection')+' as the best betting opportunity for this fixture.</p></div>'+
    '<section class="bbbox"><div class="bbbar"><span>Banker Bet of the Day</span>'+(done?'<em class="bbres '+v.st+'">'+(v.st==="won"?"&#10003; Won":"Lost")+'</em>':'<em class="bbres pend">Pending</em>')+'</div>'+
-   '<div class="bbin"><div class="bbl"><span class="bbk">Our Best Bet</span><h2>'+(hasBM?'<span class="mk">'+esc(bm.m)+'</span><span class="dash"> - </span><span class="sl">'+esc(bm.sel||bm.l[bm.i])+'</span>':(selTxt?'<span class="sl">'+esc(selTxt)+'</span>':'<span class="na">Not posted yet</span>'))+'</h2>'+
-   (paras.length?paras.map(function(t){return '<p>'+esc(t)+'</p>'}).join(""):'<p class="note">The analyst reasoning for this bet has not been written yet.</p>')+
+   '<div class="bbin"><div class="bbl"><span class="bbk">Our Best Bet</span><h2>'+(hasBM?'<span class="mk">'+esc(bm.m)+'</span><span class="dash"> - </span><span class="sl">'+esc(bm.sel||bm.l[bm.i])+'</span>':(selTxt?'<span class="sl">'+esc(selTxt)+'</span>':'<span class="na">Coming soon</span>'))+'</h2>'+
+   (paras.length?paras.map(function(t){return '<p>'+esc(t)+'</p>'}).join(""):'')+
    '<p class="note by">Banker Bet by <b>'+esc(v.by)+'</b> &middot; '+(sp==="football"?"&#9917; Football":"&#127936; Basketball")+'</p></div>'+
-   '<div class="bbr"><div class="bbcard"><span class="bbk">Market Odds</span>'+oddsHtml+'</div>'+
-   '<div class="bbcard"><span class="bbk">Rating</span>'+(clv?'<div class="bbrate"><b class="'+ccl+'">'+clv+'</b><span>'+esc(String(Math.round(cn)))+'% confidence</span></div><i class="etmeter"><u class="'+ccl+'" style="width:'+Math.max(4,Math.min(100,cn))+'%"></u></i>':'<p class="note" style="margin:0">Not posted yet.</p>')+'</div></div></div></section>'+
+   '<div class="bbr">'+(oddsHtml?'<div class="bbcard"><span class="bbk">Market Odds</span>'+oddsHtml+'</div>':'')+
+   (clv?'<div class="bbcard"><span class="bbk">Rating</span><div class="bbrate"><b class="'+ccl+'">'+clv+'</b><span>'+esc(String(Math.round(cn)))+'% confidence</span></div><i class="etmeter"><u class="'+ccl+'" style="width:'+Math.max(4,Math.min(100,cn))+'%"></u></i></div>':'')+'</div></div></section>'+
    '<p class="note center" style="margin-top:14px">'+(sp==="football"?"Football":"Basketball")+' predictions are based on statistical analysis and are not guaranteed. Please bet responsibly.</p>';
 });
 
@@ -1159,13 +1159,29 @@ document.addEventListener("click",function(e){
   document.addEventListener("click",function(e){var a=e.target.closest&&e.target.closest("[data-tzsw]");if(!a)return;e.preventDefault();try{localStorage.setItem("pb.tz",a.dataset.tzsw)}catch(x){}location.reload()});
 })();
 
-/* ---------- light / dark switch (button in the header; choice remembered) ---------- */
+/* ---------- light / dark: automatic by the visitor's local time (day 06:00-18:00 = light, night = dark),
+   with a clearly labelled button to switch. A manual choice holds until the next day/night change. ---------- */
 (function(){
   var root=document.documentElement, b=document.createElement("button");b.type="button";b.className="themebtn";
-  function paint(){var l=root.getAttribute("data-theme")==="light";b.textContent=l?"\u263E":"\u2600";b.setAttribute("aria-label",l?"Switch to dark mode":"Switch to light mode");b.title=l?"Dark mode":"Light mode"}
-  b.onclick=function(){var l=root.getAttribute("data-theme")==="light";if(l)root.removeAttribute("data-theme");else root.setAttribute("data-theme","light");try{localStorage.setItem("pb.theme",l?"dark":"light")}catch(_){}paint()};
-  paint();
-  /* the account page rewrites the header buttons after login, so put the switch back whenever it is removed */
-  function put(){var ab=document.querySelector(".authbtns");if(ab&&b.parentNode!==ab)ab.insertBefore(b,ab.firstChild)}
-  put();var ab0=document.querySelector(".authbtns");if(ab0&&window.MutationObserver)new MutationObserver(put).observe(ab0,{childList:true});
+  function isDay(){var h=new Date().getHours();return h>=6&&h<18}
+  function nextSwitch(){var d=new Date(),t=new Date(d);t.setMinutes(0,0,0);
+    if(d.getHours()<6)t.setHours(6);else if(d.getHours()<18)t.setHours(18);else{t.setDate(t.getDate()+1);t.setHours(6)}
+    return t.getTime()}
+  function wantLight(){var l=isDay();try{var c=localStorage.getItem("pb.theme"),u=+localStorage.getItem("pb.themeUntil")||0;if((c==="light"||c==="dark")&&Date.now()<u)l=c==="light"}catch(_){}return l}
+  function apply(l){if(l)root.setAttribute("data-theme","light");else root.removeAttribute("data-theme");paint()}
+  function paint(){var l=root.getAttribute("data-theme")==="light";
+    b.innerHTML='<span class="ti">'+(l?"☾":"☀")+'</span><span class="tl">'+(l?"Dark mode":"Light mode")+'</span>';
+    b.setAttribute("aria-label",l?"Switch to dark mode":"Switch to light mode");b.title=l?"Switch to dark mode":"Switch to light mode"}
+  b.onclick=function(){var l=root.getAttribute("data-theme")!=="light";apply(l);try{localStorage.setItem("pb.theme",l?"light":"dark");localStorage.setItem("pb.themeUntil",String(nextSwitch()))}catch(_){}};
+  apply(wantLight());
+  setInterval(function(){var l=wantLight();if((root.getAttribute("data-theme")==="light")!==l)apply(l)},60000);
+  /* wide screens: a labelled pill in the header. Phones and tablets: a floating pill bottom-left, so the header stays uncrowded */
+  var mq=window.matchMedia?window.matchMedia("(max-width:1100px)"):null;
+  function place(){var ab=document.querySelector(".authbtns"),small=mq&&mq.matches;
+    if(small){if(b.parentNode!==document.body){b.classList.add("float");document.body.appendChild(b)}lift()}
+    else if(ab&&b.parentNode!==ab){b.classList.remove("float");b.style.bottom="";ab.insertBefore(b,ab.firstChild)}}
+  function lift(){if(!b.classList.contains("float"))return;var cb=document.getElementById("cookieBanner"),v=cb&&!cb.classList.contains("hidden")&&cb.offsetHeight>0;b.style.bottom=(v?cb.offsetHeight+12:16)+"px"}
+  place();setInterval(lift,700);
+  if(mq){if(mq.addEventListener)mq.addEventListener("change",place);else if(mq.addListener)mq.addListener(place)}
+  var ab0=document.querySelector(".authbtns");if(ab0&&window.MutationObserver)new MutationObserver(place).observe(ab0,{childList:true});
 })();

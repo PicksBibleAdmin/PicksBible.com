@@ -7,7 +7,7 @@
   const $ = s => document.querySelector(s);
   const lagos = d => new Intl.DateTimeFormat("en-CA", { timeZone: "Africa/Lagos" }).format(d || new Date());
   let unsubs = [], day = "", act = [], act7 = [], rolls = [], started = false, tick = null;
-  const PN = { jackpot: "JACKPOT", vip7: "1 week VIP", vip1: "VIP day", pick: "Bonus pick" };
+  const PN = { jackpot: "JACKPOT", vip7: "1 week VIP", vip1: "VIP day", pick: "Bonus pick" };  /* "pick" only appears for old rolls */
 
   function mount() {
     const nav = document.querySelector("nav.tabs");

@@ -59,7 +59,7 @@
 </div>
 <div class="card">
   <h2>Dice Roll winners <span class="muted" id="dwCount"></span></h2>
-  <p class="note">Prizes won in the dice game (a visitor's win shows as \"visitor, not claimed yet\" until they sign up). Credit the prize (Customers tab: Mark paid for VIP days, or send a bonus pick), then tick Done. For the jackpot, verify the winner before paying.</p>
+  <p class="note">Prizes won in the dice game (a visitor's win shows as \"visitor, not claimed yet\" until they sign up). Credit the prize (Customers tab: Mark paid for VIP days), then tick Done. For the jackpot, verify the winner before paying.</p>
   <div id="dwList"><p class="note">Loading...</p></div>
 </div>
 <div class="card">

@@ -1226,8 +1226,10 @@ table.pt.bw.lgbars.cat{display:table!important}
 
 /* ================= LIGHT MODE (soft, easy on the eyes) =================
    Switched with the sun/moon button in the header; remembered per visitor (localStorage "pb.theme"). */
-.themebtn{width:38px;height:38px;border-radius:50%;border:1px solid var(--line);background:var(--panel);color:var(--text);font-size:17px;line-height:1;cursor:pointer;display:inline-grid;place-items:center;padding:0}
-.themebtn:hover{border-color:var(--cyan)}
+.themebtn{display:inline-flex;align-items:center;justify-content:center;gap:7px;height:40px;padding:0 15px;border-radius:999px;border:2px solid var(--cyan);background:var(--panel);color:var(--text);font:800 13.5px var(--body);line-height:1;cursor:pointer;white-space:nowrap;flex:none}
+.themebtn .ti{font-size:19px;line-height:1}
+.themebtn:hover{background:var(--cyan);color:var(--cyan-ink)}
+.themebtn.float{position:fixed;left:12px;bottom:16px;z-index:90;height:46px;padding:0 18px;font-size:15px;box-shadow:0 8px 26px #000b,0 0 0 4px #22d3ee22}
 .authbtns{display:flex;align-items:center;gap:8px}
 html[data-theme="light"]{--bg:#dfe3ee;--panel:#eceff6;--panel-2:#e1e5f0;--line:#c3c9dc;--text:#1b2140;--muted:#525b80;--cyan:#0e7490;--cyan-ink:#fff;color-scheme:light}
 html[data-theme="light"] body{background:var(--bg)}
@@ -1256,7 +1258,7 @@ html[data-theme="light"] .tznote{border-color:var(--line)}
 html[data-theme="light"] .ok{background:#d9f3e4;color:#0b4d2a}
 html[data-theme="light"] .adwide .slot,html[data-theme="light"] .ad .slot{color:#0e7490}
 html[data-theme="light"] .vipbox,html[data-theme="light"] .viphead{color:#fff}
-html[data-theme="light"] .themebtn{background:#eceff6}
+html[data-theme="light"] .themebtn{background:#eceff6;border-color:#0e7490;color:#1b2140}html[data-theme="light"] .themebtn:hover{background:#0e7490;color:#fff}html[data-theme="light"] .themebtn.float{box-shadow:0 8px 22px #1b214044,0 0 0 4px #0e749022}
 
 /* ================= DICE GAME (homepage card + dice page) ================= */
 .dicehero{display:block;position:relative;overflow:hidden;margin:18px 0 0;padding:14px 16px 12px;border-radius:18px;text-decoration:none;color:#fff;text-align:center;
@@ -1279,12 +1281,12 @@ html[data-theme="light"] .themebtn{background:#eceff6}
   .hero .wrap>h1{grid-column:1;grid-row:1;padding-right:0}
   .hero .wrap>.dicehero.dh-home{grid-column:2;grid-row:1;align-self:stretch;margin:0;padding:10px 6px 11px;border-radius:16px;display:flex;flex-direction:column;justify-content:center;align-items:center}
   .dicehero.dh-home .spark{display:none}
-  .dicehero.dh-home .dh-jp{font-size:21px;line-height:1}
-  .dicehero.dh-home .dh-sub{font-size:11px;line-height:1.25;margin-top:4px}
-  .dicehero.dh-home .dh-stage{padding:14px 0 14px;gap:14px;perspective:340px}
-  .dicehero.dh-home .cube{--s:32px}
+  .dicehero.dh-home .dh-jp{font-size:27px;line-height:.95}.dicehero.dh-home .dh-jp span,.dicehero.dh-home .dh-jp em{display:block}.dicehero.dh-home .dh-jp em{font-style:normal;font-size:15px;letter-spacing:.16em;margin-top:3px}
+  .dicehero.dh-home .dh-sub,.dicehero.dh-home .dh-fine{display:none}
+  .dicehero.dh-home .dh-stage{padding:11px 0 12px;gap:14px;perspective:340px}
+  .dicehero.dh-home .cube{--s:34px}
   .dicehero.dh-home .cube .face{padding:3px;border-radius:6px;gap:0}.dicehero.dh-home .cube .face i{width:5px;height:5px}
-  .dicehero.dh-home .dh-btn{font-size:12px;padding:8px 12px;line-height:1.1}
+  .dicehero.dh-home .dh-btn{font-size:12.5px;padding:8px 13px;line-height:1.1}
   .dicehero.dh-home .dh-fine{font-size:9.5px;margin-top:7px;line-height:1.25}
 }
 /* 3D dice: brand navy glass, cyan pips, gold ace */
@@ -1357,6 +1359,11 @@ html[data-theme="light"] .vb-by{background:#d3d8e8!important;color:#434b70}
 html[data-theme="light"] .vb-by b{color:#1b2140}
 html[data-theme="light"] .lg-select{color:#0b5c72!important;background:#eceff6!important;border-color:#0e7490!important}
 html[data-theme="light"] .plan,html[data-theme="light"] .pcard,html[data-theme="light"] .vipbox,html[data-theme="light"] .ck-paybox{--text:#eef0ff;--muted:#a3a8d6;--line:#2c2660;--panel:#141032;--panel-2:#1b1642;color:#eef0ff}
-@media(max-width:520px){.themebtn{width:32px;height:32px;font-size:15px}.authbtns{gap:5px}.top .brand span{font-size:19px}.top .brand img{width:46px;height:auto}}
-@media(max-width:400px){.top .brand span{font-size:16px}.top .brand img{width:40px}.top .brand{gap:4px}.themebtn{width:30px;height:30px}.authbtns .lgn,.authbtns .sgn{padding-inline:10px}}
+@media(max-width:520px){.authbtns{gap:5px}.top .brand span{font-size:19px}.top .brand img{width:46px;height:auto}}
+@media(max-width:400px){.top .brand span{font-size:16px}.top .brand img{width:40px}.top .brand{gap:4px}.authbtns .lgn,.authbtns .sgn{padding-inline:10px}}
 @media(max-width:350px){.top .brand span{display:none}}
+
+/* VIP results box: a pulsing gold outline so it stands out on every page */
+.vipbox{border:2px solid #fbbf24!important;animation:vipGold 2.2s ease-in-out infinite}
+@keyframes vipGold{0%,100%{border-color:#d99700;box-shadow:0 0 0 1px #fbbf2422 inset,0 0 8px 0 #fbbf2444,0 10px 30px #0006}50%{border-color:#ffe08a;box-shadow:0 0 0 1px #ffe08a55 inset,0 0 26px 5px #fbbf24aa,0 10px 30px #0006}}
+@media(prefers-reduced-motion:reduce){.vipbox{animation:none}}

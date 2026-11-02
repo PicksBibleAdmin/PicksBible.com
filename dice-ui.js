@@ -23,7 +23,7 @@
   var hero = document.getElementById("diceHero");
   if (hero) {
     var sp = ""; for (var i = 0; i < 9; i++) sp += '<span class="spark" style="left:' + (8 + Math.random() * 84).toFixed(0) + "%;top:" + (30 + Math.random() * 45).toFixed(0) + "%;animation-delay:" + (Math.random() * 3).toFixed(1) + 's"></span>';
-    hero.innerHTML = '<div class="dh-jp">$1,000 JACKPOT</div><p class="dh-sub">Stand the chance to win $1,000</p>' +
+    hero.innerHTML = '<div class="dh-jp"><span>$1,000</span> <em>JACKPOT</em></div><p class="dh-sub">Stand the chance to win $1,000</p>' +
       '<div class="dh-stage">' + cubeHTML("a") + cubeHTML("b") + "</div>" + '<span class="dh-btn">ROLL NOW &rarr;</span><span class="dh-fine">18+ &middot; free to play</span>' + sp;
   }
 })();

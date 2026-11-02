@@ -13,8 +13,7 @@
   var PRIZE = {
     jackpot: ["$1,000 JACKPOT!", "Double six! We will contact you to verify and pay."],
     vip7: ["1 WEEK FREE VIP", "Seven days of Gold VIP picks, on us."],
-    vip1: ["A FREE VIP DAY", "A full day of Gold VIP picks, on us."],
-    pick: ["A BONUS PICK", "An extra expert pick, on us."]
+    vip1: ["A FREE VIP DAY", "A full day of Gold VIP picks, on us."]
   };
   var delay = function (ms) { return new Promise(function (r) { setTimeout(r, ms); }); };
 
@@ -39,19 +38,19 @@
   function counter() {
     var el = $("#dLeft"), big = $("#dBig"), nx = $("#dNext");
     if (left == null) return;
-    el.textContent = left > 0 ? left + (left === 1 ? " roll" : " rolls") + " left today" : "No rolls left today";
+    el.textContent = left > 0 ? left + (left === 1 ? " spin" : " spins") + " left today" : "No spins left today";
     big.textContent = left + " / " + limit;
-    nx.textContent = member ? "Members get 6 rolls a day. They reset at midnight, Lagos time." : "Visitors get 3 rolls a day. Sign up free for 3 more.";
+    nx.textContent = "Registered members get 6 spins a day. Everyone else gets 3.";
     $("#dStreakBox").style.display = member ? "" : "none";
   }
   function actions(extraHtml) {
     var h = extraHtml || "";
     if (left > 0) h += '<button type="button" class="dh-btn dbtn" id="dAgain">ROLL AGAIN</button>';
-    else if (!member) h += '<a class="dcta" href="account.html#signup">Sign up free for 3 more rolls</a>';
+    else if (!member) h += '<a class="dcta" href="account.html#signup">Sign up free for 6 spins a day</a>';
     acts.innerHTML = h;
     var b = $("#dAgain"); if (b) b.onclick = roll;
     hint.style.display = "none";
-    if (left <= 0) say(member ? "That is all 6 rolls for today. Come back tomorrow for more!" : "You have used your 3 free rolls. Sign up free to get 3 more today!", false);
+    if (left <= 0) say(member ? "That is all 6 spins for today. Come back tomorrow!" : "You have used your 3 spins for today. Sign up free to get 6 spins a day!", false);
   }
   function resetTable() {
     gift.className = "dgift"; gift.innerHTML = ""; pair.classList.remove("away"); acts.innerHTML = ""; say("");
@@ -81,7 +80,7 @@
       if (member) note = "Added to your Notifications. Our team credits it within 24 hours.";
       else note = "Create your free account on this device to claim it.";
       actions(member || left <= 0 ? "" : '<a class="dcta" href="account.html#signup">Sign up free to claim</a> ');
-      say(note + (left <= 0 && member ? " That was your last roll today." : "") , true);
+      say(note + (left <= 0 && member ? " That was your last spin today." : "") , true);
     });
   }
   function missed() {
@@ -103,7 +102,7 @@
       if (o.s === 503) { say("The dice open very soon. Check back shortly!"); ready = false; busy = false; return; }
       if (o.s === 429 || o.s === 409) { left = 0; counter(); busy = false; actions(); return; }
       if (o.s === 401) { say("Please log in again, then tap the dice."); busy = false; return; }
-      if (o.s !== 200) { say("Something went wrong. Tap the dice to try again." + (o.j && o.j.detail ? " (" + o.j.detail + ")" : "")); busy = false; hint.style.display = ""; return; }
+      if (o.s !== 200) { say("Something went wrong. Tap the dice to try again."); busy = false; hint.style.display = ""; return; }
       var j = o.j;
       PBDice.land(cubes[0], j.d1, 1500); PBDice.land(cubes[1], j.d2, 1850);
       say("");
@@ -124,7 +123,7 @@
   function status() {
     api("status").then(function (o) {
       if (o.s === 503) { $("#dLeft").textContent = "Opening very soon"; say("The dice open very soon. Check back shortly!"); hint.style.display = "none"; return; }
-      if (o.s !== 200) { $("#dLeft").textContent = "Could not load your rolls"; if (o.j && o.j.detail) say("Technical note for the site owner: " + o.j.detail); ready = true; return; }
+      if (o.s !== 200) { $("#dLeft").textContent = "Tap the dice to spin"; ready = true; return; }
       var j = o.j; left = j.left; limit = j.limit; member = !!j.member; ready = true; counter();
       if (member) $("#dStreak").textContent = (j.streak || 0) + (j.streak === 1 ? " day" : " days");
       if (j.d1) { PBDice.land(cubes[0], j.d1, 10); PBDice.land(cubes[1], j.d2, 10); }

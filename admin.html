@@ -4,7 +4,7 @@
 <meta name="robots" content="noindex,nofollow">
 <title>PicksBible Admin</title>
 <link rel="icon" href="img/pb-logo.png">
-<script>try{if(localStorage.getItem("pb.theme")==="light")document.documentElement.setAttribute("data-theme","light")}catch(e){}</script>
+<script>(function(){try{var h=new Date().getHours(),l=h>=6&&h<18,c=localStorage.getItem("pb.theme"),u=+localStorage.getItem("pb.themeUntil")||0;if((c==="light"||c==="dark")&&Date.now()<u)l=c==="light";if(l)document.documentElement.setAttribute("data-theme","light")}catch(e){}})()</script>
 <style>
 :root{--bg:#0b0820;--panel:#141032;--panel-2:#1b1642;--line:#2c2660;--cyan:#22d3ee;--cyan-ink:#062a33;--purple:#6d28d9;--text:#eef0ff;--muted:#a3a8d6;--won:#22c55e;--lost:#ef4444;--pend:#f5b301;--r:10px}
 *{box-sizing:border-box}
@@ -36,7 +36,7 @@ html[data-theme="light"] .inv{background:#f4f6fb;box-shadow:0 12px 30px #1b21403
 html[data-theme="light"] nav.tabs button[aria-selected=true]{color:#fff}
 html[data-theme="light"] .btn.ghost{color:var(--text)}
 html[data-theme="light"] .note{background:var(--panel-2)}
-#themeBtn{width:36px;height:36px;border-radius:50%;border:1px solid var(--line);background:var(--panel-2);color:var(--text);font-size:16px;cursor:pointer;padding:0}
+#themeBtn{display:inline-flex;align-items:center;gap:7px;height:38px;padding:0 15px;border-radius:999px;border:2px solid var(--cyan);background:var(--panel-2);color:var(--text);font:800 13.5px inherit;cursor:pointer}
 .btn[disabled]{opacity:.45;cursor:not-allowed}
 .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
 .row.end{justify-content:flex-end;margin-top:12px}
@@ -1205,8 +1205,11 @@ try{
 </script>
 <script src="admin-csv-import.js"></script>
 <script src="admin-vip.js"></script>
-<script>(function(){var r=document.documentElement,b=document.getElementById("themeBtn");function paint(){var l=r.getAttribute("data-theme")==="light";b.textContent=l?"\u263E":"\u2600";b.title=l?"Dark mode":"Light mode"}
-b.onclick=function(){var l=r.getAttribute("data-theme")==="light";if(l)r.removeAttribute("data-theme");else r.setAttribute("data-theme","light");try{localStorage.setItem("pb.theme",l?"dark":"light")}catch(e){}paint()};paint()})();</script>
+<script>(function(){var r=document.documentElement,b=document.getElementById("themeBtn");
+function day(){var h=new Date().getHours();return h>=6&&h<18}
+function nextSwitch(){var d=new Date(),t=new Date(d);t.setMinutes(0,0,0);if(d.getHours()<6)t.setHours(6);else if(d.getHours()<18)t.setHours(18);else{t.setDate(t.getDate()+1);t.setHours(6)}return t.getTime()}
+function paint(){var l=r.getAttribute("data-theme")==="light";b.innerHTML="<span>"+(l?"\u263E":"\u2600")+"</span><span>"+(l?"Dark mode":"Light mode")+"</span>";b.title=l?"Switch to dark mode":"Switch to light mode"}
+b.onclick=function(){var l=r.getAttribute("data-theme")!=="light";if(l)r.setAttribute("data-theme","light");else r.removeAttribute("data-theme");try{localStorage.setItem("pb.theme",l?"light":"dark");localStorage.setItem("pb.themeUntil",String(nextSwitch()))}catch(e){}paint()};paint()})();</script>
 <script src="admin-hub.js"></script>
 <script src="admin-gifts.js"></script>
 <script src="admin-live.js"></script>
