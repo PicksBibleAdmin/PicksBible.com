@@ -1271,7 +1271,7 @@ html[data-theme="light"] .themebtn{background:#eceff6}
 .dicehero .dh-fine{display:block;margin-top:10px;font:500 11.5px var(--body);color:#a5b4fc}
 .dicehero .spark{position:absolute;width:6px;height:6px;border-radius:50%;background:#67e8f9;opacity:0;animation:spark 3s ease-in-out infinite}
 @keyframes spark{0%{opacity:0;transform:translateY(8px) scale(.4)}40%{opacity:1}100%{opacity:0;transform:translateY(-26px) scale(1.2)}}
-@media(min-width:1000px){.hero{position:relative}.hero .wrap{position:relative}.dicehero.dh-home{position:absolute;right:16px;top:26px;width:340px;margin:0}}
+@media(min-width:1000px){.hero{position:relative}.hero .wrap{position:relative}.dicehero.dh-home{position:absolute;right:16px;top:26px;width:340px;margin:0}.hero .wrap>h1,.hero .wrap>p{max-width:calc(100% - 372px)}.hero .wrap>.hdates{max-width:calc(100% - 372px)}}
 /* phone: the card sits in the column beside the headline and stretches to fill it */
 @media(max-width:999px){
   .hero .wrap{display:grid;grid-template-columns:minmax(0,1fr) 132px;column-gap:12px;align-items:start}
