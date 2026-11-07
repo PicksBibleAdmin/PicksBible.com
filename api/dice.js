@@ -70,7 +70,7 @@ module.exports = async function handler(req, res) {
       if (!lk.ok) return res.status(401).json({ error: "login expired" });
       const u = ((await lk.json()).users || [])[0]; if (!u) return res.status(401).json({ error: "login expired" });
       uid = u.localId; email = u.email || "";
-      if (!(await get("users/" + uid))) return res.status(403).json({ error: "no account" });
+      /* a valid login is enough: older accounts may not have a users/ document */
     }
     const guestDoc = gid ? await get("dice_guest/" + today + "_d_" + gid) : null;
     const guestUsed = Math.min(GUEST_MAX, getInt(guestDoc && guestDoc.fields, "n"));

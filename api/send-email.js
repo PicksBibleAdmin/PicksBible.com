@@ -43,6 +43,16 @@ ${paras(body)}
 ${picks.length ? `<table role="presentation" width="100%" cellpadding="0" cellspacing="0">${items}</table>` : ""}
 ${button(link, "#dc2626")}</td></tr>` + FOOT;
 }
+/* VIP picks: total odds on top, then the numbered list of picks */
+function vipHtml(picks, total, body, link, title) {
+  const items = picks.map((p, i) => `<tr><td style="padding:12px 0;border-bottom:1px solid #eee"><div style="font-size:12px;color:#777;margin-bottom:3px">${esc(p.meta || "")}</div>
+<div style="font-size:16px;font-weight:bold;color:#111">${i + 1}. ${esc(p.match)}</div><div style="font-size:16px;color:#b45309;font-weight:bold;margin-top:3px">${esc(p.pick)}</div></td></tr>`).join("");
+  return SHELL_TOP + `<tr><td style="padding:26px 24px 6px">${title ? `<h1 style="margin:0 0 14px;font-size:22px;color:#111">${esc(title)}</h1>` : ""}<p style="margin:0 0 12px;font-size:17px;color:#111">Hello {{params.NAME}},</p>
+${paras(body)}
+${total ? `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:6px 0 4px"><tr><td style="background:#fff7e0;border:2px solid #f9a01b;border-radius:12px;padding:12px 16px;text-align:center"><div style="font-size:12px;letter-spacing:.08em;color:#92400e;font-weight:bold">TOTAL ODDS</div><div style="font-size:30px;font-weight:bold;color:#111">${esc(total)}</div></td></tr></table>` : ""}
+${picks.length ? `<table role="presentation" width="100%" cellpadding="0" cellspacing="0">${items}</table>` : ""}
+${button(link, "#2563eb")}</td></tr>` + FOOT;
+}
 const cleanLink = l => {
   const url = String((l && l.url) || "").trim();
   if (!/^https:\/\/[^\s"<>]{3,380}$/.test(url)) return null;
@@ -72,13 +82,15 @@ async function handler(req, res) {
   if (!admin) return res.status(401).json({ error: "Not allowed" });
 
   const b = typeof req.body === "string" ? JSON.parse(req.body || "{}") : (req.body || {});
-  const free = b.mode === "free";
+  const free = b.mode === "free", vip = b.mode === "vip";
   const subject = String(b.subject || "").trim().slice(0, 150), text = String(b.text || "").trim().slice(0, 2000);
   if (!subject || (!free && !text)) return res.status(400).json({ error: "subject and text are required" });
   const link = cleanLink(b.link);
   const tag = String(b.tag || "").replace(/[^A-Za-z0-9_-]/g, "").slice(0, 40);
   const heading = String(b.title || "").trim().slice(0, 150);
   const picks = free ? (Array.isArray(b.picks) ? b.picks : []).slice(0, 5).map(p => ({ match: String(p.match || "").slice(0, 120), pick: String(p.pick || "").slice(0, 120), meta: String(p.meta || "").slice(0, 120), odds: oddsOf(p.odds) })).filter(p => p.match && p.pick) : [];
+  const vpicks = vip ? (Array.isArray(b.picks) ? b.picks : []).slice(0, 12).map(p => ({ match: String(p.match || "").slice(0, 120), pick: String(p.pick || "").slice(0, 120), meta: String(p.meta || "").slice(0, 120) })).filter(p => p.match && p.pick) : [];
+  const vtotal = vip ? oddsOf(b.total) : "";
   if (free && !picks.length && !text) return res.status(400).json({ error: "add at least one pick or write a message" });
   const seen = new Set(), list = [];
   (Array.isArray(b.recipients) ? b.recipients : []).forEach(x => {
@@ -90,8 +102,8 @@ async function handler(req, res) {
 
   const from = { email: env.MAIL_FROM || "picks@picksbible.com", name: env.MAIL_FROM_NAME || "PicksBible" };
   const replyTo = { email: env.MAIL_REPLY_TO || "picksbiblesupport@gmail.com", name: "PicksBible Support" };
-  const html = free ? freeHtml(picks, text, link, heading) : htmlOf(heading || subject, text, link);
-  const plain = (free ? "Hello {{params.NAME}},\n" + (text ? text + "\n" : "") + picks.map((p, i) => (i + 1) + ". " + p.match + " - " + p.pick + (p.odds ? " @ " + p.odds : "")).join("\n") : text) + (link ? "\n" + link.label + ": " + link.url : "") + "\nUnsubscribe: {{params.UNSUB}}";
+  const html = vip ? vipHtml(vpicks, vtotal, text, link, heading) : free ? freeHtml(picks, text, link, heading) : htmlOf(heading || subject, text, link);
+  const plain = vip ? "Hello {{params.NAME}},\n" + text + (vtotal ? "\nTOTAL ODDS: " + vtotal : "") + "\n" + vpicks.map((p, i) => (i + 1) + ". " + p.match + " - " + p.pick).join("\n") + (link ? "\n" + link.label + ": " + link.url : "") + "\nUnsubscribe: {{params.UNSUB}}" : (free ? "Hello {{params.NAME}},\n" + (text ? text + "\n" : "") + picks.map((p, i) => (i + 1) + ". " + p.match + " - " + p.pick + (p.odds ? " @ " + p.odds : "")).join("\n") : text) + (link ? "\n" + link.label + ": " + link.url : "") + "\nUnsubscribe: {{params.UNSUB}}";
   let sent = 0; const failed = [];
   for (let i = 0; i < list.length; i += CHUNK) {
     const part = list.slice(i, i + CHUNK);
@@ -111,4 +123,4 @@ async function handler(req, res) {
   return res.status(failed.length && !sent ? 502 : 200).json({ sent, failed });
 }
 module.exports = handler;
-module.exports._test = { htmlOf, freeHtml, cleanLink, oddsOf, isEmail, verifyAdmin };
+module.exports._test = { vipHtml, htmlOf, freeHtml, cleanLink, oddsOf, isEmail, verifyAdmin };
