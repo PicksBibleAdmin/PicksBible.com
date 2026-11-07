@@ -69,7 +69,9 @@
     const out = { et: 0, bo: 0, vip: [], changed: false };
     (db.fixtures || []).forEach(f => {
       const sc = scoreOf(f); if (!sc) return;
-      if (f.et && f.et.on) {                                  /* Banker Bet of the Day = the pick typed in Home boxes, or else the table tip for this match */
+      if (f.et && f.et.on && f.et.mk === "Player Prop") {      /* a player prop cannot be judged from the team score: only marked by hand, and an automatic mark made earlier is removed */
+        if (f.et.stAuto && f.et.st === f.et.stAuto) { f.et.st = ""; delete f.et.stAuto; out.et++; out.changed = true; }
+      } else if (f.et && f.et.on) {                                  /* Banker Bet of the Day = the pick typed in Home boxes, or else the table tip for this match */
         const tip = (f.sport === "basketball" ? f.bb : f.fb) || {};
         const mine = String(f.et.pick || "").trim();
         const r = mine ? evalPick("", mine, sc) : tip.st;

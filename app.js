@@ -110,7 +110,7 @@ function addFx(P,f,days){
     var cname=(function(){var c=String(f.country||""),k=String(f.competition||"");if(!c)return k;if(k.toLowerCase().indexOf(c.toLowerCase())===0)k=k.slice(c.length).replace(/^[\s:\-\u00b7]+/,"");return c+": "+k})();
     if(f.et&&f.et.on&&hd)(P.home.etl[sp][hd]=P.home.etl[sp][hd]||[]).push({h:f.home,a:f.away,lg:cname,t:lt(f.kickoff),by:"Admin",st:f.et.st||"",sp:sp});
     var bm=(f.et&&f.et.on)?etBM(f):null;
-    if(f.et&&f.et.on&&hd)P.home.et[sp][hd]={bm:bm,h:f.home,a:f.away,lg:cname,t:lt(f.kickoff),by:"Admin",st:f.et.st||((sp==="basketball"?(f.bb&&f.bb.st):(f.fb&&f.fb.st))==="won"||(sp==="basketball"?(f.bb&&f.bb.st):(f.fb&&f.fb.st))==="lost"?(sp==="basketball"?f.bb.st:f.fb.st):""),reasoning:f.et.reasoning||"",aff:f.et.aff||"",hl:f.et.hl||"",al:f.et.al||"",hc:f.hc||"",ac:f.ac||"",sp:sp,tip:(f.et.pick||(bm&&bm.i>=0?bm.l[bm.i]:"")||(sp==="basketball"?(f.bb&&f.bb.tip):(f.fb&&f.fb.tip))||""),conf:String(f.et.conf||(sp==="basketball"?(f.bb&&f.bb.conf):(f.fb&&f.fb.conf))||"").replace("%",""),score:(sp==="basketball"?(f.bb&&f.bb.score):(f.fb&&f.fb.score))||"",odd:String(f.et.odd||"").trim()||(bm&&bm.i>=0?String(bm.o[bm.i]||""):"")||(function(){var x=sp==="basketball"?(f.bb||{}):(f.fb||{}),t=String(f.et.pick||x.tip||"");return t==="1"?x.o1:t==="2"?x.o2:t==="X"?x.oX:t==="1X"?x.dcOdds:""})()||""};
+    if(f.et&&f.et.on&&hd)P.home.et[sp][hd]={bm:bm,h:f.home,a:f.away,lg:cname,t:lt(f.kickoff),by:"Admin",st:f.et.st||(f.et.mk==="Player Prop"?"":((sp==="basketball"?(f.bb&&f.bb.st):(f.fb&&f.fb.st))==="won"||(sp==="basketball"?(f.bb&&f.bb.st):(f.fb&&f.fb.st))==="lost"?(sp==="basketball"?f.bb.st:f.fb.st):"")),reasoning:f.et.reasoning||"",aff:f.et.aff||"",hl:f.et.hl||"",al:f.et.al||"",hc:f.hc||"",ac:f.ac||"",sp:sp,tip:(f.et.pick||(bm&&bm.i>=0?bm.l[bm.i]:"")||(sp==="basketball"?(f.bb&&f.bb.tip):(f.fb&&f.fb.tip))||""),conf:String(f.et.conf||(sp==="basketball"?(f.bb&&f.bb.conf):(f.fb&&f.fb.conf))||"").replace("%",""),score:(sp==="basketball"?(f.bb&&f.bb.score):(f.fb&&f.fb.score))||"",odd:String(f.et.odd||"").trim()||(bm&&bm.i>=0?String(bm.o[bm.i]||""):"")||(function(){var x=sp==="basketball"?(f.bb||{}):(f.fb||{}),t=String(f.et.pick||x.tip||"");return t==="1"?x.o1:t==="2"?x.o2:t==="X"?x.oX:t==="1X"?x.dcOdds:""})()||""};
     if(f.bo&&f.bo.on&&hd){var bl=P.home.bo[sp][hd]=P.home.bo[sp][hd]||[];bl.push({lg:cname,t:(f.bo.st==="won"||f.bo.st==="lost")?"FT":lt(f.kickoff),h:f.home,a:f.away,pick:f.bo.pick||"",st:f.bo.st||"pending",sc:f.bo.score||""})}
     if(!((f.fb&&f.fb.live)||(f.bb&&f.bb.live)))return;
     if(f.sport==="basketball"){
@@ -727,9 +727,9 @@ function affPills(txt){
     var p=l.split("|"),u=(p.length>1?p.slice(1).join("|"):p[0]).trim(),n=(p.length>1?p[0]:"").trim();
     if(!/^https:\/\//i.test(u))return "";
     if(!n){try{n=new URL(u).hostname.replace(/^www\./,"")}catch(_){n="Bet now"}}
-    return '<a class="affpill" href="'+esc(u)+'" target="_blank" rel="sponsored nofollow noopener">Bet this on '+esc(n)+' &rarr;</a>';
+    return '<a class="affpill" href="'+esc(u)+'" target="_blank" rel="sponsored nofollow noopener" title="'+esc(n)+'">Bet now</a>';
   }).filter(Boolean);
-  return out.length?'<div class="affrow">'+out.join("")+'<small>18+ &middot; Gamble responsibly &middot; Ad</small></div>':"";
+  return out.length?'<div class="affrow">'+out.join("")+'<small>18+ &middot; Gamble responsibly</small></div>':"";
 }
 /* ---------- MATCH ANALYSIS page (the reasoning behind an Expert Tip, written in the admin page) ---------- */
 $$("[data-analysis]").forEach(function(el){
@@ -815,7 +815,7 @@ $$("[data-props]").forEach(function(el){
       '<div class="propav">🏀</div>'+
       '<div class="propinfo"><b>'+esc(team?p.team:p.player)+'</b><span>'+esc(team?"":p.team+" ")+esc(p.opp||"")+'</span></div>'+
       '<div class="propmkt">'+esc(m.name)+'</div>'+
-      '<div class="proppick"><span class="pick">'+esc(team?(m.short||"Pick"):p.pick+" "+p.line)+'</span><span class="o">@ '+esc(p.odds)+'</span></div>'+(p.st==="won"?'<span class="bigmark won" aria-label="Won">&#10003;</span>':p.st==="lost"?'<span class="bigmark lost" aria-label="Did not land"></span>':'')+
+      '<div class="proppick"><span class="pick">'+esc(team?(m.short||"Pick"):p.pick+" "+p.line)+'</span><span class="o">'+(p.odds?'@ '+esc(p.odds):'')+'</span></div>'+(p.st==="won"?'<span class="bigmark won" aria-label="Won">&#10003;</span>':p.st==="lost"?'<span class="bigmark lost" aria-label="Did not land"></span>':'')+
     '</div>';
   }
   function listFor(k){return ((D.propsByDate||{})[day]||[]).filter(function(p){return p.k===k})}

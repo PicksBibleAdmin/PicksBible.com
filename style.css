@@ -1429,8 +1429,8 @@ html[data-theme="light"] .top .lgn{color:#fff!important;border-color:#ffffff88!i
 
 /* affiliate pills under the Banker Bet reasoning */
 .affrow{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:14px 0 4px}
-.affpill{display:inline-block;background:#2563EB;color:#fff!important;font:700 13px var(--body);padding:8px 16px;border-radius:999px;text-decoration:none}
-.affpill:hover{background:#1D4ED8}
+.affpill{display:inline-block;background:#dc2626;color:#fff!important;font:700 14px var(--body);padding:9px 26px;border-radius:999px;text-decoration:none}
+.affpill:hover{background:#b91c1c}
 .affrow small{color:var(--muted);font-size:11px;flex-basis:100%}
 
 /* softer light mode: no pure white surfaces, so it is easy on the eyes */
