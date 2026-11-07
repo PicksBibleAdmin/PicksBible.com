@@ -31,7 +31,7 @@ input:focus,select:focus,textarea:focus{outline:2px solid var(--cyan);outline-of
 .btn.sm{padding:5px 10px;font-size:13px}
 .inv{position:absolute;left:0;right:0;top:100%;z-index:20;max-height:320px;overflow:auto;border:1px solid var(--line);border-radius:10px;background:#120f2e;box-shadow:0 12px 30px #000a;margin-top:4px}.hbseg{display:flex;border:1px solid var(--line);border-radius:999px;overflow:hidden;background:var(--bg)}.hbseg button{flex:1;border:0;background:transparent;color:var(--muted);padding:10px 16px;font:inherit;font-weight:700;cursor:pointer}.hbseg button[aria-pressed=true]{background:#e9fbff;color:var(--cyan-ink)}.hbseg button.bb[aria-pressed=true]{background:#fff1e0;color:#7c2d12}.inv .ih{position:sticky;top:0;background:#1a1740;padding:6px 12px;font-size:12px;font-weight:700;color:var(--muted,#9aa)}.inv .ir{display:flex;align-items:center;gap:10px;padding:6px 12px;border-top:1px solid var(--line);font-size:13px}.inv .ir .m{flex:1}.inv .ir .t{width:48px;font-weight:700}.inv .ir.done{opacity:.5}.inv .em{padding:14px;color:var(--muted,#9aa)}
 /* light mode (sun/moon button in the header; same choice as the website) */
-html[data-theme="light"]{--bg:#f8fafc;--panel:#ffffff;--panel-2:#f1f5f9;--line:#e2e8f0;--text:#0f172a;--muted:#475569;--cyan:#2563EB;--cyan-ink:#fff;--purple:#552583;--won:#15803d;--lost:#64748b;--pend:#a16207;color-scheme:light}
+html[data-theme="light"]{--bg:#E8ECF2;--panel:#F3F5F9;--panel-2:#E4E9F0;--line:#CBD5E1;--text:#1E293B;--muted:#475569;--cyan:#2563EB;--cyan-ink:#fff;--purple:#552583;--won:#15803d;--lost:#64748b;--pend:#a16207;color-scheme:light}
 html[data-theme="light"] .inv{background:#f4f6fb;box-shadow:0 12px 30px #1b214033}
 html[data-theme="light"] nav.tabs button[aria-selected=true]{color:#fff}
 html[data-theme="light"] .btn.ghost{color:var(--text)}
@@ -776,17 +776,18 @@ const todayStr = () => new Intl.DateTimeFormat("en-CA",{timeZone:"Africa/Lagos"}
 $("#hbDate").value = todayStr(); $("#vpMonth").value = todayStr().slice(0,7);
 
 /* Banker Bet market picker: market, line, odds for EVERY option, and which option is ours (that one is highlighted on the page) */
-const BB_MK = { football:{ "1X2":["1","X","2"], "Double Chance":["1X","X2","12"], "BTTS":["Yes","No"], "Over/Under goals":["Over","Under"] },
+const BB_MK = { football:{ "1X2":["1","X","2"], "Double Chance":["1X","X2","12"], "BTTS":["Yes","No"], "Over/Under goals":["Over","Under"], "Home Over/Under":["Over","Under"], "Away Over/Under":["Over","Under"], "Handicap":["1","2"] },
                 basketball:{ "Moneyline":["1","2"], "Spread":["1","2"], "Total points":["Over","Under"], "Player Prop":["Over","Under"] } };
 function bbCell(f,e){
   const defs = BB_MK[f.sport] || BB_MK.football, base = defs[e.mk], x = (f.sport==="basketball"?f.bb:f.fb) || {};
-  const needLine = e.mk==="Over/Under goals" || e.mk==="Total points" || e.mk==="Spread" || e.mk==="Player Prop";
+  const isHc = e.mk==="Spread" || e.mk==="Handicap", teamOU = e.mk==="Home Over/Under" || e.mk==="Away Over/Under", tmName = e.mk==="Home Over/Under" ? (f.home||"Home") : (f.away||"Away");
+  const needLine = e.mk==="Over/Under goals" || teamOU || e.mk==="Handicap" || e.mk==="Total points" || e.mk==="Spread" || e.mk==="Player Prop";
   const auto = e.mk==="1X2" ? [x.o1,x.oX,x.o2] : e.mk==="Moneyline" ? [x.o1,x.o2] : [];
   let h = `<b>Market:</b> <select data-g="et" data-f="mk"><option value="">Choose a market</option>${Object.keys(defs).map(k=>`<option ${e.mk===k?"selected":""}>${k}</option>`).join("")}</select>`;
   if(e.mk==="Player Prop") h += `<br><b>Player:</b> <input data-g="et" data-f="player" value="${esc(e.player||"")}" placeholder="e.g. LeBron James" style="width:170px" maxlength="60"> <b>Stat:</b> <input data-g="et" data-f="stat" list="ppStats" value="${esc(e.stat||"")}" placeholder="Points" style="width:130px" maxlength="30"><datalist id="ppStats"><option>Points</option><option>Rebounds</option><option>Assists</option><option>3-Pointers Made</option><option>Pts + Reb + Ast</option><option>Pts + Reb</option><option>Pts + Ast</option><option>Reb + Ast</option><option>Steals</option><option>Blocks</option></datalist><br>`;
-  if(needLine) h += ` <b>Line:</b> <input data-g="et" data-f="line" value="${esc(e.line||"")}" placeholder="${e.mk==="Spread"?"-6.5":e.mk==="Total points"?"220.5":e.mk==="Player Prop"?"24.5":"2.5"}" style="width:80px" maxlength="7" title="${e.mk==="Spread"?"Handicap for team 1, e.g. -6.5 (team 2 gets +6.5 automatically)":"The goals or points line, e.g. 2.5"}">`;
+  if(needLine) h += ` <b>Line:</b> <input data-g="et" data-f="line" value="${esc(e.line||"")}" placeholder="${isHc?(e.mk==="Handicap"?"-1":"-6.5"):e.mk==="Total points"?"220.5":e.mk==="Player Prop"?"24.5":"2.5"}" style="width:80px" maxlength="7" title="${isHc?"Handicap for team 1 (home), e.g. -1 (team 2 gets +1 automatically)":"The goals or points line, e.g. 2.5"}">`;
   if(base){
-    const lab = base.map((o,i)=> e.mk==="Spread" ? (e.line&&!isNaN(parseFloat(e.line)) ? o+" "+(i===0?parseFloat(e.line):-parseFloat(e.line)).toString().replace(/^(\d)/,"+$1") : o) : (needLine&&e.line ? o+" "+e.line : o));
+    const lab = base.map((o,i)=> teamOU ? (e.line ? tmName+" "+o+" "+e.line : o) : isHc ? (e.line&&!isNaN(parseFloat(e.line)) ? o+" "+(i===0?parseFloat(e.line):-parseFloat(e.line)).toString().replace(/^(\d)/,"+$1") : o) : (needLine&&e.line ? o+" "+e.line : o));
     h += `<br><small class="muted">Type the market odds for every option, then choose which one is OURS:</small><br>` +
       lab.map((l,i)=>`${esc(l)} odds <input data-g="et" data-f="o${i}" value="${esc(e["o"+i]||"")}" placeholder="${esc(auto[i]||"odds")}" style="width:70px" maxlength="7" inputmode="decimal">`).join(" &nbsp; ") +
       `<br><b>Our selection:</b> <select data-g="et" data-f="ours"><option value="">Choose</option>${lab.map((l,i)=>`<option value="${i}" ${String(e.ours)===String(i)?"selected":""}>${esc(l)}</option>`).join("")}</select>`;
@@ -816,7 +817,7 @@ function renderHome(){
       <td class="t">${esc(hhmm(f.kickoff))}</td>
       <td class="tm"><b>${esc(f.home)}</b> v <b>${esc(f.away)}</b><br><small>${f.sport==="football"?"Football":"Basketball"} · ${esc(f.competition)}</small></td>
       <td><label class="sw"><input type="checkbox" data-g="et" data-f="on" ${e.on?"checked":""}><i></i></label></td>
-      <td>${e.on?`${bbCell(f,e)}<textarea data-g="et" data-f="reasoning" rows="3" style="min-width:240px;max-width:320px" placeholder="Why this tip? (new line = new paragraph)">${esc(e.reasoning||"")}</textarea><br><input data-g="et" data-f="by" value="${esc(e.by||"PB Analyst")}" placeholder="By" style="width:140px"><br><input data-g="et" data-f="hl" value="${esc(e.hl||"")}" placeholder="Home logo link" style="width:150px"> <input data-g="et" data-f="al" value="${esc(e.al||"")}" placeholder="Away logo link" style="width:150px"><br><small class="muted">National teams get their flag automatically. For clubs, paste an https image link, or leave blank for a neutral ball icon.</small><br>Result: <select data-g="et" data-f="st"><option value="">pending</option><option value="won" ${e.st==="won"?"selected":""}>won</option><option value="lost" ${e.st==="lost"?"selected":""}>lost</option><option value="postponed" ${e.st==="postponed"?"selected":""}>postponed</option></select>`:'<span class="muted">-</span>'}</td>
+      <td>${e.on?`${bbCell(f,e)}<textarea data-g="et" data-f="reasoning" rows="3" style="min-width:240px;max-width:320px" placeholder="Why this tip? (new line = new paragraph)">${esc(e.reasoning||"")}</textarea><br><input data-g="et" data-f="by" value="Admin" placeholder="By" style="width:140px" readonly title="Always shown as Admin"><br><textarea data-g="et" data-f="aff" rows="2" style="min-width:240px;max-width:320px" placeholder="Affiliate buttons, one per line:&#10;Stake | https://stake.com/...&#10;SportyBet | https://sportybet.com/...">${esc(e.aff||"")}</textarea><br><input data-g="et" data-f="hl" value="${esc(e.hl||"")}" placeholder="Home logo link" style="width:150px"> <input data-g="et" data-f="al" value="${esc(e.al||"")}" placeholder="Away logo link" style="width:150px"><br><small class="muted">National teams get their flag automatically. For clubs, paste an https image link, or leave blank for a neutral ball icon.</small><br>Result: <select data-g="et" data-f="st"><option value="">pending</option><option value="won" ${e.st==="won"?"selected":""}>won</option><option value="lost" ${e.st==="lost"?"selected":""}>lost</option><option value="postponed" ${e.st==="postponed"?"selected":""}>postponed</option></select>`:'<span class="muted">-</span>'}</td>
       <td><label class="sw"><input type="checkbox" data-g="bo" data-f="on" ${b.on?"checked":""}><i></i></label></td>
       <td>${b.on?`<input data-g="bo" data-f="pick" value="${esc(b.pick||"")}" placeholder="1X" style="width:110px">`:'<span class="muted">-</span>'}</td>
       <td>${b.on?`<select data-g="bo" data-f="st">${["pending","won","lost","postponed"].map(r=>`<option ${(b.st||"pending")===r?"selected":""}>${r}</option>`).join("")}</select>`:'<span class="muted">-</span>'}</td>
@@ -969,7 +970,7 @@ bbForm.onsubmit = e => {
     if(x) Object.assign(x, rec);
     stopPropEdit(); commit(); toast("Prop updated"); return;
   }
-  db.props.push({id:uid(), ...rec, live:false, createdAt:new Date().toISOString()});
+  db.props.push({id:uid(), ...rec, live:true, createdAt:new Date().toISOString()});
   bbForm.player.value=""; bbForm.line.value=""; bbForm.odds.value=""; commit(); toast("Prop added");
 };
 let editingProp = null;
@@ -1106,7 +1107,7 @@ function renderResults(){
   const et=db.fixtures.filter(f=>f.et&&f.et.on&&dayOfF(f)===day).sort(byKick), etShow=et.filter(f=>!onlyOpen||!isDone(f.et.st));
   $("#rsEtCount").textContent = et.length ? `(${et.filter(f=>isDone(f.et.st)).length} of ${et.length} settled)` : "";
   $("#rsEtBody").innerHTML = etShow.length ? etShow.map(f=>`<tr data-id="${f.id}"><td class="t">${esc(hhmm(f.kickoff))}</td>
-      <td>${f.sport==="basketball"?"🏀":"⚽"} <b>${esc(f.home)}</b> v <b>${esc(f.away)}</b></td><td>${esc(f.et.by||"PB Analyst")}</td>
+      <td>${f.sport==="basketball"?"🏀":"⚽"} <b>${esc(f.home)}</b> v <b>${esc(f.away)}</b></td><td>${"Admin"}</td>
       <td>${resSel(f.et.st,'data-f="st"')}</td></tr>`).join("") : `<tr><td colspan="4" class="empty">${et.length?"Settled.":"No Banker Bet of the Day on this day."}</td></tr>`;
   /* bets of the day */
   const bo=db.fixtures.filter(f=>f.bo&&f.bo.on&&dayOfF(f)===day).sort(byKick), boShow=bo.filter(f=>!onlyOpen||!isDone(f.bo.st));

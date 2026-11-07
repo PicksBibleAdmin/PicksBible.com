@@ -338,7 +338,7 @@ window.PB = {
     flutterwave: { gold:{NGN:"",USD:""} },
     whop:        { gold:"" },
     usdt:        { address:"TXoTZTaddtj7JJNNiMict6nQsbWUquJ6nW", network:"TRC20" },
-    bank:        { name:"", number:"", bank:"" }
+    bank:        { name:"", number:"8141285371", bank:"Moniepoint" }
   },
 
   /* ---------- BLOG POSTS ---------- */

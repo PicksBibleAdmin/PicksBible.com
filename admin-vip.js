@@ -219,7 +219,7 @@
     const L = PK[state.pk].label;
     const e = findEntry(state.pk, state.ymd);
     $("#vpMsgTitle").value = (e && e.msgTitle) || `Today's ${L} VIP picks are ready`;
-    $("#vpMsgBody").value = (e && e.msgBody) || `Your ${L} VIP picks for today are live in your VIP dashboard. Total odds ${readOdds()}. Good luck!`;
+    $("#vpMsgBody").value = (e && e.msgBody) || `Your ${L} VIP picks for today are below. Good luck!`;
     $("#vpMsgAud").textContent = "This goes to Gold members." + warn;
     $("#vpMsgForm").hidden = false; $("#vpMsgDone").hidden = true; $("#vpMsgSend").disabled = false;
     $("#vipPop").hidden = false;
@@ -255,7 +255,8 @@
     } catch (err) { note = note || "The message record could not be saved (" + (err.code || err.message) + ")."; }
     let mailNote = "", mailFail = false;
     if ($("#vpMsgMail").checked && n) {
-      try { const m = await PBMail.send(mailTo, title, body); mailNote = "Emailed " + m.sent + " of " + n + (m.failed && m.failed.length ? " (some failed: " + esc(m.failed[0].detail || m.failed[0].status || "") + ")" : "") + "."; }
+      try { const picksMail = (e.legs || []).filter(l => l && (l.home || l.away) && l.sel).map(l => ({ match: (l.home || "") + " v " + (l.away || ""), pick: (l.market ? l.market + ": " : "") + l.sel, meta: [l.comp, l.ko ? String(l.ko).replace("T", " ").slice(0, 16) : ""].filter(Boolean).join(" · ") }));
+        const m = await PBMail.send(mailTo, title, body, { mode: "vip", total: e.odds, picks: picksMail, link: { url: "https://picksbible.com/account.html", label: "Open my VIP dashboard" } }); mailNote = "Emailed " + m.sent + " of " + n + (m.failed && m.failed.length ? " (some failed: " + esc(m.failed[0].detail || m.failed[0].status || "") + ")" : "") + "."; }
       catch (err) { mailNote = "Email not sent: " + (err.message || err); mailFail = true; }
     }
     Store.save(db); $("#stats").textContent = statsText();

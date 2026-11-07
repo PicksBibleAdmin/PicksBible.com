@@ -83,16 +83,17 @@ function applyLive(P,live){
 function addProp(P,p){
   var k=String(p.kickoff||"").slice(0,10); if(!k)return;
   var team=p.team||"", other=team===p.home?p.away:p.home;
-  (P.propsByDate[k]=P.propsByDate[k]||[]).push({k:p.market,player:p.player||"",team:team,opp:team?("vs "+other):(p.home+" v "+p.away),line:p.line||"",pick:p.side||"",odds:p.odds||"",st:p.st||"pending"});
+  (P.propsByDate[k]=P.propsByDate[k]||[]).push({k:p.market,player:p.player||"",team:team,opp:team?("vs "+other):(p.home+" v "+p.away),m:(p.home||"")+" v "+(p.away||""),fx:p.fixtureId||"",line:p.line||"",pick:p.side||"",odds:p.odds||"",st:p.st||"pending"});
 }
 /* Banker Bet market: the analyst picks a market, types the odds for every option and marks which one is ours.
    Returns {m:market, l:[option labels], o:[odds], i:index of our selection or -1}, or null when no market was chosen. */
-var BB_OPTS={"1X2":["1","X","2"],"Double Chance":["1X","X2","12"],"BTTS":["Yes","No"],"Over/Under goals":["Over","Under"],"Moneyline":["1","2"],"Spread":["1","2"],"Total points":["Over","Under"],"Player Prop":["Over","Under"]};
+var BB_OPTS={"1X2":["1","X","2"],"Double Chance":["1X","X2","12"],"BTTS":["Yes","No"],"Over/Under goals":["Over","Under"],"Home Over/Under":["Over","Under"],"Away Over/Under":["Over","Under"],"Handicap":["1","2"],"Moneyline":["1","2"],"Spread":["1","2"],"Total points":["Over","Under"],"Player Prop":["Over","Under"]};
 function etBM(f){
   var e=f&&f.et; if(!e||!e.mk||!BB_OPTS[e.mk])return null;
   var base=BB_OPTS[e.mk], line=String(e.line||"").trim(), n=parseFloat(line), l=base.slice();
   if(line&&(e.mk==="Over/Under goals"||e.mk==="Total points"||e.mk==="Player Prop"))l=base.map(function(x){return x+" "+line});
-  if(e.mk==="Spread"&&line&&!isNaN(n)){var sg=function(v){return (v>0?"+":"")+v};l=["1 "+sg(n),"2 "+sg(-n)]}
+  if(line&&(e.mk==="Home Over/Under"||e.mk==="Away Over/Under")){var tm=e.mk==="Home Over/Under"?f.home:f.away;l=base.map(function(x){return tm+" "+x+" "+line})}
+  if((e.mk==="Spread"||e.mk==="Handicap")&&line&&!isNaN(n)){var sg=function(v){return (v>0?"+":"")+v};l=["1 "+sg(n),"2 "+sg(-n)]}
   var x=(f.sport==="basketball"?f.bb:f.fb)||{}, auto=e.mk==="1X2"?[x.o1,x.oX,x.o2]:e.mk==="Moneyline"?[x.o1,x.o2]:[];
   var o=base.map(function(_,i){return String(e["o"+i]||auto[i]||"").trim()});
   var i=parseInt(e.ours,10); if(isNaN(i)||i<0||i>=base.length)i=-1;
@@ -107,9 +108,9 @@ function addFx(P,f,days){
   {
     var hd=String(f.kickoff||"").slice(0,10), sp=f.sport==="basketball"?"basketball":"football";
     var cname=(function(){var c=String(f.country||""),k=String(f.competition||"");if(!c)return k;if(k.toLowerCase().indexOf(c.toLowerCase())===0)k=k.slice(c.length).replace(/^[\s:\-\u00b7]+/,"");return c+": "+k})();
-    if(f.et&&f.et.on&&hd)(P.home.etl[sp][hd]=P.home.etl[sp][hd]||[]).push({h:f.home,a:f.away,lg:cname,t:lt(f.kickoff),by:f.et.by||"PB Analyst",st:f.et.st||"",sp:sp});
+    if(f.et&&f.et.on&&hd)(P.home.etl[sp][hd]=P.home.etl[sp][hd]||[]).push({h:f.home,a:f.away,lg:cname,t:lt(f.kickoff),by:"Admin",st:f.et.st||"",sp:sp});
     var bm=(f.et&&f.et.on)?etBM(f):null;
-    if(f.et&&f.et.on&&hd)P.home.et[sp][hd]={bm:bm,h:f.home,a:f.away,lg:cname,t:lt(f.kickoff),by:f.et.by||"PB Analyst",st:f.et.st||((sp==="basketball"?(f.bb&&f.bb.st):(f.fb&&f.fb.st))==="won"||(sp==="basketball"?(f.bb&&f.bb.st):(f.fb&&f.fb.st))==="lost"?(sp==="basketball"?f.bb.st:f.fb.st):""),reasoning:f.et.reasoning||"",hl:f.et.hl||"",al:f.et.al||"",hc:f.hc||"",ac:f.ac||"",sp:sp,tip:(f.et.pick||(bm&&bm.i>=0?bm.l[bm.i]:"")||(sp==="basketball"?(f.bb&&f.bb.tip):(f.fb&&f.fb.tip))||""),conf:String(f.et.conf||(sp==="basketball"?(f.bb&&f.bb.conf):(f.fb&&f.fb.conf))||"").replace("%",""),score:(sp==="basketball"?(f.bb&&f.bb.score):(f.fb&&f.fb.score))||"",odd:String(f.et.odd||"").trim()||(bm&&bm.i>=0?String(bm.o[bm.i]||""):"")||(function(){var x=sp==="basketball"?(f.bb||{}):(f.fb||{}),t=String(f.et.pick||x.tip||"");return t==="1"?x.o1:t==="2"?x.o2:t==="X"?x.oX:t==="1X"?x.dcOdds:""})()||""};
+    if(f.et&&f.et.on&&hd)P.home.et[sp][hd]={bm:bm,h:f.home,a:f.away,lg:cname,t:lt(f.kickoff),by:"Admin",st:f.et.st||((sp==="basketball"?(f.bb&&f.bb.st):(f.fb&&f.fb.st))==="won"||(sp==="basketball"?(f.bb&&f.bb.st):(f.fb&&f.fb.st))==="lost"?(sp==="basketball"?f.bb.st:f.fb.st):""),reasoning:f.et.reasoning||"",aff:f.et.aff||"",hl:f.et.hl||"",al:f.et.al||"",hc:f.hc||"",ac:f.ac||"",sp:sp,tip:(f.et.pick||(bm&&bm.i>=0?bm.l[bm.i]:"")||(sp==="basketball"?(f.bb&&f.bb.tip):(f.fb&&f.fb.tip))||""),conf:String(f.et.conf||(sp==="basketball"?(f.bb&&f.bb.conf):(f.fb&&f.fb.conf))||"").replace("%",""),score:(sp==="basketball"?(f.bb&&f.bb.score):(f.fb&&f.fb.score))||"",odd:String(f.et.odd||"").trim()||(bm&&bm.i>=0?String(bm.o[bm.i]||""):"")||(function(){var x=sp==="basketball"?(f.bb||{}):(f.fb||{}),t=String(f.et.pick||x.tip||"");return t==="1"?x.o1:t==="2"?x.o2:t==="X"?x.oX:t==="1X"?x.dcOdds:""})()||""};
     if(f.bo&&f.bo.on&&hd){var bl=P.home.bo[sp][hd]=P.home.bo[sp][hd]||[];bl.push({lg:cname,t:(f.bo.st==="won"||f.bo.st==="lost")?"FT":lt(f.kickoff),h:f.home,a:f.away,pick:f.bo.pick||"",st:f.bo.st||"pending",sc:f.bo.score||""})}
     if(!((f.fb&&f.fb.live)||(f.bb&&f.bb.live)))return;
     if(f.sport==="basketball"){
@@ -720,6 +721,16 @@ if(!$("[data-home]")){
   vs.forEach(function(v){if(v.cal)v.cal.addEventListener("change",function(){if(!v.cal.value)return;sel=v.cal.value;vs.forEach(function(w){if(w.cal)w.cal.value=sel;w.toYmd(sel);w.draw()})})});
 }
 
+/* affiliate buttons under the analyst reasoning: one "Label | https://link" per line, written in the admin page */
+function affPills(txt){
+  var out=String(txt||"").split(/\n+/).map(function(l){
+    var p=l.split("|"),u=(p.length>1?p.slice(1).join("|"):p[0]).trim(),n=(p.length>1?p[0]:"").trim();
+    if(!/^https:\/\//i.test(u))return "";
+    if(!n){try{n=new URL(u).hostname.replace(/^www\./,"")}catch(_){n="Bet now"}}
+    return '<a class="affpill" href="'+esc(u)+'" target="_blank" rel="sponsored nofollow noopener">Bet this on '+esc(n)+' &rarr;</a>';
+  }).filter(Boolean);
+  return out.length?'<div class="affrow">'+out.join("")+'<small>18+ &middot; Gamble responsibly &middot; Ad</small></div>':"";
+}
 /* ---------- MATCH ANALYSIS page (the reasoning behind an Expert Tip, written in the admin page) ---------- */
 $$("[data-analysis]").forEach(function(el){
   if(!new URLSearchParams(location.search).get("s"))return;
@@ -750,6 +761,7 @@ $$("[data-analysis]").forEach(function(el){
    '<section class="bbbox"><div class="bbbar"><span>Banker Bet of the Day</span>'+(done?'<em class="bbres '+v.st+'">'+(v.st==="won"?"&#10003; Won":"Lost")+'</em>':'<em class="bbres pend">Pending</em>')+'</div>'+
    '<div class="bbin"><div class="bbl"><span class="bbk">Our Best Bet</span><h2>'+(hasBM?'<span class="mk">'+esc(bm.m)+'</span><span class="dash"> - </span><span class="sl">'+esc(bm.sel||bm.l[bm.i])+'</span>':(selTxt?'<span class="sl">'+esc(selTxt)+'</span>':'<span class="na">Coming soon</span>'))+'</h2>'+
    (paras.length?paras.map(function(t){return '<p>'+esc(t)+'</p>'}).join(""):'')+
+   affPills(v.aff)+
    '<p class="note by">Banker Bet by <b>'+esc(v.by)+'</b> &middot; '+(sp==="football"?"&#9917; Football":"&#127936; Basketball")+'</p></div>'+
    '<div class="bbr">'+(oddsHtml?'<div class="bbcard"><span class="bbk">Market Odds</span>'+oddsHtml+'</div>':'')+
    (clv?'<div class="bbcard"><span class="bbk">Rating</span><div class="bbrate"><b class="'+ccl+'">'+clv+'</b><span>'+esc(String(Math.round(cn)))+'% confidence</span></div><i class="etmeter"><u class="'+ccl+'" style="width:'+Math.max(4,Math.min(100,cn))+'%"></u></i></div>':'')+'</div></div></section>'+
@@ -809,7 +821,10 @@ $$("[data-props]").forEach(function(el){
   function listFor(k){return ((D.propsByDate||{})[day]||[]).filter(function(p){return p.k===k})}
   function draw(k){
     var list=listFor(k);
-    el.innerHTML=list.length?list.map(card).join(""):'<div class="empty">No '+esc(mk(k).name)+' props posted yet.</div>';
+    if(!list.length){el.innerHTML='<div class="empty">No '+esc(mk(k).name)+' props posted yet.</div>';return}
+    var groups=[],idx={};
+    list.forEach(function(p){var key=p.fx||p.m;if(!(key in idx)){idx[key]=groups.length;groups.push({t:p.m,items:[]})}groups[idx[key]].items.push(p)});
+    el.innerHTML=groups.map(function(g){return '<div class="propmatch"><div class="pm-title">'+esc(g.t)+'</div>'+g.items.map(card).join("")+'</div>'}).join("");
   }
   var cur=store("pb.propmkt");
   function pick(){
@@ -1029,10 +1044,10 @@ $$("[data-checkout]").forEach(function(root){
     if(link){location.href=link;return}
     var rows=null, warn="";
     if(method==="usdt"&&cfg.usdt&&cfg.usdt.address){rows=[["Send","<b>"+esc(String(plan.price).replace("$",""))+" USDT</b>"],["Network","<b>"+esc("TRC20")+"</b>"],["Wallet address",'<code>'+esc(cfg.usdt.address)+'</code>',cfg.usdt.address]];warn="Send only USDT on the "+("TRC20")+" network. Sending on another network can lose your funds."}
-    else if(method==="bank"&&bank){rows=[["Amount","<b>"+esc(price)+"</b>"],["Bank","<b>"+esc(bank.bank||"")+"</b>"],["Account name","<b>"+esc(bank.name||"")+"</b>"],["Account number",'<code>'+esc(bank.number)+'</code>',bank.number]]}
+    else if(method==="bank"&&bank){rows=[["Amount","<b>"+esc(price)+"</b>"],["Bank","<b>"+esc(bank.bank||"")+"</b>"],].concat(bank.name?[["Account name","<b>"+esc(bank.name)+"</b>"]]:[]).concat([["Account number",'<code>'+esc(bank.number)+'</code>',bank.number]])}
     if(!rows){wa_("Hi PicksBible, I want to join "+plan.name+". Please send me the payment details.");return}
     var box=$q("[data-ck-pay-box]"); box.hidden=false;
-    box.innerHTML='<h2>Complete your payment</h2><dl>'+rows.map(function(r){return '<div><dt>'+r[0]+'</dt><dd>'+r[1]+(r[2]?' <button type="button" class="ck-copy" data-copy-v="'+esc(r[2])+'">Copy</button>':'')+'</dd></div>'}).join("")+'</dl>'+(warn?'<p class="ck-warn">'+esc(warn)+'</p>':'')+'<button class="btn wide" type="button" data-ck-paid>I have paid, send proof on WhatsApp</button><p class="ck-sub" style="margin:10px 0 0">After sending, tap the button and share your transaction hash or a screenshot. We activate your VIP access once we confirm it.</p>';
+    box.innerHTML='<h2>Complete your payment</h2><dl>'+rows.map(function(r){return '<div><dt>'+r[0]+'</dt><dd>'+r[1]+(r[2]?' <button type="button" class="ck-copy" data-copy-v="'+esc(r[2])+'">Copy</button>':'')+'</dd></div>'}).join("")+'</dl>'+(warn?'<p class="ck-warn">'+esc(warn)+'</p>':'')+'<button class="btn wide" type="button" data-ck-paid>I have paid, send proof on WhatsApp</button><p class="ck-sub" style="margin:10px 0 0">After you pay, tap the button and chat us on WhatsApp with your payment receipt. We will authenticate you and activate your VIP access.</p>';
     $$("[data-copy-v]",box).forEach(function(b){b.addEventListener("click",function(){var v=b.dataset.copyV;function done(){b.textContent="Copied"}if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(v).then(done,done);else done()})});
     $q("[data-ck-paid]").addEventListener("click",function(){wa_("Hi PicksBible, I have made my payment and here is my proof.")});
     box.scrollIntoView({behavior:"smooth",block:"center"});
@@ -1127,15 +1142,6 @@ document.addEventListener("click",function(e){
   c.querySelector(".cu-main").addEventListener("click",function(e){if(!open){e.preventDefault();open=true;try{localStorage.setItem("pb.chatClosed","0")}catch(x){}paint()}});
   paint();
   var tg=null;
-  if(false){/* Telegram bar removed */
-    var hid=false;try{hid=+localStorage.getItem("pb.tgHide")>Date.now()}catch(e){}
-    if(!hid){
-      tg=document.createElement("div");tg.className="tgbar";
-      tg.innerHTML='<div class="tg-t"><b>Join our Telegram</b><small>Free picks, VIP updates &amp; results.</small></div><a class="tg-b" href="'+TG+'" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" fill="currentColor"><path d="M21.9 3.4 2.6 10.9c-.9.4-.9 1.6 0 1.9l4.8 1.5 1.8 5.6c.2.7 1.1.9 1.6.4l2.6-2.4 4.9 3.6c.6.4 1.4.1 1.6-.6L23 4.6c.2-.9-.6-1.5-1.1-1.2zM9.6 14.1l8.1-5-6.2 6.5-.3 3.4-1.6-4.9z"/></svg>Join Telegram</a><button class="tg-x" type="button" aria-label="Close">&times;</button>';
-      document.body.appendChild(tg);
-      tg.querySelector(".tg-x").addEventListener("click",function(){tg.remove();tg=null;try{localStorage.setItem("pb.tgHide",String(Date.now()+864e5))}catch(e){}layout()});
-    }
-  }
   /* stack above the cookie banner and the Telegram bar */
   function layout(){
     var cb=document.getElementById("cookieBanner"),h=0;

@@ -102,7 +102,7 @@
       if (o.s === 503) { say("The dice open very soon. Check back shortly!"); ready = false; busy = false; return; }
       if (o.s === 429 || o.s === 409) { left = 0; counter(); busy = false; actions(); return; }
       if (o.s === 401) { say("Please log in again, then tap the dice."); busy = false; return; }
-      if (o.s !== 200) { say("Something went wrong. Tap the dice to try again."); busy = false; hint.style.display = ""; return; }
+      if (o.s !== 200) { say("Something went wrong" + (o.j && o.j.detail ? " (" + o.j.detail + ")" : "") + ". Tap the dice to try again."); busy = false; hint.style.display = ""; return; }
       var j = o.j;
       PBDice.land(cubes[0], j.d1, 1500); PBDice.land(cubes[1], j.d2, 1850);
       say("");
@@ -123,7 +123,7 @@
   function status() {
     api("status").then(function (o) {
       if (o.s === 503) { $("#dLeft").textContent = "Opening very soon"; say("The dice open very soon. Check back shortly!"); hint.style.display = "none"; return; }
-      if (o.s !== 200) { $("#dLeft").textContent = "Tap the dice to spin"; ready = true; return; }
+      if (o.s !== 200) { $("#dLeft").textContent = "Tap the dice to spin"; ready = true; if (o.j && o.j.detail) say("Note: " + o.j.detail); return; }
       var j = o.j; left = j.left; limit = j.limit; member = !!j.member; ready = true; counter();
       if (member) $("#dStreak").textContent = (j.streak || 0) + (j.streak === 1 ? " day" : " days");
       if (j.d1) { PBDice.land(cubes[0], j.d1, 10); PBDice.land(cubes[1], j.d2, 10); }

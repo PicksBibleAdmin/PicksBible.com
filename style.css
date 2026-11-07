@@ -1231,7 +1231,7 @@ table.pt.bw.lgbars.cat{display:table!important}
 .themebtn:hover{background:var(--cyan);color:var(--cyan-ink)}
 .themebtn.float{position:fixed;left:12px;bottom:16px;z-index:90;height:46px;padding:0 18px;font-size:15px;box-shadow:0 8px 26px #000b,0 0 0 4px #3B82F622}
 .authbtns{display:flex;align-items:center;gap:8px}
-html[data-theme="light"]{--bg:#F8FAFC;--panel:#FFFFFF;--panel-2:#F1F5F9;--line:#E2E8F0;--text:#0F172A;--muted:#475569;--cyan:#2563EB;--cyan-ink:#fff;color-scheme:light}
+html[data-theme="light"]{--bg:#E8ECF2;--panel:#F3F5F9;--panel-2:#E4E9F0;--line:#CBD5E1;--text:#1E293B;--muted:#475569;--cyan:#2563EB;--cyan-ink:#fff;color-scheme:light}
 html[data-theme="light"] body{background:var(--bg)}
 html[data-theme="light"] .hero{background:linear-gradient(#F1F5F9,var(--bg))}
 html[data-theme="light"] .top,html[data-theme="light"] footer,html[data-theme="light"] .stats,html[data-theme="light"] .meaning,html[data-theme="light"] .premium,html[data-theme="light"] .ad,html[data-theme="light"] .adstrip,html[data-theme="light"] .adwide,html[data-theme="light"] .odds span,html[data-theme="light"] .copyrow code,html[data-theme="light"] .ck-paybox code,html[data-theme="light"] .paddr,html[data-theme="light"] .bar.dark,html[data-theme="light"] .tznote,html[data-theme="light"] form.f input,html[data-theme="light"] form.f textarea,html[data-theme="light"] form.f select,html[data-theme="light"] .ck input,html[data-theme="light"] .ck select{background:var(--panel)!important;color:var(--text)}
@@ -1422,3 +1422,32 @@ html[data-theme="light"] .top .lgn{color:#fff!important;border-color:#ffffff88!i
 .premium-gate .btn,#premContinue{background:#2563EB!important;color:#fff!important}
 .premium-gate .btn:hover,#premContinue:hover{background:#1D4ED8!important}
 .top .desk-nav>a[href="premium.html"],html[data-theme="light"] .top .desk-nav>a[href="premium.html"]{background:linear-gradient(180deg,var(--gold1),var(--gold2) 60%,var(--gold3))!important;color:var(--goldink)!important}
+
+/* props grouped by match: one soft four-sided border round all props of the same match */
+.propmatch{border:1px solid #ef444499;border-radius:12px;padding:8px 10px 10px;margin-bottom:14px;display:flex;flex-direction:column;gap:8px;background:#ef44440a}
+.propmatch .pm-title{font:700 11.5px var(--body);letter-spacing:.06em;text-transform:uppercase;color:var(--muted);padding:2px 4px 0}
+
+/* affiliate pills under the Banker Bet reasoning */
+.affrow{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:14px 0 4px}
+.affpill{display:inline-block;background:#2563EB;color:#fff!important;font:700 13px var(--body);padding:8px 16px;border-radius:999px;text-decoration:none}
+.affpill:hover{background:#1D4ED8}
+.affrow small{color:var(--muted);font-size:11px;flex-basis:100%}
+
+/* softer light mode: no pure white surfaces, so it is easy on the eyes */
+html[data-theme="light"] .tscroll.bwwrap,html[data-theme="light"] .mtwrap,html[data-theme="light"] .pt.bw td,html[data-theme="light"] .pt.mt td,html[data-theme="light"] .propsel,html[data-theme="light"] .premium-select,html[data-theme="light"] .lgq,html[data-theme="light"] .ddm,html[data-theme="light"] .drawer nav,html[data-theme="light"] .cookie-banner{background:#EEF1F5}
+html[data-theme="light"] .pt.bw td,html[data-theme="light"] .pt.mt td{color:#1E293B;border-top-color:#D5DCE6}
+html[data-theme="light"] .hero{background:linear-gradient(#DEE4EC,var(--bg))}
+html[data-theme="light"] .lg-select{background:#F3F5F9!important}
+html[data-theme="light"] .themebtn{background:#F3F5F9}
+
+.dpage .dad{margin:0 0 18px}
+
+/* soft paper white (like SportyBet) instead of pure white, in dark and light mode */
+.bbbox,.bbin,.tscroll.bwwrap,.mtwrap,table.pt.bw,table.pt.mt,.pt.bw td,.pt.mt td,.propsel,.premium-select,.lgq,.pt.bw .dmi .bx{background:#EEF1F5}
+.bbbox{background:#EEF1F5}
+.bbt{background:#F7F8FA}
+.bbcard{background:#E6EAF0;border-color:#D5DBE4}
+.pt.bw td,.pt.mt td{border-top-color:#D8DDE5}
+.pt.bw tr.lgb td{background:#b9cfbf}
+table.pt.bw.lgbars tr.lgb td{background:#000}
+html[data-theme="light"] .bbbox,html[data-theme="light"] .bbin{background:#EEF1F5}
