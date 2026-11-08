@@ -95,26 +95,29 @@
   function mount() {
     const tab = $("#tab-bbprops"); if (!tab || $("#ppImport")) return;
     const card = document.createElement("div"); card.className = "card"; card.id = "ppImport";
-    card.innerHTML = `<h2>Paste player props from a sheet</h2>
-<p class="note">Copy the rows from Google Sheets and paste them below. Columns in this order: <b>STARTING TIME, LEAGUE, HOME TEAM, AWAY TEAM, PLAYER, PROP TYPE, ODDS, PREDICTION, FINAL SCORE</b> (same order as your sheet tab). Example: <code>01:30 | NBA | Charlotte Hornets | Detroit Pistons | Coby White | Player Points | 1.54 | Over 9.5 | 9</code></p>
+    card.innerHTML = `<h2>Upload player props (CSV from your sheet)</h2>
+<p class="note">In Google Sheets use <b>File &rarr; Download &rarr; Comma Separated Values (.csv)</b> on the <b>Basketball Props</b> tab, then upload it here. Columns: <b>STARTING TIME, LEAGUE, HOME TEAM, AWAY TEAM, PLAYER, PROP TYPE, ODDS, PREDICTION, FINAL SCORE</b>.</p>
 <div class="grid">
  <div><label>Match date (Nigeria time) *</label><input type="date" id="ppDate"></div>
- <div><label>What are you pasting?</label><select id="ppMode"><option value="pre">Before the games: add these props (they go live)</option><option value="res">After the games: mark won / lost from FINAL SCORE</option></select></div>
+ <div><label>What is in the file?</label><select id="ppMode"><option value="pre">Predictions (before the games): add the props, they go live</option><option value="res">Results (file has the FINAL SCORE filled in): mark won / lost</option></select></div>
 </div>
-<label>Paste rows here</label><textarea id="ppText" rows="7" placeholder="01:30&#9;NBA&#9;Charlotte Hornets&#9;Detroit Pistons&#9;Coby White&#9;Player Points&#9;1.54&#9;Over 9.5&#9;9" style="width:100%"></textarea>
-<p><button class="btn" type="button" id="ppGo">Import props</button> <span class="muted" id="ppOut" style="white-space:pre-wrap"></span></p>`;
+<p><label class="btn" style="display:inline-block;cursor:pointer">Upload props CSV<input type="file" id="ppFile" accept=".csv,text/csv,.tsv,.txt" style="display:none"></label> <span class="muted" id="ppOut" style="white-space:pre-wrap"></span></p>`;
     tab.insertBefore(card, tab.firstChild);
     $("#ppDate").value = typeof watDay === "function" ? watDay(0) : "";
-    $("#ppGo").onclick = () => {
-      const out = $("#ppOut"), date = $("#ppDate").value, mode = $("#ppMode").value;
-      if (!date) { out.textContent = "Pick the match date first."; return; }
-      const rep = run($("#ppText").value, mode, date);
-      if (rep.changed) commit();
-      const head = mode === "pre" ? rep.added + " added, " + rep.updated + " updated (live)." : rep.marked + " marked won/lost" + (rep.push ? ", " + rep.push + " landed exactly on the line (left pending)" : "") + (rep.added ? ", " + rep.added + " added" : "") + (rep.waiting ? ", " + rep.waiting + " had no final score yet" : "") + ".";
-      out.textContent = head + (rep.problems.length ? "\n\nNeeds attention (" + rep.problems.length + "):\n- " + rep.problems.join("\n- ") : "");
-      out.style.color = rep.problems.length ? "var(--lost)" : "";
-      if (rep.changed) { toast(head); $("#ppText").value = rep.problems.length ? $("#ppText").value : ""; }
-    };
+    $("#ppFile").addEventListener("change", async () => {
+      const out = $("#ppOut"), inp = $("#ppFile"), f = inp.files[0], date = $("#ppDate").value, mode = $("#ppMode").value;
+      if (!f) return;
+      if (!date) { out.textContent = "Pick the match date first."; inp.value = ""; return; }
+      try {
+        const rep = run(await f.text(), mode, date);
+        if (rep.changed) commit();
+        const head = mode === "pre" ? "Props " + date + ": " + rep.added + " added, " + rep.updated + " updated (live)." : "Props " + date + ": " + rep.marked + " marked won/lost" + (rep.push ? ", " + rep.push + " landed exactly on the line (left pending)" : "") + (rep.added ? ", " + rep.added + " added" : "") + (rep.waiting ? ", " + rep.waiting + " had no final score yet" : "") + ".";
+        out.textContent = head + (rep.problems.length ? "\n\nNeeds attention (" + rep.problems.length + "):\n- " + rep.problems.join("\n- ") : "");
+        out.style.color = rep.problems.length ? "var(--lost)" : "";
+        if (rep.changed) toast(head);
+      } catch (e) { out.textContent = "Import failed: " + e.message; console.error(e); }
+      inp.value = "";
+    });
   }
   if (typeof module !== "undefined" && module.exports) { module.exports = { run, marketKey, parseRows }; return; }
   mount();
