@@ -1021,6 +1021,28 @@ $$("[data-checkout]").forEach(function(root){
     $q("[data-ck-methods]").innerHTML=ms.map(function(k){var m=METHODS[k],on=isLive(k);return '<button type="button" class="ck-m'+(on?'':' off')+'" data-m="'+k+'" aria-pressed="'+(method===k)+'"'+(on?'':' disabled aria-disabled="true"')+'><i aria-hidden="true">'+m.i+'</i><span>'+m.n+'<small>'+(on?(k==="bank"?"Nigeria only. ":"")+m.s:"Temporarily unavailable")+'</small></span></button>'}).join("");
     $$("[data-m]:not([disabled])",root).forEach(function(b){b.addEventListener("click",function(){method=b.dataset.m;draw()})});
     var sum=$q(".ck-sum"); sum.className="ckcard ck-sum tier-"+plan.tier;
+    var bx=$q("[data-ck-pay-box]");
+    if(method==="bank"){var pb=payRows("bank");if(pb)renderPayBox(pb.rows,pb.warn,false,true)}else if(bx){bx.hidden=true;bx.innerHTML=""}
+  }
+  /* the payment details panel (bank transfer and others): shown at once when the method is picked, so people see where to pay before anything else */
+  function payRows(m){
+    var cfg=D.pay||{}, price=ng()?plan.ngn:plan.price, bank=cfg.bank&&cfg.bank.number?cfg.bank:null;
+    if(m==="bank"&&bank)return {rows:[["Amount (per week)","<b>"+esc(price)+"</b>"],["Bank","<b>"+esc(bank.bank||"")+"</b>"]].concat(bank.name?[["Account name","<b>"+esc(bank.name)+"</b>"]]:[]).concat([["Account number",'<code>'+esc(bank.number)+'</code>',bank.number]]),warn:""};
+    if(m==="usdt"&&cfg.usdt&&cfg.usdt.address)return {rows:[["Send","<b>"+esc(String(plan.price).replace("$",""))+" USDT</b>"],["Network","<b>TRC20</b>"],["Wallet address",'<code>'+esc(cfg.usdt.address)+'</code>',cfg.usdt.address]],warn:"Send only USDT on the TRC20 network. Sending on another network can lose your funds."};
+    return null;
+  }
+  function renderPayBox(rows,warn,scroll,isBank){
+    var box=$q("[data-ck-pay-box]"); box.hidden=false;
+    box.innerHTML='<h2>Complete your payment</h2><dl>'+rows.map(function(r){return '<div><dt>'+r[0]+'</dt><dd>'+r[1]+(r[2]?' <button type="button" class="ck-copy" data-copy-v="'+esc(r[2])+'">Copy</button>':'')+'</dd></div>'}).join("")+'</dl>'+(warn?'<p class="ck-warn">'+esc(warn)+'</p>':'')+
+      (isBank?'<ol class="ck-steps"><li>Open your bank app and transfer the exact amount above to this account.</li><li>Take a screenshot of your payment receipt.</li><li>Tap the button below and send us the receipt on WhatsApp.</li><li>We authenticate your payment and activate your VIP access.</li></ol>':'')+
+      '<button class="btn wide" type="button" data-ck-paid>I have paid, send receipt on WhatsApp</button>';
+    $$("[data-copy-v]",box).forEach(function(b){b.addEventListener("click",function(){var v=b.dataset.copyV;function done(){b.textContent="Copied"}if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(v).then(done,done);else done()})});
+    $q("[data-ck-paid]").addEventListener("click",function(){
+      var name=$q("[data-ck=name]").value.trim(), email=$q("[data-ck=email]").value.trim(), wa=$q("[data-ck=wa]").value.trim(), price=ng()?plan.ngn:plan.price, num=String(S.whatsapp).replace(/[^0-9]/g,"");
+      var order="Name: "+(name||"-")+"\nEmail: "+(email||"-")+(wa?"\nWhatsApp: "+wa:"")+"\nCountry: "+cs.value+"\nPlan: "+plan.name+" (1 week, "+price+" per week)\nPayment method: "+METHODS[method].n;
+      location.href="https://api.whatsapp.com/send/?phone="+num+"&text="+encodeURIComponent("Hi PicksBible, I have made my payment for "+plan.name+" and here is my receipt.\n"+order);
+    });
+    if(scroll)box.scrollIntoView({behavior:"smooth",block:"center"});
   }
   cs.addEventListener("change",function(){store("premCountry",cs.value);draw()});
   $q("[data-ck-go]").addEventListener("click",function(){
@@ -1033,24 +1055,17 @@ $$("[data-checkout]").forEach(function(root){
     /* remember the customer's details (admin sees them under Customers > Email list) before they leave for payment */
     try{var fl=name.split(/\s+/),em=email.toLowerCase();fetch("https://firestore.googleapis.com/v1/projects/picksbible-7fa7f/databases/(default)/documents/leads?documentId="+encodeURIComponent("co_"+em)+"&key="+LIVE_URL.split("key=")[1],{method:"POST",keepalive:true,headers:{"Content-Type":"application/json"},body:JSON.stringify({fields:{email:{stringValue:em},firstName:{stringValue:fl[0]||""},lastName:{stringValue:fl.slice(1).join(" ")},whatsapp:{stringValue:wa},plan:{stringValue:String(plan.tier||"")},source:{stringValue:"checkout"},page:{stringValue:"checkout.html"},createdAt:{stringValue:new Date().toISOString()}}})}).catch(function(){})}catch(_){}
     var cfg=D.pay||{}, cur=ng()?"NGN":"USD", price=ng()?plan.ngn:plan.price, num=String(S.whatsapp).replace(/[^0-9]/g,"");
-    var order="Name: "+name+"\nEmail: "+email+(wa?"\nWhatsApp: "+wa:"")+"\nCountry: "+cs.value+"\nPlan: "+plan.name+" (1 month, "+price+")\nPayment method: "+METHODS[method].n;
+    var order="Name: "+name+"\nEmail: "+email+(wa?"\nWhatsApp: "+wa:"")+"\nCountry: "+cs.value+"\nPlan: "+plan.name+" (1 week, "+price+" per week)\nPayment method: "+METHODS[method].n;
     function wa_(text){location.href="https://api.whatsapp.com/send/?phone="+num+"&text="+encodeURIComponent(text+"\n"+order)}
-    if(method==="bank"){wa_("Hi PicksBible, I want to join "+plan.name+". Please send me the payment details.");return}
     if(method==="usdt"){location.href="usdt-payment.html?plan="+encodeURIComponent(plan.tier)+"&n="+encodeURIComponent(name)+"&e="+encodeURIComponent(email);return}
     var fw=cfg.flutterwave&&cfg.flutterwave[plan.tier]&&cfg.flutterwave[plan.tier][cur], bank=cfg.bank&&cfg.bank.number?cfg.bank:null, link="";
     if(method==="whop")link=(cfg.whop&&cfg.whop[plan.tier])||"";
     else if(method==="stripe")link=(cfg.stripe&&cfg.stripe[plan.tier])||"";
     else if(method==="card"||method==="momo"||(method==="bank"&&!bank))link=fw||"";
     if(link){location.href=link;return}
-    var rows=null, warn="";
-    if(method==="usdt"&&cfg.usdt&&cfg.usdt.address){rows=[["Send","<b>"+esc(String(plan.price).replace("$",""))+" USDT</b>"],["Network","<b>"+esc("TRC20")+"</b>"],["Wallet address",'<code>'+esc(cfg.usdt.address)+'</code>',cfg.usdt.address]];warn="Send only USDT on the "+("TRC20")+" network. Sending on another network can lose your funds."}
-    else if(method==="bank"&&bank){rows=[["Amount","<b>"+esc(price)+"</b>"],["Bank","<b>"+esc(bank.bank||"")+"</b>"],].concat(bank.name?[["Account name","<b>"+esc(bank.name)+"</b>"]]:[]).concat([["Account number",'<code>'+esc(bank.number)+'</code>',bank.number]])}
-    if(!rows){wa_("Hi PicksBible, I want to join "+plan.name+". Please send me the payment details.");return}
-    var box=$q("[data-ck-pay-box]"); box.hidden=false;
-    box.innerHTML='<h2>Complete your payment</h2><dl>'+rows.map(function(r){return '<div><dt>'+r[0]+'</dt><dd>'+r[1]+(r[2]?' <button type="button" class="ck-copy" data-copy-v="'+esc(r[2])+'">Copy</button>':'')+'</dd></div>'}).join("")+'</dl>'+(warn?'<p class="ck-warn">'+esc(warn)+'</p>':'')+'<button class="btn wide" type="button" data-ck-paid>I have paid, send proof on WhatsApp</button><p class="ck-sub" style="margin:10px 0 0">After you pay, tap the button and chat us on WhatsApp with your payment receipt. We will authenticate you and activate your VIP access.</p>';
-    $$("[data-copy-v]",box).forEach(function(b){b.addEventListener("click",function(){var v=b.dataset.copyV;function done(){b.textContent="Copied"}if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(v).then(done,done);else done()})});
-    $q("[data-ck-paid]").addEventListener("click",function(){wa_("Hi PicksBible, I have made my payment and here is my proof.")});
-    box.scrollIntoView({behavior:"smooth",block:"center"});
+    var pr=payRows(method);
+    if(!pr){location.href="https://api.whatsapp.com/send/?phone="+num+"&text="+encodeURIComponent("Hi PicksBible, I want to join "+plan.name+" (1 week, "+price+" per week). Please send me the payment details.\n"+order);return}
+    renderPayBox(pr.rows,pr.warn,true,method==="bank");
   });
   draw();
 });

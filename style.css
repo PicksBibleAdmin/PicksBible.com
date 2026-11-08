@@ -1424,7 +1424,7 @@ html[data-theme="light"] .top .lgn{color:#fff!important;border-color:#ffffff88!i
 .top .desk-nav>a[href="premium.html"],html[data-theme="light"] .top .desk-nav>a[href="premium.html"]{background:linear-gradient(180deg,var(--gold1),var(--gold2) 60%,var(--gold3))!important;color:var(--goldink)!important}
 
 /* props grouped by match: one soft four-sided border round all props of the same match */
-.propmatch{border:1px solid #ef444499;border-radius:12px;padding:8px 10px 10px;margin-bottom:14px;display:flex;flex-direction:column;gap:8px;background:#ef44440a}
+.propmatch{border:1px solid var(--line);border-radius:12px;padding:8px 10px 10px;margin-bottom:14px;display:flex;flex-direction:column;gap:8px;background:transparent;box-shadow:none}
 .propmatch .pm-title{font:700 11.5px var(--body);letter-spacing:.06em;text-transform:uppercase;color:var(--muted);padding:2px 4px 0}
 
 /* affiliate pills under the Banker Bet reasoning */
@@ -1451,3 +1451,9 @@ html[data-theme="light"] .themebtn{background:#F3F5F9}
 .pt.bw tr.lgb td{background:#b9cfbf}
 table.pt.bw.lgbars tr.lgb td{background:#000}
 html[data-theme="light"] .bbbox,html[data-theme="light"] .bbin{background:#EEF1F5}
+
+.ck-steps{margin:12px 0 14px;padding-left:20px;color:var(--muted);font-size:14px;line-height:1.55}.ck-steps li{margin:3px 0}
+/* checkout in light mode: dark text on the light cards (the pay box stays dark) */
+html[data-theme="light"] .ckcard h2,html[data-theme="light"] .ck-info b,html[data-theme="light"] .ck-m,html[data-theme="light"] .ck-sum dd,html[data-theme="light"] .ck-sum .ck-total,html[data-theme="light"] .ck label{color:var(--text)}
+html[data-theme="light"] .ck-paybox h2,html[data-theme="light"] .ck-paybox dd{color:#F8FAFC}
+html[data-theme="light"] .ck-total span,html[data-theme="light"] .ck-total b{color:var(--text)}
