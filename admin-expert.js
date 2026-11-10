@@ -14,6 +14,7 @@
       { k: "cs",   name: "Best Correct Score predictions", show: f => fbOf(f).cs || "", conf: f => fbOf(f).conf }
     ],
     basketball: [
+      { k: "ml",     name: "Best NBA Moneyline picks",    show: f => { const v = bbOf(f); return /^[12]$/.test(v.tip) && !String(v.spread || "").trim() ? v.tip + (v.tipOdds ? " @ " + v.tipOdds : "") : ""; }, conf: f => bbOf(f).conf },
       { k: "ats",    name: "Best NBA ATS picks",          show: f => { const v = bbOf(f); return v.tip && String(v.spread || "").trim() ? v.tip + " " + String(v.spread).trim() : ""; }, conf: f => bbOf(f).conf },
       { k: "totals", name: "Best NBA Over/Under picks",   show: f => { const v = bbOf(f); return v.totalSide ? v.totalSide + (v.totalLine ? " " + v.totalLine : "") : ""; }, conf: f => bbOf(f).conf }
     ]

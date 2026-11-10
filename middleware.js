@@ -6,7 +6,7 @@ export const config = {
     "/", "/predictions.html", "/football-predictions.html", "/basketball-predictions.html",
     "/best-1x2-predictions-today.html", "/best-btts-predictions-today.html",
     "/best-correct-score-predictions-today.html", "/best-double-chance-tips-today.html",
-    "/best-nba-ats-picks-today.html", "/best-nba-over-under-picks-today.html",
+    "/best-nba-moneyline-picks-today.html", "/best-nba-ats-picks-today.html", "/best-nba-over-under-picks-today.html",
     "/best-nba-player-props-today.html", "/best-over-under-2-5-predictions-today.html"
   ]
 };

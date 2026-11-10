@@ -781,6 +781,7 @@ $$("[data-cat]").forEach(function(el){
     "ou25":{h:["Over/Under 2.5","Conf"],ok:function(m){return picked(m,"ou25")&&!!m.ou},row:function(m){return extraPick(ouLabel2(m),"","O/U")+confCell(m)}},
     "dc":{h:["Double Chance","Conf"],ok:function(m){return picked(m,"dc")&&isTip(m,/^(1X|X2|12)$/)},row:function(m){return '<td class="kv">'+pkBadge(m)+'</td>'+confCell(m)}},
     "cs":{h:["Correct Score","Conf"],ok:function(m){return picked(m,"cs")&&!!m.cs},row:function(m){return '<td class="cs kv">'+esc(m.cs)+'</td>'+confCell(m)}},
+    "ml":{h:["1","2","Tip","Conf"],ok:function(m){return picked(m,"ml")&&isTip(m,/^[12]$/)},row:function(m){return oddCell(m,0,"1")+oddCell(m,1,"2")+'<td class="kv">'+pkBadge(m)+'</td>'+confCell(m)}},
     "ats":{h:["Spread Pick","Conf"],ok:function(m){return picked(m,"ats")&&isTip(m,/\s/)},row:function(m){return '<td class="kv">'+pkBadge(m)+'</td>'+confCell(m)}},
     "totals":{h:["Point Total","Conf"],ok:function(m){return picked(m,"totals")&&!!m.ts},row:function(m){return '<td class="kv"><span class="xp"><b>'+esc(m.ts+(m.tl?" "+m.tl:""))+'</b></span></td>'+confCell(m)}}
   };
