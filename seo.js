@@ -242,23 +242,23 @@ const POPULAR = [
   ['/wnba-predictions-today', 'WNBA predictions'], ['/nba-player-props-today', 'NBA player props today'], ['/2-odds-predictions-today', '2 odds today'], ['/5-odds-predictions-today', '5 odds today'], ['/basketball-spread-predictions-today', 'NBA picks against the spread'], ['/football-predictions-tomorrow', 'Tomorrow']
 ];
 
-function shell({ title, desc, canonical, body, schema = [], noindex = false }) {
+function shell({ title, desc, canonical, body, schema = [], noindex = false, image = '', head = '', ogType = 'website', tail = '' }) {
   return `<!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>${esc(title)}</title><meta name="description" content="${esc(desc)}"><link rel="canonical" href="${esc(SITE + canonical)}">
 <meta name="robots" content="${noindex ? 'noindex,follow' : 'index,follow,max-image-preview:large'}">
-<meta property="og:type" content="website"><meta property="og:site_name" content="PicksBible"><meta property="og:title" content="${esc(title)}"><meta property="og:description" content="${esc(desc)}"><meta property="og:url" content="${esc(SITE + canonical)}"><meta property="og:image" content="${SITE}/img/pb-logo.png">
-<meta name="twitter:card" content="summary"><meta name="theme-color" content="#0b0820"><link rel="icon" href="/img/pb-logo.png">
+<meta property="og:type" content="${ogType}"><meta property="og:site_name" content="PicksBible"><meta property="og:title" content="${esc(title)}"><meta property="og:description" content="${esc(desc)}"><meta property="og:url" content="${esc(SITE + canonical)}"><meta property="og:image" content="${esc(image || SITE + '/img/pb-logo.png')}">
+<meta name="twitter:card" content="${image ? 'summary_large_image' : 'summary'}">${image ? `<meta name="twitter:image" content="${esc(image)}">` : ''}<meta name="theme-color" content="#0b0820"><link rel="icon" href="/img/pb-logo.png">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700;800&family=Saira+Condensed:wght@600;700&display=swap">
-<link rel="stylesheet" href="/style.css"><style>${CSS}</style>
+<link rel="stylesheet" href="/style.css"><style>${CSS}</style>${head}
 ${schema.map(ld).join('\n')}
 </head><body>
 <header class="sp-head"><div class="wrap"><a class="sp-brand" href="/"><img src="/img/pb-logo.png" alt="PicksBible logo" width="55" height="40"><span>Picks<b>Bible</b></span></a><nav class="sp-nav" aria-label="Main">${NAV.map(n => `<a href="${n[0]}">${n[1]}</a>`).join('')}</nav></div></header>
 <main class="sp wrap">${body}</main>
 <footer class="sp-foot"><div class="wrap"><ul class="sp-links">${POPULAR.map(p => `<li><a href="${p[0]}">${p[1]}</a></li>`).join('')}</ul>
 <p>PicksBible tips are based on statistical analysis of past events, current form and team news available when each prediction was made. No prediction is guaranteed. 18+ only, please gamble responsibly.</p>
-<p>&copy; PicksBible &middot; <a href="/about.html">About</a> &middot; <a href="/contact.html">Contact</a> &middot; <a href="/legal.html">Legal</a></p></div></footer>
+<p>&copy; PicksBible &middot; <a href="/about.html">About</a> &middot; <a href="/contact.html">Contact</a> &middot; <a href="/legal.html">Legal</a></p></div></footer>${tail}
 </body></html>`;
 }
 
@@ -592,8 +592,48 @@ function blogPage(id) {
   });
 }
 
+
+/* ───────────── blog posts written in the admin editor (public/blog-<slug> and public/blog-index) ───────────── */
+async function blogIndex() {
+  try { const d = await getDoc('blog-index'); const a = d && d.json ? JSON.parse(d.json) : []; const now = Date.now(); return a.filter(x => x && x.slug && Date.parse(x.publishAt || 0) <= now); } catch (e) { return []; }
+}
+const stripUnsafe = h => String(h || '').replace(/<\s*(script|style|object|embed|form)\b[\s\S]*?<\s*\/\s*\1\s*>/gi, '').replace(/<\s*(script|style|object|embed|form)\b[^>]*>/gi, '').replace(/\son[a-z]+\s*=\s*("[^"]*"|'[^']*'|[^\s>]+)/gi, '').replace(/javascript\s*:/gi, '');
+const plain = h => String(h || '').replace(/<[^>]+>/g, ' ').replace(/&nbsp;/g, ' ').replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/\s+/g, ' ').trim();
+const absUrl = u => !u ? '' : /^https?:/i.test(u) ? u : SITE + (u[0] === '/' ? '' : '/') + u;
+async function dynBlogPage(slugId) {
+  if (!/^[a-z0-9][a-z0-9-]{0,98}$/.test(slugId)) return null;
+  const p = await getDoc('blog-' + slugId); if (!p) return null;
+  if (p.redirect) return { redirect: '/blog/' + p.redirect };
+  if (!p.title || !p.html || Date.parse(p.publishAt || 0) > Date.now()) return null;
+  const idx = await blogIndex();
+  const rel = idx.filter(x => x.slug !== p.slug && (p.cat && x.cat === p.cat)).slice(0, 3).concat(idx.filter(x => x.slug !== p.slug && x.cat !== p.cat)).slice(0, 3);
+  const html = stripUnsafe(p.html), canon = p.canonical && /^https?:\/\//.test(p.canonical) ? p.canonical : SITE + '/blog/' + p.slug;
+  const canonPath = canon.indexOf(SITE) === 0 ? canon.slice(SITE.length) || '/' : '/blog/' + p.slug;
+  const desc = String(p.metaDesc || p.excerpt || plain(html).slice(0, 160)).slice(0, 300), title = p.metaTitle || (p.title + ' | PicksBible');
+  const cr = [['/', 'Home'], ['/blog.html', 'Blog'], ['/blog/' + p.slug, p.title]];
+  const faqs = []; html.replace(/<details[^>]*>\s*<summary[^>]*>([\s\S]*?)<\/summary>([\s\S]*?)<\/details>/gi, (m, q, a) => { const qq = plain(q), aa = plain(a); if (qq && aa) faqs.push([qq, aa]); return m; });
+  const img = absUrl(p.cover), pub = new Date(p.publishAt).toISOString(), mod = p.updatedAt ? new Date(p.updatedAt).toISOString() : pub;
+  const when = new Date(p.publishAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'Africa/Lagos' });
+  const tags = Array.isArray(p.tags) ? p.tags : [];
+  const body = crumbs(cr) + `<article><h1>${esc(p.title)}</h1><p class="sp-meta">${p.cat ? esc(p.cat) + ' &middot; ' : ''}${esc(when)} &middot; by ${esc(p.author || 'PicksBible Desk')} &middot; ${esc(p.mins || 1)} min read</p>` +
+    (img ? `<figure class="pb-cover"><img src="${esc(img)}" alt="${esc(p.coverAlt || p.title)}" width="1200" height="630" style="width:100%;height:auto;border-radius:12px"></figure>` : '') +
+    `<div class="pbart" id="pbArt">${html}</div>` +
+    (tags.length ? `<p class="sp-meta">${tags.map(t => '#' + esc(t)).join(' &nbsp; ')}</p>` : '') +
+    `<p class="sp-note">Betting involves risk and no prediction is guaranteed. 18+ only. Please gamble responsibly (<a href="https://www.begambleaware.org" rel="noopener">BeGambleAware.org</a>).</p></article>` +
+    (rel.length ? `<h2>More from the blog</h2><ul class="sp-links">${rel.map(r => `<li><a href="/blog/${esc(r.slug)}">${esc(r.title)}</a></li>`).join('')}</ul>` : '');
+  const tail = `<script>(function(){try{if(localStorage.getItem("pb.noTrack"))return}catch(e){}var S=${JSON.stringify(p.slug)},T=new Date().toLocaleDateString("en-CA",{timeZone:"Africa/Lagos"}),u=1;try{var k="pb.bv."+S;if(localStorage.getItem(k)===T)u=0;else localStorage.setItem(k,T)}catch(e){}
+function send(ev,x){try{var b=JSON.stringify(Object.assign({slug:S,ev:ev},x||{}));if(navigator.sendBeacon)navigator.sendBeacon("/api/blog-view",new Blob([b],{type:"text/plain"}));else fetch("/api/blog-view",{method:"POST",body:b,keepalive:true})}catch(e){}}
+send("view",{u:u,ref:document.referrer});var a=document.getElementById("pbArt"),r=0;
+function chk(){if(r)return;var h=a.getBoundingClientRect(),vh=innerHeight;if(h.top+h.height*.5<vh){r=1;send("read")}}addEventListener("scroll",chk,{passive:true});setTimeout(chk,3000);
+a.addEventListener("click",function(e){var l=e.target.closest&&e.target.closest("a.pb-btn");if(l)send("cta")})})()</script>`;
+  return { html: shell({
+    title, desc, canonical: canonPath, body, noindex: !!p.noindex, image: img, ogType: 'article', tail, head: '<link rel="stylesheet" href="/blog-article.css">',
+    schema: [crumbSchema(cr), { '@context': 'https://schema.org', '@type': 'Article', headline: p.title, description: desc, image: img ? [img] : undefined, datePublished: pub, dateModified: mod, author: { '@type': 'Person', name: p.author || 'PicksBible Desk' }, publisher: { '@type': 'Organization', name: 'PicksBible', logo: { '@type': 'ImageObject', url: SITE + '/img/pb-logo.png' } }, mainEntityOfPage: canon }, faqSchema(faqs)].filter(Boolean)
+  }) };
+}
+
 /* ───────────── sitemap ───────────── */
-function sitemap(D) {
+function sitemap(D, bi = []) {
   const today = watYmd(0), urls = [];
   const add = (loc, lastmod, pr) => urls.push(`<url><loc>${SITE}${esc(loc)}</loc><lastmod>${lastmod}</lastmod>${pr ? `<priority>${pr}</priority>` : ''}</url>`);
   Object.keys(HUBS).forEach(k => { if (D.matches.some(m => m.sport === HUBS[k].sport && HUBS[k].filter(m))) add('/' + k, today, '0.9'); });
@@ -607,6 +647,7 @@ function sitemap(D) {
   D.matches.forEach(m => { const k = m.sport + m.date; if (!seen[k]) { seen[k] = 1; add(`/${sportWord(m.sport)}-predictions/${m.date}`, m.date, '0.6'); } });
   D.matches.forEach(m => add(m.url, m.date, '0.7'));
   statics().posts.forEach(p => add('/blog/' + p.id, (() => { const d = new Date(p.date + ' 12:00 UTC'); return isNaN(d) ? today : d.toISOString().slice(0, 10); })(), '0.6'));
+  bi.forEach(p => add('/blog/' + p.slug, String(p.publishAt || today).slice(0, 10), '0.7'));
   return `<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">${urls.join('')}</urlset>`;
 }
 
@@ -626,9 +667,14 @@ module.exports = async function handler(req, res) {
   };
   try {
     const t = q.t;
-    if (t === 'blog') { const h = blogPage(String(q.slug || '')); return h ? send(200, 'text/html; charset=utf-8', h) : send(404, 'text/html; charset=utf-8', notFound(), 'public, s-maxage=300'); }
+    if (t === 'blog') {
+      const id = String(q.slug || ''); const h = blogPage(id); if (h) return send(200, 'text/html; charset=utf-8', h);
+      const d = await dynBlogPage(id);
+      if (d && d.redirect) { res.statusCode = 301; res.setHeader('Location', d.redirect); res.setHeader('Cache-Control', 'public, s-maxage=300'); return res.end(); }
+      return d ? send(200, 'text/html; charset=utf-8', d.html, 'public, s-maxage=300, stale-while-revalidate=3600') : send(404, 'text/html; charset=utf-8', notFound(), 'public, s-maxage=60');
+    }
     const D = await loadAll();
-    if (t === 'sitemap') return send(200, 'application/xml; charset=utf-8', sitemap(D), 'public, s-maxage=1800, stale-while-revalidate=43200');
+    if (t === 'sitemap') return send(200, 'application/xml; charset=utf-8', sitemap(D, await blogIndex()), 'public, s-maxage=1800, stale-while-revalidate=43200');
     let html = null;
     if (t === 'match') { const m = D.matches.find(x => x.slug === String(q.slug || '')); html = m && matchPage(m, D); }
     else if (t === 'league') { const L = D.leagues[String(q.slug || '')]; html = L && leaguePage(L, D); }
