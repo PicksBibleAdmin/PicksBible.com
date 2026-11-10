@@ -14,7 +14,7 @@
       { k: "cs",   name: "Best Correct Score predictions", show: f => fbOf(f).cs || "", conf: f => fbOf(f).conf }
     ],
     basketball: [
-      { k: "ml",     name: "Best NBA Moneyline picks",    show: f => { const v = bbOf(f); return /^[12]$/.test(v.tip) && !String(v.spread || "").trim() ? v.tip + (v.tipOdds ? " @ " + v.tipOdds : "") : ""; }, conf: f => bbOf(f).conf },
+      { k: "ml",     name: "Best NBA Moneyline picks",    show: f => { const v = bbOf(f), t = String(v.tip || ""); if (t !== "1" && t !== "2") return ""; const o = t === "1" ? v.o1 : v.o2; return (t === "1" ? f.home : f.away) + (o ? " @ " + o : ""); }, conf: f => bbOf(f).conf },
       { k: "ats",    name: "Best NBA ATS picks",          show: f => { const v = bbOf(f); return v.tip && String(v.spread || "").trim() ? v.tip + " " + String(v.spread).trim() : ""; }, conf: f => bbOf(f).conf },
       { k: "totals", name: "Best NBA Over/Under picks",   show: f => { const v = bbOf(f); return v.totalSide ? v.totalSide + (v.totalLine ? " " + v.totalLine : "") : ""; }, conf: f => bbOf(f).conf }
     ]
@@ -51,7 +51,7 @@
 </style>
 <div class="card">
   <h2>Expert tips: hand-pick for each page</h2>
-  <p class="note">Each category below is a public page (for example <b>Best BTTS predictions today</b>). Only the matches you tick here appear on that page. A match is listed once you have filled in that market in the Football or Basketball table and switched the match <b>Live</b>. Use the confidence filter to find your strongest picks quickly. Player props are chosen in tab 4.</p>
+  <p class="note">Each category below is a public page (for example <b>Best BTTS predictions today</b>). Only the matches you tick here appear on that page. A match is listed once you have filled in that market in the Football or Basketball table and switched the match <b>Live</b>. Use the confidence filter to find your strongest picks quickly. Player props for the day are listed at the bottom of the Basketball view; add or edit them in tab 4.</p>
   <div class="xb">
     <div><label>Day</label><input type="date" id="xtDate"></div>
     <div class="seg" role="group"><button type="button" data-xs="football" aria-pressed="true">Football</button><button type="button" data-xs="basketball" aria-pressed="false">Basketball</button></div>
@@ -65,7 +65,12 @@
     $("#xtMin").oninput = () => { minConf = Math.max(0, Math.min(100, +$("#xtMin").value || 0)); render(); };
     sec.querySelectorAll("[data-xs]").forEach(b => b.onclick = () => { sport = b.dataset.xs; sec.querySelectorAll("[data-xs]").forEach(x => x.setAttribute("aria-pressed", String(x === b))); render(); });
     $("#xtBody").addEventListener("change", e => {
-      const el = e.target; if (!el.dataset.xf) return;
+      const el = e.target;
+      if (el.dataset.xp) {
+        const p = db.props.find(x => x.id === el.dataset.xp); if (!p) return;
+        p.live = el.checked; Store.save(db); toast(el.checked ? "Added to the Best NBA Player Props page" : "Removed from the page"); render(); return;
+      }
+      if (!el.dataset.xf) return;
       const f = db.fixtures.find(x => x.id === el.dataset.xf); if (!f) return;
       const k = el.dataset.xk, cur = Array.isArray(f.xt) ? f.xt.slice() : [];
       const i = cur.indexOf(k);
@@ -105,7 +110,22 @@
         (hidden ? `<div class="em">${hidden} more match${hidden === 1 ? " has" : "es have"} this market but ${hidden === 1 ? "is" : "are"} not Live yet.</div>` : "") +
         (pickedAll.length ? `<div style="padding:10px 14px"><button type="button" class="btn ghost sm" data-clear="${c.k}">Clear all ${pickedAll.length}</button></div>` : "") +
         `</details>`;
+    }).join("") + propsBlock(dayFx);
+  }
+  /* Best NBA Player Props: the props added in tab 4. Ticked = shown on the public page. */
+  function propsBlock(dayFx) {
+    if (sport !== "basketball") return "";
+    const ids = {}; dayFx.forEach(f => { ids[f.id] = f; });
+    const list = (db.props || []).filter(p => ids[p.fixtureId]);
+    const mk = k => { const m = (typeof PROP_MARKETS !== "undefined" ? PROP_MARKETS : []).find(x => x.k === k); return m ? m.name.replace(/\s*\(Over\/Under\)/, "") : k; };
+    const on = list.filter(p => p.live).length;
+    const rows = list.map(p => {
+      const f = ids[p.fixtureId], who = p.player || p.team || "";
+      return `<div class="xr ${p.live ? "sel" : ""}"><input type="checkbox" data-xp="${esc(p.id)}" ${p.live ? "checked" : ""} aria-label="Show on page"><span>${esc(hhmm(f.kickoff))}</span><span><b>${esc(who)}</b> <span class="muted">${esc(f.home)} v ${esc(f.away)}</span></span><span class="mk">${esc(mk(p.market))} ${esc(p.side || "")} ${esc(p.line || "")}${p.odds ? " @ " + esc(p.odds) : ""}</span><span class="cf">${p.st === "won" ? "Won" : p.st === "lost" ? "Lost" : ""}</span></div>`;
     }).join("");
+    return `<details data-k="props" ${openCat.props ? "open" : ""}><summary><span>Best NBA Player Props</span><span><span class="cnt ${on ? "on" : ""}">${on} shown</span> <span class="cnt">${list.length} added</span></span></summary>` +
+      (list.length ? rows : `<div class="em">No player props added for this day yet. Add them in tab 4 (Basketball props) or upload the props CSV there.</div>`) +
+      `<div class="em">Ticked props appear on the public Best NBA Player Props page. Add, edit or delete props in tab 4.</div></details>`;
   }
 
   const t = setInterval(() => { if (document.querySelector('nav.tabs [data-tab="results"]') && typeof showTab === "function" && typeof db !== "undefined" && db) { clearInterval(t); mount(); } }, 300);
