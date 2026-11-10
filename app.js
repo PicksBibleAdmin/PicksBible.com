@@ -117,7 +117,7 @@ function addFx(P,f,days){
       var bd=String(f.kickoff||"").slice(0,10), bday=days[bd]; if(!bd)return;
       var b=f.bb||{}, bt=(b.tip||"")+(b.tip&&String(b.spread||"").trim()?" "+String(b.spread).trim():"");   /* tip + handicap shown together, e.g. "1 -6.5" or "2 +10.5" */
       var bm={lg:lgKey(P,"basketball",f.competition,f.country),t:lt(f.kickoff),k:f.kickoff,h:f.home,a:f.away,
-        o:[b.o1||"",b.o2||""],mls:(b.tip==="1"||b.tip==="2")?b.tip:"",pk:bt,tip:bt||"-",to:b.tipOdds||"",conf:b.conf||"",spread:b.spread||"",ts:b.totalSide||"",tl:b.totalLine||"",sure:!!b.sure,xp:!!f.xp,xt:f.xt||[],st:b.st||"pending",score:b.score||""};
+        o:[b.o1||"",b.o2||""],pk:bt,tip:bt||"-",to:b.tipOdds||"",conf:b.conf||"",spread:b.spread||"",ts:b.totalSide||"",tl:b.totalLine||"",sure:!!b.sure,xp:!!f.xp,xt:f.xt||[],st:b.st||"pending",score:b.score||""};
       (P.byDate.basketball[bd]=P.byDate.basketball[bd]||[]).push(bm);
       if(bday){var bl=P.basketball[bday];bm.featured=bl.length<6;bl.push(bm)}
       return;
@@ -781,11 +781,7 @@ $$("[data-cat]").forEach(function(el){
     "ou25":{h:["Over/Under 2.5","Conf"],ok:function(m){return picked(m,"ou25")&&!!m.ou},row:function(m){return extraPick(ouLabel2(m),"","O/U")+confCell(m)}},
     "dc":{h:["Double Chance","Conf"],ok:function(m){return picked(m,"dc")&&isTip(m,/^(1X|X2|12)$/)},row:function(m){return '<td class="kv">'+pkBadge(m)+'</td>'+confCell(m)}},
     "cs":{h:["Correct Score","Conf"],ok:function(m){return picked(m,"cs")&&!!m.cs},row:function(m){return '<td class="cs kv">'+esc(m.cs)+'</td>'+confCell(m)}},
-    "ml":{h:["1","2","Tip","Conf"],ok:function(m){return picked(m,"ml")&&(m.mls==="1"||m.mls==="2")},row:function(m){
-      var i=+m.mls-1,c=Object.assign({},m,{pk:m.mls}),sc=String(m.score||"").match(/(\d+)\s*[-:]\s*(\d+)/),st="pending";
-      if(sc){var A=+sc[1],B=+sc[2];if(A!==B)st=((A>B)===(i===0))?"won":"lost"}
-      var t=Object.assign({},m,{pk:i===0?m.h:m.a,tip:i===0?m.h:m.a,to:m.o[i]||"",st:st});
-      return oddCell(c,0,"1")+oddCell(c,1,"2")+'<td class="kv">'+pkBadge(t)+'</td>'+confCell(m)}},
+    "ml":{h:["1","2","Tip","Conf"],ok:function(m){return picked(m,"ml")&&isTip(m,/^[12]$/)},row:function(m){return oddCell(m,0,"1")+oddCell(m,1,"2")+'<td class="kv">'+pkBadge(m)+'</td>'+confCell(m)}},
     "ats":{h:["Spread Pick","Conf"],ok:function(m){return picked(m,"ats")&&isTip(m,/\s/)},row:function(m){return '<td class="kv">'+pkBadge(m)+'</td>'+confCell(m)}},
     "totals":{h:["Point Total","Conf"],ok:function(m){return picked(m,"totals")&&!!m.ts},row:function(m){return '<td class="kv"><span class="xp"><b>'+esc(m.ts+(m.tl?" "+m.tl:""))+'</b></span></td>'+confCell(m)}}
   };

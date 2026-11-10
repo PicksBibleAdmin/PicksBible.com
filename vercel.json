@@ -33,6 +33,10 @@
       "destination": "/api/seo?t=date&sport=basketball&date=:date"
     },
     {
+      "source": "/media/:id",
+      "destination": "/api/media?id=:id"
+    },
+    {
       "source": "/blog/:slug",
       "destination": "/api/seo?t=blog&slug=:slug"
     },

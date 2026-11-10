@@ -108,6 +108,13 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
 
+    /* ---- blog: posts and drafts, pictures and saved versions are admin only; visitor counts are written by the server and read by the admin.
+       (a published post is copied to public/blog-<slug>, which the website reads) ---- */
+    match /blog_posts/{id}     { allow read, write: if isAdmin(); }
+    match /blog_media/{id}     { allow read, write: if isAdmin(); }
+    match /blog_revisions/{id} { allow read, write: if isAdmin(); }
+    match /blog_stats/{id}     { allow read: if isAdmin(); allow write: if false; }
+
     match /{document=**} { allow read, write: if false; }
   }
 }
