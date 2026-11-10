@@ -95,6 +95,12 @@
     <button type="button" class="btn danger" id="vpkDel" hidden>Delete this package</button>
   </div>
 </div>
+<div class="card" id="vpkResCard" hidden>
+  <h2>Result of this package</h2>
+  <p class="note">The scores can mark a package automatically, but you have the last word. Choose <b>Won</b> or <b>Lost</b> and it stays that way, whatever scores are uploaded later. Choose <b>Automatic</b> to let the scores decide again. You can also mark each pick below its card.</p>
+  <div class="row"><div><label>Package result</label><select id="vpkRes"><option value="">Automatic (from the scores)</option><option value="won">Won</option><option value="lost">Lost</option><option value="pending">Pending (not settled)</option></select></div></div>
+  <p class="note" id="vpkResNote" style="margin-bottom:0"></p>
+</div>
 <div id="vipPop" hidden>
   <div class="box" role="dialog" aria-modal="true" aria-label="Message to VIP members">
     <h2>Message to members</h2>
@@ -148,7 +154,10 @@
   /* ---------- painting ---------- */
   function paint() {
     $("#vpkStatus").textContent = statusText();
-    $("#vpkDel").hidden = !findEntry(state.pk, state.ymd);
+    const cur = findEntry(state.pk, state.ymd), live = !!(cur && !cur.draft && cur.legs && cur.legs.length);
+    $("#vpkDel").hidden = !cur;
+    $("#vpkResCard").hidden = !live;
+    if (live) { $("#vpkRes").value = cur.stMan || ""; $("#vpkResNote").textContent = "Showing on the site as: " + (cur.st === "won" ? "WON" : cur.st === "lost" ? "LOST" : "pending") + (cur.stMan ? " (set by you)" : " (automatic)") + "."; }
     $("#vpkLegs").innerHTML = state.legs.map((l, i) => {
       const f = l.fid && fx(l.fid);
       const shown = f ? `${f.home} v ${f.away}` : "";
@@ -161,6 +170,7 @@
           <div><label>Market</label><select class="lgk"><option value="">Select market</option>${mk}</select></div>
           <div><label>Selection</label><input class="lgs" list="vpkdl${i}" placeholder="${l.market ? "e.g. " + esc(MARKETS[l.market][0]) : "Select market first"}" value="${esc(l.sel)}"><datalist id="vpkdl${i}">${dl}</datalist></div>
         </div>
+        ${(() => { const cur = findEntry(state.pk, state.ymd); const sv = cur && !cur.draft && (cur.legs || []).find(x => x.fid === l.fid && x.market === l.market && x.sel === l.sel.trim()); return sv ? `<div style="margin-top:8px"><label>Result of this pick</label><select class="lgr"><option value="">Automatic${sv.res ? " (now " + sv.res + ")" : ""}</option><option value="won" ${sv.resMan === "won" ? "selected" : ""}>Won</option><option value="lost" ${sv.resMan === "lost" ? "selected" : ""}>Lost</option></select></div>` : ""; })()}
         <div class="legfoot"><span class="muted">${f ? esc(f.competition || "") + " · " + esc(String(f.kickoff).slice(0, 16).replace("T", " ")) : ""}</span>${state.legs.length > 1 ? '<button type="button" class="btn danger lgx" style="padding:5px 10px">Remove</button>' : ""}</div>
       </div>`;
     }).join("");
@@ -201,7 +211,11 @@
     e.odds = readOdds();
     e.legs = state.legs.filter(l => l.fid && l.market && l.sel.trim()).map(l => {
       const f = fx(l.fid) || {};
-      return { fid: l.fid, sport: f.sport || "football", home: f.home || "", away: f.away || "", comp: f.competition || "", ko: f.kickoff || "", market: l.market, sel: l.sel.trim() };
+      const prev = (e.legs || []).find(x => x.fid === l.fid && x.market === l.market && x.sel === l.sel.trim()) || {};
+      const out = { fid: l.fid, sport: f.sport || "football", home: f.home || "", away: f.away || "", comp: f.competition || "", ko: f.kickoff || "", market: l.market, sel: l.sel.trim() };
+      if (prev.resMan) out.resMan = prev.resMan;
+      if (prev.res) out.res = prev.res;
+      return out;
     });
     e.draft = !!draft;
     e.pkg = pk;
@@ -277,6 +291,12 @@
     $("#vpkDel").onclick = delPackage;
     $("#vpMsgCancel").onclick = () => { $("#vipPop").hidden = true; };
     $("#vpMsgSend").onclick = publish;
+    $("#vpkRes").onchange = e => {
+      const cur = findEntry(state.pk, state.ymd); if (!cur) return;
+      const val = e.target.value;
+      if (val) cur.stMan = val; else { delete cur.stMan; cur.st = ""; delete cur.stAuto; }   /* automatic: clear it so the scores decide again */
+      commit(); paint(); toast(val ? "Package marked " + val : "Automatic: the scores decide");
+    };
     const legs = $("#vpkLegs");
     legs.addEventListener("focusin", e => { if (e.target.classList.contains("lgm")) { const i = +e.target.closest(".leg").dataset.i; openList(e.target.nextElementSibling, i, ""); } });
     legs.addEventListener("input", e => {
@@ -288,6 +308,10 @@
       const leg = e.target.closest(".leg"); if (!leg) return; const i = +leg.dataset.i;
       if (e.target.classList.contains("lgk")) { state.legs[i].market = e.target.value; state.legs[i].sel = ""; paint(); }
       if (e.target.classList.contains("lgs")) state.legs[i].sel = e.target.value;
+      if (e.target.classList.contains("lgr")) {
+        const cur = findEntry(state.pk, state.ymd), l = state.legs[i], sv = cur && (cur.legs || []).find(x => x.fid === l.fid && x.market === l.market && x.sel === l.sel.trim());
+        if (sv) { if (e.target.value) sv.resMan = e.target.value; else { delete sv.resMan; sv.res = ""; } commit(); paint(); toast(e.target.value ? "Pick marked " + e.target.value : "Automatic: the scores decide"); }
+      }
     });
     legs.addEventListener("click", e => {
       if (e.target.id === "vpkAll") { e.preventDefault(); state.allDates = true; const leg = e.target.closest(".leg"); openList(e.target.closest(".cbl"), +leg.dataset.i, leg.querySelector(".lgm").value); return; }

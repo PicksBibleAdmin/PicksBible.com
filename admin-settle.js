@@ -88,14 +88,22 @@
       if (!v.legs || !v.legs.length) return;
       const res = v.legs.map(l => {
         const f = (db.fixtures || []).find(x => x.id === l.fid), sc = f && scoreOf(f);
+        if (l.resMan === "won" || l.resMan === "lost") return l.resMan;      /* marked by hand: never overwritten */
         const r = sc ? evalPick(l.market, l.sel, sc) : "";
         return r;
       });
       let ch = false;
       v.legs.forEach((l, i) => { if ((l.res || "") !== res[i]) { l.res = res[i]; ch = true; } });
       if (v.draft) { if (ch) out.changed = true; return; }          /* drafts are never settled */
+      if (v.stMan === "won" || v.stMan === "lost" || v.stMan === "pending") {   /* package result marked by hand: the scores never change it */
+        const m = v.stMan === "pending" ? "" : v.stMan;
+        if ((v.st || "") !== m || v.stAuto) { v.st = m; delete v.stAuto; ch = true; }
+        if (ch) { out.changed = true; out.vip.push(v); }
+        return;
+      }
       const want = packageResult(res);
       if (want && (!done(v.st) || (v.stAuto && v.st === v.stAuto && v.st !== want))) { v.st = want; v.stAuto = want; ch = true; out.vip.push(v); }
+      else if (ch) out.vip.push(v);
       if (ch) out.changed = true;
     });
     return out;
