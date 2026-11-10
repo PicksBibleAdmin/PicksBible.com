@@ -68,7 +68,11 @@
       const el = e.target;
       if (el.dataset.xp) {
         const p = db.props.find(x => x.id === el.dataset.xp); if (!p) return;
-        p.live = el.checked; Store.save(db); toast(el.checked ? "Added to the Best NBA Player Props page" : "Removed from the page"); render(); return;
+        p.xt = el.checked; Store.save(db); toast(el.checked ? "Added to the Best NBA Player Props page" : "Removed from the page"); render(); return;
+      }
+      if (el.dataset.xc) {
+        const p = db.props.find(x => x.id === el.dataset.xc); if (!p) return;
+        const v = String(el.value).trim(); if (v === "") delete p.conf; else p.conf = Math.max(0, Math.min(100, +v || 0)); Store.save(db); toast("Confidence saved"); return;
       }
       if (!el.dataset.xf) return;
       const f = db.fixtures.find(x => x.id === el.dataset.xf); if (!f) return;
@@ -83,6 +87,7 @@
     $("#xtBody").addEventListener("click", e => {
       const b = e.target.closest("[data-clear]"); if (!b) return;
       const k = b.dataset.clear, day = $("#xtDate").value;
+      if (k === "props") { db.props.forEach(p => { if (p.xt) { const f = db.fixtures.find(x => x.id === p.fixtureId); if (f && String(f.kickoff || "").slice(0, 10) === day) delete p.xt; } }); Store.save(db); toast("Cleared"); render(); return; }
       db.fixtures.forEach(f => { if (f.sport === sport && String(f.kickoff || "").slice(0, 10) === day && has(f, k)) f.xt = f.xt.filter(x => x !== k); });
       Store.save(db); toast("Cleared"); render();
     });
@@ -112,20 +117,23 @@
         `</details>`;
     }).join("") + propsBlock(dayFx);
   }
-  /* Best NBA Player Props: the props added in tab 4. Ticked = shown on the public page. */
+  /* Best NBA Player Props: the analyst picks which props go on the public page (tick), and can note a confidence for each. */
   function propsBlock(dayFx) {
     if (sport !== "basketball") return "";
     const ids = {}; dayFx.forEach(f => { ids[f.id] = f; });
-    const list = (db.props || []).filter(p => ids[p.fixtureId]);
+    const conf = p => +String(p.conf == null ? "" : p.conf).replace("%", "") || 0;
+    const all = (db.props || []).filter(p => ids[p.fixtureId]);
     const mk = k => { const m = (typeof PROP_MARKETS !== "undefined" ? PROP_MARKETS : []).find(x => x.k === k); return m ? m.name.replace(/\s*\(Over\/Under\)/, "") : k; };
-    const on = list.filter(p => p.live).length;
+    const picked = all.filter(p => p.xt).length;
+    const list = all.filter(p => conf(p) >= minConf || p.xt).sort((x, y) => (y.xt ? 1 : 0) - (x.xt ? 1 : 0) || conf(y) - conf(x) || String(ids[x.fixtureId].kickoff).localeCompare(String(ids[y.fixtureId].kickoff)));
     const rows = list.map(p => {
       const f = ids[p.fixtureId], who = p.player || p.team || "";
-      return `<div class="xr ${p.live ? "sel" : ""}"><input type="checkbox" data-xp="${esc(p.id)}" ${p.live ? "checked" : ""} aria-label="Show on page"><span>${esc(hhmm(f.kickoff))}</span><span><b>${esc(who)}</b> <span class="muted">${esc(f.home)} v ${esc(f.away)}</span></span><span class="mk">${esc(mk(p.market))} ${esc(p.side || "")} ${esc(p.line || "")}${p.odds ? " @ " + esc(p.odds) : ""}</span><span class="cf">${p.st === "won" ? "Won" : p.st === "lost" ? "Lost" : ""}</span></div>`;
+      return `<div class="xr ${p.xt ? "sel" : ""}"><input type="checkbox" data-xp="${esc(p.id)}" ${p.xt ? "checked" : ""} aria-label="Pick"><span>${esc(hhmm(f.kickoff))}</span><span><b>${esc(who)}</b> <span class="muted">${esc(f.home)} v ${esc(f.away)}</span></span><span class="mk">${esc(mk(p.market))} ${esc(p.side || "")} ${esc(p.line || "")}${p.odds ? " @ " + esc(p.odds) : ""}${p.live ? "" : ' <span class="muted">(not Live in tab 4)</span>'}${p.st === "won" ? " ✓" : p.st === "lost" ? " ✗" : ""}</span><input type="number" min="0" max="100" data-xc="${esc(p.id)}" value="${esc(p.conf == null ? "" : String(p.conf).replace("%", ""))}" placeholder="%" title="Confidence %" style="width:60px;padding:4px 6px"></div>`;
     }).join("");
-    return `<details data-k="props" ${openCat.props ? "open" : ""}><summary><span>Best NBA Player Props</span><span><span class="cnt ${on ? "on" : ""}">${on} shown</span> <span class="cnt">${list.length} added</span></span></summary>` +
-      (list.length ? rows : `<div class="em">No player props added for this day yet. Add them in tab 4 (Basketball props) or upload the props CSV there.</div>`) +
-      `<div class="em">Ticked props appear on the public Best NBA Player Props page. Add, edit or delete props in tab 4.</div></details>`;
+    return `<details data-k="props" ${openCat.props ? "open" : ""}><summary><span>Best NBA Player Props</span><span><span class="cnt ${picked ? "on" : ""}">${picked} selected</span> <span class="cnt">${all.length} added</span></span></summary>` +
+      (all.length ? (rows || `<div class="em">No props at that confidence. Lower the filter or add a confidence % to your props.</div>`) : `<div class="em">No player props added for this day yet. Add them in tab 4 (Basketball props) or upload the props CSV there.</div>`) +
+      `<div class="em">Only the props you tick here appear on the public Best NBA Player Props page. Type a confidence % on each prop to compare and filter (it shows on the page too). Props still need to be Live in tab 4.</div>` +
+      (picked ? `<div style="padding:10px 14px"><button type="button" class="btn ghost sm" data-clear="props">Clear all ${picked}</button></div>` : "") + `</details>`;
   }
 
   const t = setInterval(() => { if (document.querySelector('nav.tabs [data-tab="results"]') && typeof showTab === "function" && typeof db !== "undefined" && db) { clearInterval(t); mount(); } }, 300);

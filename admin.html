@@ -561,7 +561,7 @@ async function onSignedIn(user){
 /* ============ TABS ============ */
 function showTab(name){
   document.querySelectorAll("nav.tabs button").forEach(b=>b.setAttribute("aria-selected", b.dataset.tab===name));
-  ["fixtures","fbtable","bbtable","bbprops","home","results","vip","hub","gifts","live","xtips","picks","published","data"].forEach(t=>{ const el=$("#tab-"+t); if(el) el.hidden = t!==name; });
+  ["fixtures","fbtable","bbtable","bbprops","home","results","vip","hub","gifts","live","blog","xtips","picks","published","data"].forEach(t=>{ const el=$("#tab-"+t); if(el) el.hidden = t!==name; });
   { const vb=document.querySelector(".viewbar"); if(vb) vb.style.display = ["fixtures","fbtable","bbtable","bbprops"].includes(name) ? "" : "none"; }   /* the Showing / search bar does not apply to the Results tab */
 }
 document.querySelectorAll("nav.tabs button").forEach(b=>b.onclick=()=>{ if(b.dataset.tab==="picks") resetPick(); showTab(b.dataset.tab); });

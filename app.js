@@ -83,7 +83,7 @@ function applyLive(P,live){
 function addProp(P,p){
   var k=String(p.kickoff||"").slice(0,10); if(!k)return;
   var team=p.team||"", other=team===p.home?p.away:p.home;
-  (P.propsByDate[k]=P.propsByDate[k]||[]).push({k:p.market,player:p.player||"",team:team,opp:team?("vs "+other):(p.home+" v "+p.away),m:(p.home||"")+" v "+(p.away||""),fx:p.fixtureId||"",line:p.line||"",pick:p.side||"",odds:p.odds||"",st:p.st||"pending"});
+  (P.propsByDate[k]=P.propsByDate[k]||[]).push({k:p.market,player:p.player||"",team:team,opp:team?("vs "+other):(p.home+" v "+p.away),m:(p.home||"")+" v "+(p.away||""),fx:p.fixtureId||"",line:p.line||"",pick:p.side||"",odds:p.odds||"",st:p.st||"pending",x:!!p.xt,c:p.conf==null?"":String(p.conf).replace("%","")});
 }
 /* Banker Bet market: the analyst picks a market, types the odds for every option and marks which one is ours.
    Returns {m:market, l:[option labels], o:[odds], i:index of our selection or -1}, or null when no market was chosen. */
@@ -820,10 +820,11 @@ $$("[data-props]").forEach(function(el){
       '<div class="propav">🏀</div>'+
       '<div class="propinfo"><b>'+esc(team?p.team:p.player)+'</b><span>'+esc(team?"":p.team+" ")+esc(p.opp||"")+'</span></div>'+
       '<div class="propmkt">'+esc(m.name)+'</div>'+
-      '<div class="proppick"><span class="pick">'+esc(team?(m.short||"Pick"):p.pick+" "+p.line)+'</span><span class="o">'+(p.odds?'@ '+esc(p.odds):'')+'</span></div>'+(p.st==="won"?'<span class="bigmark won" aria-label="Won">&#10003;</span>':p.st==="lost"?'<span class="bigmark lost" aria-label="Did not land"></span>':'')+
+      '<div class="proppick"><span class="pick">'+esc(team?(m.short||"Pick"):p.pick+" "+p.line)+'</span><span class="o">'+(p.odds?'@ '+esc(p.odds):'')+'</span>'+(expertOnly&&p.c?'<span class="conf '+(+p.c>55?'hi':+p.c>=45?'mid':'lo')+'">'+esc(p.c)+'%</span>':'')+'</div>'+(p.st==="won"?'<span class="bigmark won" aria-label="Won">&#10003;</span>':p.st==="lost"?'<span class="bigmark lost" aria-label="Did not land"></span>':'')+
     '</div>';
   }
-  function listFor(k){return ((D.propsByDate||{})[day]||[]).filter(function(p){return p.k===k})}
+  var expertOnly=el.hasAttribute("data-expert");   /* Best NBA Player Props page: only the props the analyst ticked, strongest first */
+  function listFor(k){var l=((D.propsByDate||{})[day]||[]).filter(function(p){return p.k===k&&(!expertOnly||p.x)});if(expertOnly)l.sort(function(a,b){return (+b.c||0)-(+a.c||0)});return l}
   function draw(k){
     var list=listFor(k);
     if(!list.length){el.innerHTML='<div class="empty">No '+esc(mk(k).name)+' props posted yet.</div>';return}
