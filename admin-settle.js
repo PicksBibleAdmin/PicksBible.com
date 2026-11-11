@@ -93,7 +93,12 @@
         return r;
       });
       let ch = false;
-      v.legs.forEach((l, i) => { if ((l.res || "") !== res[i]) { l.res = res[i]; ch = true; } });
+      v.legs.forEach((l, i) => {
+        if ((l.res || "") !== res[i]) { l.res = res[i]; ch = true; }
+        const f = (db.fixtures || []).find(x => x.id === l.fid), sc = f && scoreOf(f);     /* the box on the site: your typed final result, else the match's full-time score */
+        const ft = (l.ftMan || "").trim() || (sc ? sc.join("-") : "");
+        if ((l.ft || "") !== ft) { if (ft) l.ft = ft; else delete l.ft; ch = true; }
+      });
       if (v.draft) { if (ch) out.changed = true; return; }          /* drafts are never settled */
       if (v.stMan === "won" || v.stMan === "lost" || v.stMan === "pending") {   /* package result marked by hand: the scores never change it */
         const m = v.stMan === "pending" ? "" : v.stMan;

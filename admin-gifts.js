@@ -58,11 +58,6 @@
   <div class="row" style="gap:8px"><button type="button" class="btn" id="bgSave">Save gift</button><button type="button" class="btn ghost" id="bgCancel" hidden>Cancel edit</button></div>
 </div>
 <div class="card">
-  <h2>Dice Roll winners <span class="muted" id="dwCount"></span></h2>
-  <p class="note">Prizes won in the dice game (a visitor's win shows as \"visitor, not claimed yet\" until they sign up). Credit the prize (Customers tab: Mark paid for VIP days), then tick Done. For the jackpot, verify the winner before paying.</p>
-  <div id="dwList"><p class="note">Loading...</p></div>
-</div>
-<div class="card">
   <h2>Your gifts <span class="muted" id="bgCount"></span></h2>
   <div id="bgList"><p class="note">Loading...</p></div>
 </div>`;
@@ -83,7 +78,6 @@
     $("#bgLegs").addEventListener("input", e => { if (e.target.classList.contains("gs")) legs[+e.target.closest(".leg").dataset.i].sel = e.target.value; });
     $("#bgLegs").addEventListener("click", e => { if (e.target.classList.contains("gx")) { legs.splice(+e.target.closest(".leg").dataset.i, 1); if (!legs.length) legs = [empty()]; drawLegs(); } });
     $("#bgList").addEventListener("click", onList);
-    $("#dwList").addEventListener("click", async e => { const b = e.target.closest("[data-wa]"); if (!b) return; try { await Store.fs.collection("dice_wins").doc(b.closest("[data-w]").dataset.w).update({ fulfilled: b.dataset.wa === "done" }); loadWins(); } catch (err) { toast("Could not update (" + (err.code || err.message) + ")"); } });
     drawLegs();
   }
 
@@ -136,16 +130,7 @@
     catch (e) { out("Could not save (" + (e.code || e.message) + "). Publish the new Firestore rules first."); }
     $("#bgSave").disabled = false;
   }
-  async function loadWins() {
-    try {
-      const s = await Store.fs.collection("dice_wins").get(); const w = []; s.forEach(d => w.push(Object.assign({ id: d.id }, d.data())));
-      w.sort((a, b) => String(b.at).localeCompare(String(a.at)));
-      $("#dwCount").textContent = w.length ? "(" + w.length + ")" : "";
-      $("#dwList").innerHTML = w.length ? w.slice(0, 100).map(x => `<div class="gl" data-w="${esc(x.id)}"><div><b>${esc(x.prizeName || x.prize)}</b> · ${esc(x.email || (x.guest ? "visitor, not claimed yet" : ""))}<small>${esc(String(x.at || "").slice(0, 16).replace("T", " "))} UTC · ${x.fulfilled ? "Done" : "NOT credited yet"}</small></div><div><button type="button" class="btn ${x.fulfilled ? "ghost" : ""} sm" data-wa="${x.fulfilled ? "undo" : "done"}">${x.fulfilled ? "Undo" : "Done"}</button></div></div>`).join("") : '<p class="note">No winners yet.</p>';
-    } catch (e) { $("#dwList").innerHTML = '<p class="note">Could not load (' + esc(e.code || e.message) + '). Publish the new Firestore rules first.</p>'; }
-  }
   async function load(quiet) {
-    loadWins();
     try {
       Store.fs.collection("users").get().then(u => { users = []; u.forEach(d => users.push(Object.assign({ id: d.id }, d.data()))); users.sort((a, b) => String(a.name || a.email).localeCompare(String(b.name || b.email))); specDraw(); }).catch(() => {});
       const s = await Store.fs.collection("gifts").get(); gifts = []; s.forEach(d => gifts.push(Object.assign({ id: d.id }, d.data())));

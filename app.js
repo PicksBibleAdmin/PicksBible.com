@@ -83,7 +83,7 @@ function applyLive(P,live){
 function addProp(P,p){
   var k=String(p.kickoff||"").slice(0,10); if(!k)return;
   var team=p.team||"", other=team===p.home?p.away:p.home;
-  (P.propsByDate[k]=P.propsByDate[k]||[]).push({k:p.market,player:p.player||"",team:team,opp:team?("vs "+other):(p.home+" v "+p.away),m:(p.home||"")+" v "+(p.away||""),fx:p.fixtureId||"",line:p.line||"",pick:p.side||"",odds:p.odds||"",st:p.st||"pending",x:!!p.xt,c:p.conf==null?"":String(p.conf).replace("%","")});
+  (P.propsByDate[k]=P.propsByDate[k]||[]).push({k:p.market,player:p.player||"",team:team,opp:team?("vs "+other):(p.home+" v "+p.away),m:(p.home||"")+" v "+(p.away||""),fx:p.fixtureId||"",line:p.line||"",pick:p.side||"",odds:p.odds||"",st:p.st||"pending",a:(p.stat==null||p.stat==="")?"":String(p.stat),x:!!p.xt,c:p.conf==null?"":String(p.conf).replace("%","")});
 }
 /* Banker Bet market: the analyst picks a market, types the odds for every option and marks which one is ours.
    Returns {m:market, l:[option labels], o:[odds], i:index of our selection or -1}, or null when no market was chosen. */
@@ -110,7 +110,7 @@ function addFx(P,f,days){
     var cname=(function(){var c=String(f.country||""),k=String(f.competition||"");if(!c)return k;if(k.toLowerCase().indexOf(c.toLowerCase())===0)k=k.slice(c.length).replace(/^[\s:\-\u00b7]+/,"");return c+": "+k})();
     if(f.et&&f.et.on&&hd)(P.home.etl[sp][hd]=P.home.etl[sp][hd]||[]).push({h:f.home,a:f.away,lg:cname,t:lt(f.kickoff),by:"Admin",st:f.et.st||"",sp:sp});
     var bm=(f.et&&f.et.on)?etBM(f):null;
-    if(f.et&&f.et.on&&hd)P.home.et[sp][hd]={bm:bm,h:f.home,a:f.away,lg:cname,t:lt(f.kickoff),by:"Admin",st:f.et.st||(f.et.mk==="Player Prop"?"":((sp==="basketball"?(f.bb&&f.bb.st):(f.fb&&f.fb.st))==="won"||(sp==="basketball"?(f.bb&&f.bb.st):(f.fb&&f.fb.st))==="lost"?(sp==="basketball"?f.bb.st:f.fb.st):"")),reasoning:f.et.reasoning||"",aff:f.et.aff||"",hl:f.et.hl||"",al:f.et.al||"",hc:f.hc||"",ac:f.ac||"",sp:sp,tip:(f.et.pick||(bm&&bm.i>=0?bm.l[bm.i]:"")||(sp==="basketball"?(f.bb&&f.bb.tip):(f.fb&&f.fb.tip))||""),conf:String(f.et.conf||(sp==="basketball"?(f.bb&&f.bb.conf):(f.fb&&f.fb.conf))||"").replace("%",""),score:(sp==="basketball"?(f.bb&&f.bb.score):(f.fb&&f.fb.score))||"",odd:String(f.et.odd||"").trim()||(bm&&bm.i>=0?String(bm.o[bm.i]||""):"")||(function(){var x=sp==="basketball"?(f.bb||{}):(f.fb||{}),t=String(f.et.pick||x.tip||"");return t==="1"?x.o1:t==="2"?x.o2:t==="X"?x.oX:t==="1X"?x.dcOdds:""})()||""};
+    if(f.et&&f.et.on&&hd)P.home.et[sp][hd]={bm:bm,h:f.home,a:f.away,lg:cname,t:lt(f.kickoff),by:"Admin",st:f.et.st||(f.et.mk==="Player Prop"?"":((sp==="basketball"?(f.bb&&f.bb.st):(f.fb&&f.fb.st))==="won"||(sp==="basketball"?(f.bb&&f.bb.st):(f.fb&&f.fb.st))==="lost"?(sp==="basketball"?f.bb.st:f.fb.st):"")),reasoning:f.et.reasoning||"",act:f.et.act||"",mk:f.et.mk||"",aff:f.et.aff||"",hl:f.et.hl||"",al:f.et.al||"",hc:f.hc||"",ac:f.ac||"",sp:sp,tip:(f.et.pick||(bm&&bm.i>=0?bm.l[bm.i]:"")||(sp==="basketball"?(f.bb&&f.bb.tip):(f.fb&&f.fb.tip))||""),conf:String(f.et.conf||(sp==="basketball"?(f.bb&&f.bb.conf):(f.fb&&f.fb.conf))||"").replace("%",""),score:(sp==="basketball"?(f.bb&&f.bb.score):(f.fb&&f.fb.score))||"",odd:String(f.et.odd||"").trim()||(bm&&bm.i>=0?String(bm.o[bm.i]||""):"")||(function(){var x=sp==="basketball"?(f.bb||{}):(f.fb||{}),t=String(f.et.pick||x.tip||"");return t==="1"?x.o1:t==="2"?x.o2:t==="X"?x.oX:t==="1X"?x.dcOdds:""})()||""};
     if(f.bo&&f.bo.on&&hd){var bl=P.home.bo[sp][hd]=P.home.bo[sp][hd]||[];bl.push({lg:cname,t:(f.bo.st==="won"||f.bo.st==="lost")?"FT":lt(f.kickoff),h:f.home,a:f.away,pick:f.bo.pick||"",st:f.bo.st||"pending",sc:f.bo.score||""})}
     if(!((f.fb&&f.fb.live)||(f.bb&&f.bb.live)))return;
     if(f.sport==="basketball"){
@@ -382,6 +382,9 @@ function sortByLeague(list){
   });
 }
 function firstIdx(list,lg){for(var i=0;i<list.length;i++)if(list[i].lg===lg)return i;return 0}
+/* small "full time" box: shown only when there is a real final result to show */
+function ftBox(txt,lab){txt=String(txt==null?"":txt).trim();return txt?'<span class="ftb" title="Final result"><i>'+esc(lab||"")+'</i><b>'+esc(txt)+'</b></span>':""}
+function etFT(v){if(!v||(v.st!=="won"&&v.st!=="lost"))return"";var prop=v.mk==="Player Prop";return ftBox(v.act||(prop?"":v.score),prop?"Final":"FT")}
 function scoreLine(m){return m.score?'<span class="sc">'+esc(m.score)+'</span>':'<span class="sc" style="color:var(--muted)">-:-</span>'}
 
 /* ---------- full prediction tables ---------- */
@@ -588,8 +591,8 @@ function showVipDay(label,x){
   var el=document.createElement("div");el.id="pbVipDay";
   el.innerHTML='<div class="vd" role="dialog" aria-modal="true" aria-label="'+label+' VIP picks"><button class="vx" type="button" aria-label="Close">&times;</button>'+
     '<h3>'+label+' VIP picks</h3><div class="vsub">'+esc(d)+'</div><div style="margin:8px 0"><span class="vr '+x.st+'">'+(x.st==="won"?"&#10003; Won":"Lost")+'</span></div>'+
-    '<table><thead><tr><th>Match</th><th>Market</th><th>Pick</th></tr></thead><tbody>'+x.legs.map(function(l){
-      return '<tr><td>'+esc(l.home)+' v '+esc(l.away)+'<br><small>'+esc(l.comp||"")+(l.ko?" &middot; "+esc(lt(l.ko)):"")+'</small></td><td>'+esc(l.market)+'</td><td><b>'+esc(l.sel)+'</b> '+(l.res==="won"?'<span style="color:var(--won)">&#10003;</span>':l.res==="lost"?'<span style="color:var(--lost)">&#10005;</span>':l.res==="push"?'<small>(void)</small>':'')+'</td></tr>'}).join("")+
+    '<table><thead><tr><th>Match</th><th>Market</th><th>Pick</th><th>FT</th></tr></thead><tbody>'+x.legs.map(function(l){
+      return '<tr><td>'+esc(l.home)+' v '+esc(l.away)+'<br><small>'+esc(l.comp||"")+(l.ko?" &middot; "+esc(lt(l.ko)):"")+'</small></td><td>'+esc(l.market)+'</td><td><b>'+esc(l.sel)+'</b> '+(l.res==="won"?'<span style="color:var(--won)">&#10003;</span>':l.res==="lost"?'<span style="color:var(--lost)">&#10005;</span>':l.res==="push"?'<small>(void)</small>':'')+'</td><td>'+(ftBox(l.ft,"")||'<small>&ndash;</small>')+'</td></tr>'}).join("")+
     '</tbody></table><div class="vt">Total odds: '+esc(x.odds)+'</div></div>';
   document.body.appendChild(el);
   function close(){el.remove();document.removeEventListener("keydown",esc_)}
@@ -644,6 +647,7 @@ $$("[data-home]").forEach(function(hero){
     if(!v)return head+'<div class="empty">No matches available.</div></div>';
     return head+
       '<div class="vb-lg"><span class="fl">'+flagByLabel(v.lg)+'</span>'+esc(v.lg)+'</div><div class="vb-main"><div class="vb-t">'+teamCrest(v.h,v.hl,v.sp,v.hc)+'<div class="vb-team">'+esc(v.h)+'</div></div><div class="vb-mid"><strong>'+esc(v.t)+'</strong><span class="vs">VS</span></div><div class="vb-t">'+teamCrest(v.a,v.al,v.sp,v.ac)+'<div class="vb-team">'+esc(v.a)+'</div></div></div>'+
+      (etFT(v)?'<div class="ftrow">'+etFT(v)+'</div>':'')+
       '<a class="etlock'+(v.st==="won"?" won":v.st==="lost"?" lost":"")+'" href="expert-tips.html?s='+sp+'&d='+selYmd()+'" aria-label="Open the reasoning for this Banker Bet of the Day"><span class="lockico" aria-hidden="true">'+(v.st==="won"?"&#10003;":"&#128274;")+'</span><span class="locktxt">View Banker Bet</span></a>'+
       '<div class="vb-by"><span>BANKER BET OF THE DAY BY: <b>'+esc(v.by)+'</b></span><span>'+(sp==="football"?"&#9917; Football":"&#127936; Basketball")+'</span></div>'+
       '</div>';
@@ -754,7 +758,7 @@ $$("[data-analysis]").forEach(function(el){
    '<div class="bbhero"><div class="crumbs"><a href="/">Home</a> &rsaquo; <a href="/">Banker Bet of the Day</a> &rsaquo; '+esc(v.h)+' vs '+esc(v.a)+'</div>'+
    '<p class="bbcomp">'+esc(v.lg)+' <i>&bull;</i> '+esc(dateTxt)+'</p>'+
    '<div class="bbteams"><div class="bbteam">'+teamCrest(v.h,v.hl,v.sp,v.hc)+'<b>'+esc(v.h)+'</b></div>'+
-   '<div class="bbvs"><strong>VS</strong><span>'+(ft?'FT '+ft:esc(v.t))+'</span></div>'+
+   '<div class="bbvs"><strong>VS</strong><span>'+(ft?'FT '+ft:esc(v.t))+'</span>'+(etFT(v)?'<div class="ftrow">'+etFT(v)+'</div>':'')+'</div>'+
    '<div class="bbteam">'+teamCrest(v.a,v.al,v.sp,v.ac)+'<b>'+esc(v.a)+'</b></div></div>'+
    '<h1>'+esc(title)+' | '+esc(shortDate)+'</h1>'+
    '<p class="bbintro">'+esc(v.h)+' welcome '+esc(v.a)+' in the '+esc(v.lg)+' on '+esc(dateTxt)+', with our prediction model identifying '+(selTxt?'<b>'+esc(selTxt)+'</b>':'our selection')+' as the best betting opportunity for this fixture.</p></div>'+
@@ -776,18 +780,18 @@ $$("[data-cat]").forEach(function(el){
   var picked=function(m,k){return m.xt&&m.xt.indexOf(k)>=0};
   var isTip=function(m,re){var t=String(m.pk||m.tip||"");return re.test(t)};
   var CATS={
-    "1x2":{h:["1","X","2","Tip","Conf"],ok:function(m){return picked(m,"1x2")&&isTip(m,/^[1X2]$/)},row:function(m){return oddCell(m,0,"1")+oddCell(m,1,"X")+oddCell(m,2,"2")+'<td class="kv">'+pkBadge(m)+'</td>'+confCell(m)}},
-    "btts":{h:["BTTS Tip","Conf"],ok:function(m){return picked(m,"btts")&&!!m.gg},row:function(m){return extraPick(m.gg,"","BTTS")+confCell(m)}},
-    "ou25":{h:["Over/Under 2.5","Conf"],ok:function(m){return picked(m,"ou25")&&!!m.ou},row:function(m){return extraPick(ouLabel2(m),"","O/U")+confCell(m)}},
-    "dc":{h:["Double Chance","Conf"],ok:function(m){return picked(m,"dc")&&isTip(m,/^(1X|X2|12)$/)},row:function(m){return '<td class="kv">'+pkBadge(m)+'</td>'+confCell(m)}},
-    "cs":{h:["Correct Score","Conf"],ok:function(m){return picked(m,"cs")&&!!m.cs},row:function(m){return '<td class="cs kv">'+esc(m.cs)+'</td>'+confCell(m)}},
-    "ml":{h:["1","2","Tip","Conf"],ok:function(m){return picked(m,"ml")&&(m.mls==="1"||m.mls==="2")},row:function(m){
+    "1x2":{h:["1","X","2","Tip"],ok:function(m){return picked(m,"1x2")&&isTip(m,/^[1X2]$/)},row:function(m){return oddCell(m,0,"1")+oddCell(m,1,"X")+oddCell(m,2,"2")+'<td class="kv">'+pkBadge(m)+'</td>'}},
+    "btts":{h:["BTTS Tip"],ok:function(m){return picked(m,"btts")&&!!m.gg},row:function(m){return extraPick(m.gg,"","BTTS")}},
+    "ou25":{h:["Over/Under 2.5"],ok:function(m){return picked(m,"ou25")&&!!m.ou},row:function(m){return extraPick(ouLabel2(m),"","O/U")}},
+    "dc":{h:["Double Chance"],ok:function(m){return picked(m,"dc")&&isTip(m,/^(1X|X2|12)$/)},row:function(m){return '<td class="kv">'+pkBadge(m)+'</td>'}},
+    "cs":{h:["Correct Score"],ok:function(m){return picked(m,"cs")&&!!m.cs},row:function(m){return '<td class="cs kv">'+esc(m.cs)+'</td>'}},
+    "ml":{h:["1","2","Tip"],ok:function(m){return picked(m,"ml")&&(m.mls==="1"||m.mls==="2")},row:function(m){
       var i=+m.mls-1,c=Object.assign({},m,{pk:m.mls}),sc=String(m.score||"").match(/(\d+)\s*[-:]\s*(\d+)/),st="pending";
       if(sc){var A=+sc[1],B=+sc[2];if(A!==B)st=((A>B)===(i===0))?"won":"lost"}
       var t=Object.assign({},m,{pk:i===0?m.h:m.a,tip:i===0?m.h:m.a,to:m.o[i]||"",st:st});
-      return oddCell(c,0,"1")+oddCell(c,1,"2")+'<td class="kv">'+pkBadge(t)+'</td>'+confCell(m)}},
-    "ats":{h:["Spread Pick","Conf"],ok:function(m){return picked(m,"ats")&&isTip(m,/\s/)},row:function(m){return '<td class="kv">'+pkBadge(m)+'</td>'+confCell(m)}},
-    "totals":{h:["Point Total","Conf"],ok:function(m){return picked(m,"totals")&&!!m.ts},row:function(m){return '<td class="kv"><span class="xp"><b>'+esc(m.ts+(m.tl?" "+m.tl:""))+'</b></span></td>'+confCell(m)}}
+      return oddCell(c,0,"1")+oddCell(c,1,"2")+'<td class="kv">'+pkBadge(t)+'</td>'}},
+    "ats":{h:["Spread Pick"],ok:function(m){return picked(m,"ats")&&isTip(m,/\s/)},row:function(m){return '<td class="kv">'+pkBadge(m)+'</td>'}},
+    "totals":{h:["Point Total"],ok:function(m){return picked(m,"totals")&&!!m.ts},row:function(m){return '<td class="kv"><span class="xp"><b>'+esc(m.ts+(m.tl?" "+m.tl:""))+'</b></span></td>'}}
   };
   function ouLabel2(m){return m.ou?(m.ou==="Over"?"Over 2.5":"Under 2.5"):""}
   var C=CATS[cat];
@@ -820,7 +824,7 @@ $$("[data-props]").forEach(function(el){
       '<div class="propav">🏀</div>'+
       '<div class="propinfo"><b>'+esc(team?p.team:p.player)+'</b><span>'+esc(team?"":p.team+" ")+esc(p.opp||"")+'</span></div>'+
       '<div class="propmkt">'+esc(m.name)+'</div>'+
-      '<div class="proppick"><span class="pick">'+esc(team?(m.short||"Pick"):p.pick+" "+p.line)+'</span><span class="o">'+(p.odds?'@ '+esc(p.odds):'')+'</span>'+(expertOnly&&p.c?'<span class="conf '+(+p.c>55?'hi':+p.c>=45?'mid':'lo')+'">'+esc(p.c)+'%</span>':'')+'</div>'+(p.st==="won"?'<span class="bigmark won" aria-label="Won">&#10003;</span>':p.st==="lost"?'<span class="bigmark lost" aria-label="Did not land"></span>':'')+
+      '<div class="proppick"><span class="pick">'+esc(team?(m.short||"Pick"):p.pick+" "+p.line)+'</span><span class="o">'+(p.odds?'@ '+esc(p.odds):'')+'</span>'+((p.st==="won"||p.st==="lost")?ftBox(p.a,"Final"):'')+'</div>'+(p.st==="won"?'<span class="bigmark won" aria-label="Won">&#10003;</span>':p.st==="lost"?'<span class="bigmark lost" aria-label="Did not land"></span>':'')+
     '</div>';
   }
   var expertOnly=el.hasAttribute("data-expert");   /* Best NBA Player Props page: only the props the analyst ticked, strongest first */

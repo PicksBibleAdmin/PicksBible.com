@@ -286,7 +286,7 @@ tr.lghead td{background:#ffffff0d;padding:10px 8px;border-bottom:1px solid var(-
   </div>
   <div class="card">
     <h2>Basketball props <span class="muted" id="rsPrCount"></span></h2>
-    <div class="tbl"><table class="ft"><thead><tr><th>Game</th><th>Prop</th><th>Pick</th><th>Odds</th><th>Result</th></tr></thead><tbody id="rsPrBody"></tbody></table></div>
+    <div class="tbl"><table class="ft"><thead><tr><th>Game</th><th>Prop</th><th>Pick</th><th>Odds</th><th>Result</th><th title="The player's final number, shown on the site next to the pick">Final stat</th></tr></thead><tbody id="rsPrBody"></tbody></table></div>
   </div>
 </section>
 
@@ -457,7 +457,7 @@ const Store = {
       const recent = r => { const k=String(r.kickoff||"").slice(0,10); return k >= cutoff && k <= farOut; };
       const snap = {
         fixtures: db.fixtures.filter(f=>liveOf("fixtures",f) && (recent(f) || homeBox(f))).map(f=>this.docOf("fixtures",f)),
-        vip:      (db.vip||[]).filter(v=>v.tier==="bronze"&&v.ymd>=cut120).map(v=>{ const o={ymd:v.ymd,tier:"bronze",odds:v.draft?"":(v.odds||""),st:v.st||""}; if((v.st==="won"||v.st==="lost")&&!v.draft&&v.legs&&v.legs.length) o.legs=v.legs.map(l=>({sport:l.sport,home:l.home,away:l.away,comp:l.comp,ko:l.ko,market:l.market,sel:l.sel,res:l.res||""})); else if(!v.draft&&v.legs&&v.legs.length){ const g=v.legs[0]; o.teaser={n:v.legs.length,g:{sport:g.sport,home:g.home,away:g.away,comp:g.comp,ko:g.ko}}; } return o; }),
+        vip:      (db.vip||[]).filter(v=>v.tier==="bronze"&&v.ymd>=cut120).map(v=>{ const o={ymd:v.ymd,tier:"bronze",odds:v.draft?"":(v.odds||""),st:v.st||""}; if((v.st==="won"||v.st==="lost")&&!v.draft&&v.legs&&v.legs.length) o.legs=v.legs.map(l=>({sport:l.sport,home:l.home,away:l.away,comp:l.comp,ko:l.ko,market:l.market,sel:l.sel,res:l.res||"",ft:l.ft||""})); else if(!v.draft&&v.legs&&v.legs.length){ const g=v.legs[0]; o.teaser={n:v.legs.length,g:{sport:g.sport,home:g.home,away:g.away,comp:g.comp,ko:g.ko}}; } return o; }),
         props:    db.props.filter(r=>liveOf("props",r)).map(r=>this.docOf("props",r)).filter(recent)
       };
       const sj = JSON.stringify(snap);
@@ -793,6 +793,7 @@ function bbCell(f,e){
       `<br><b>Our selection:</b> <select data-g="et" data-f="ours"><option value="">Choose</option>${lab.map((l,i)=>`<option value="${i}" ${String(e.ours)===String(i)?"selected":""}>${esc(l)}</option>`).join("")}</select>`;
   }
   h += ` <input data-g="et" data-f="conf" value="${esc(e.conf||"")}" placeholder="Confidence %" style="width:110px" maxlength="4" inputmode="numeric" title="Your confidence in this Banker Bet, e.g. 78. Leave empty to use the table confidence."><br>`;
+  h += `<b>Final result:</b> <input data-g="et" data-f="act" value="${esc(e.act||"")}" placeholder="${e.mk==="Player Prop"?"Player's final number, e.g. 9":"Optional, e.g. 112-108 (else the match score)"}" style="width:230px" maxlength="24" title="Shown in a small box on the site once the bet is settled. For a player prop, type the player's actual number."><br>`;
   return h;
 }
 function renderHome(){
@@ -1121,7 +1122,8 @@ function renderResults(){
   $("#rsPrCount").textContent = pr.length ? `(${pr.filter(p=>isDone(p.st)).length} of ${pr.length} settled)` : "";
   $("#rsPrBody").innerHTML = prShow.length ? prShow.map(p=>{ const f=fxById(p.fixtureId)||{home:"?",away:"?"}, m=PROP_MARKETS.find(x=>x.k===p.market);
     return `<tr data-id="${p.id}"><td><b>${esc(f.home)}</b> v <b>${esc(f.away)}</b></td><td>${esc(m?m.name:p.market)}</td><td>${esc(propPick(p))}</td><td>${esc(p.odds||"-")}</td>
-      <td>${resSel(p.st==="pending"?"":p.st,'data-f="st"')}</td></tr>`; }).join("") : `<tr><td colspan="5" class="empty">${pr.length?"Settled.":"No live props on this day."}</td></tr>`;
+      <td>${resSel(p.st==="pending"?"":p.st,'data-f="st"')}</td>
+      <td><input class="odd" type="number" step="0.5" data-f="stat" value="${p.stat==null?"":esc(p.stat)}" placeholder="e.g. 9" style="width:80px" aria-label="Final stat"></td></tr>`; }).join("") : `<tr><td colspan="6" class="empty">${pr.length?"Settled.":"No live props on this day."}</td></tr>`;
   setResultsBtn();
 }
 $("#rsBody").addEventListener("change", e => {
@@ -1147,6 +1149,7 @@ $("#rsBoBody").addEventListener("change", e => {
 $("#rsPrBody").addEventListener("change", e => {
   const el=e.target, tr=el.closest("tr"); if(!tr||!el.dataset.f) return;
   const p=db.props.find(x=>x.id===tr.dataset.id); if(!p) return;
+  if(el.dataset.f==="stat"){ const v=el.value.trim(); if(v===""||isNaN(+v)) delete p.stat; else p.stat=+v; Store.save(db); toast(v===""?"Final stat cleared":"Final stat saved"); return; }
   p.st = el.value.trim()||"pending"; Store.save(db); renderResults();
 });
 $("#rsDate").onchange = renderResults; $("#rsOpen").onchange = renderResults;

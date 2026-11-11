@@ -1273,22 +1273,6 @@ html[data-theme="light"] .themebtn{background:#FFFFFF;border-color:#2563EB;color
 .dicehero .dh-fine{display:block;margin-top:10px;font:500 11.5px var(--body);color:#a5b4fc}
 .dicehero .spark{position:absolute;width:6px;height:6px;border-radius:50%;background:#93C5FD;opacity:0;animation:spark 3s ease-in-out infinite}
 @keyframes spark{0%{opacity:0;transform:translateY(8px) scale(.4)}40%{opacity:1}100%{opacity:0;transform:translateY(-26px) scale(1.2)}}
-@media(min-width:1000px){.hero{position:relative}.hero .wrap{position:relative}.dicehero.dh-home{position:absolute;right:16px;top:26px;width:340px;margin:0}.hero .wrap>h1,.hero .wrap>p{max-width:calc(100% - 372px)}.hero .wrap>.hdates{max-width:calc(100% - 372px)}}
-/* phone: the card sits in the column beside the headline and stretches to fill it */
-@media(max-width:999px){
-  .hero .wrap{display:grid;grid-template-columns:minmax(0,1fr) 132px;column-gap:12px;align-items:start}
-  .hero .wrap>*{grid-column:1/-1}
-  .hero .wrap>h1{grid-column:1;grid-row:1;padding-right:0}
-  .hero .wrap>.dicehero.dh-home{grid-column:2;grid-row:1;align-self:stretch;margin:0;padding:10px 6px 11px;border-radius:16px;display:flex;flex-direction:column;justify-content:center;align-items:center}
-  .dicehero.dh-home .spark{display:none}
-  .dicehero.dh-home .dh-jp{font-size:27px;line-height:.95}.dicehero.dh-home .dh-jp span,.dicehero.dh-home .dh-jp em{display:block}.dicehero.dh-home .dh-jp em{font-style:normal;font-size:15px;letter-spacing:.16em;margin-top:3px}
-  .dicehero.dh-home .dh-sub,.dicehero.dh-home .dh-fine{display:none}
-  .dicehero.dh-home .dh-stage{padding:11px 0 12px;gap:14px;perspective:340px}
-  .dicehero.dh-home .cube{--s:34px}
-  .dicehero.dh-home .cube .face{padding:3px;border-radius:6px;gap:0}.dicehero.dh-home .cube .face i{width:5px;height:5px}
-  .dicehero.dh-home .dh-btn{font-size:12.5px;padding:8px 13px;line-height:1.1}
-  .dicehero.dh-home .dh-fine{font-size:9.5px;margin-top:7px;line-height:1.25}
-}
 /* 3D dice: brand navy glass, cyan pips, gold ace */
 .cube{--s:62px;width:var(--s);height:var(--s);position:relative;transform-style:preserve-3d;animation:cubeRoll 7s linear infinite}
 .cube.b{animation-duration:9s;animation-direction:reverse}
@@ -1457,3 +1441,12 @@ html[data-theme="light"] .bbbox,html[data-theme="light"] .bbin{background:#EEF1F
 html[data-theme="light"] .ckcard h2,html[data-theme="light"] .ck-info b,html[data-theme="light"] .ck-m,html[data-theme="light"] .ck-sum dd,html[data-theme="light"] .ck-sum .ck-total,html[data-theme="light"] .ck label{color:var(--text)}
 html[data-theme="light"] .ck-paybox h2,html[data-theme="light"] .ck-paybox dd{color:#F8FAFC}
 html[data-theme="light"] .ck-total span,html[data-theme="light"] .ck-total b{color:var(--text)}
+
+/* full-time result box: banker bets, player props, VIP days (neutral, so it never competes with won/lost colours) */
+.ftb{display:inline-flex;align-items:baseline;gap:5px;padding:2px 8px;border:1.5px solid var(--line);border-radius:7px;background:var(--panel-2,transparent);color:var(--text);font:700 12.5px/1.3 var(--body);white-space:nowrap}
+.ftb i{font-style:normal;font-weight:700;font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.ftb i:empty{display:none}
+.ftb b{font-weight:800;font-variant-numeric:tabular-nums}
+.ftrow{display:flex;justify-content:center;margin:0 14px 8px}
+.bbvs .ftrow{margin:6px 0 0}
+.proppick .ftb{margin-top:3px}

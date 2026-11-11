@@ -1,14 +1,11 @@
-/* PicksBible admin: "10. Live" tab. Two real-time trackers:
-   1) members who were active (logged in) today, with the last 7 days;
-   2) every dice roll as it happens, with totals and prizes.
+/* PicksBible admin: "10. Live" tab. Real-time tracker: members who were active (logged in) today, with the last 7 days.
    Uses page globals: Store, esc, showTab. Updates by itself (Firestore snapshots), no refresh needed. */
 (function () {
   "use strict";
   const $ = s => document.querySelector(s);
   const lagos = d => new Intl.DateTimeFormat("en-CA", { timeZone: "Africa/Lagos" }).format(d || new Date());
-  let unsubs = [], day = "", follow = true, act = [], act7 = [], rolls = [], started = false, tick = null;
+  let unsubs = [], day = "", follow = true, act = [], act7 = [], started = false, tick = null;
   const shift = (ymd, n) => lagos(new Date(Date.parse(ymd + "T12:00:00Z") + n * 864e5));
-  const PN = { jackpot: "JACKPOT", vip7: "1 week VIP", vip1: "VIP day", pick: "Bonus pick" };  /* "pick" only appears for old rolls */
 
   function mount() {
     const nav = document.querySelector("nav.tabs");
@@ -33,16 +30,10 @@
  <p class="note">Pick any date to see that day. Today updates by itself. The day runs midnight to midnight, Lagos time. "Active members" counts each member once, the first time they open the site logged in that day.</p>
  <div class="kpis">
   <div class="kpi"><b id="lvAct">-</b><span>Active members</span></div>
-  <div class="kpi"><b id="lvRolls">-</b><span>Dice rolls</span></div>
-  <div class="kpi"><b id="lvRM">-</b><span>by members</span></div>
-  <div class="kpi"><b id="lvRG">-</b><span>by visitors</span></div>
-  <div class="kpi"><b id="lvHr">-</b><span id="lvHrL">rolls, last hour</span></div>
-  <div class="kpi"><b id="lvWin">-</b><span>prizes won<br><small id="lvWinD"></small></span></div>
  </div>
  <p class="muted" id="lvErr"></p>
 </div>
 <div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(320px,1fr));align-items:start">
- <div class="card"><h2>Dice rolls, live</h2><div class="feed tbl"><table><thead><tr><th>Time</th><th>Who</th><th>Dice</th><th>Result</th></tr></thead><tbody id="lvFeed"><tr><td colspan="4" class="empty">Loading...</td></tr></tbody></table></div></div>
  <div>
   <div class="card"><h2>Members active, last 7 days</h2><div id="lvBars"></div></div>
   <div class="card"><h2>Active today</h2><div class="feed" id="lvWho"></div></div>
@@ -55,26 +46,20 @@
   }
   const hhmm = iso => { try { return new Intl.DateTimeFormat("en-GB", { timeZone: "Africa/Lagos", hour: "2-digit", minute: "2-digit", second: "2-digit" }).format(new Date(iso)); } catch (_) { return ""; } };
   function draw() {
-    if (!$("#lvFeed")) return;
+    if (!$("#lvBars")) return;
     const isToday = day === lagos();
-    $("#lvDay").textContent = "(" + day + ")"; $("#lvTitle").textContent = isToday ? "Live today" : "Stats for"; $("#lvDate").value = day; $("#lvHr").parentNode.style.display = isToday ? "" : "none";
+    $("#lvDay").textContent = "(" + day + ")"; $("#lvTitle").textContent = isToday ? "Live today" : "Stats for"; $("#lvDate").value = day;
     const todays = act7.filter(a => a.ymd === day);
     $("#lvAct").textContent = todays.length;
-    const rm = rolls.filter(r => !r.guest).length, hr = rolls.filter(r => Date.now() - Date.parse(r.at) < 36e5).length, wins = rolls.filter(r => r.prize);
-    $("#lvRolls").textContent = rolls.length; $("#lvRM").textContent = rm; $("#lvRG").textContent = rolls.length - rm; $("#lvHr").textContent = hr;
-    $("#lvWin").textContent = wins.length; $("#lvWinD").textContent = Object.entries(wins.reduce((m, w) => (m[w.prize] = (m[w.prize] || 0) + 1, m), {})).map(([k, v]) => v + " " + (PN[k] || k)).join(", ");
-    const feed = rolls.slice().sort((a, b) => String(b.at).localeCompare(String(a.at))).slice(0, 150);
-    $("#lvFeed").innerHTML = feed.length ? feed.map(r => `<tr><td>${esc(hhmm(r.at))}</td><td>${r.guest ? '<span class="muted">Visitor</span>' : esc(r.email || r.uid)}</td><td>${esc(r.d1)} + ${esc(r.d2)}</td><td>${r.prize ? '<span class="pz">' + esc(r.prizeName || PN[r.prize] || r.prize) + "</span>" : '<span class="muted">no prize</span>'}</td></tr>`).join("") : '<tr><td colspan="4" class="empty">No rolls on this day.</td></tr>';
     const days = []; for (let i = 6; i >= 0; i--) days.push(shift(day, -i));
     const cnt = days.map(d => act7.filter(a => a.ymd === d).length), mx = Math.max(1, ...cnt);
     $("#lvBars").innerHTML = days.map((d, i) => `<div class="bar"><span style="width:84px">${esc(d.slice(5))}${d === lagos() ? " (today)" : d === day ? " (selected)" : ""}</span><i style="width:${Math.round(cnt[i] / mx * 160)}px"></i><b>${cnt[i]}</b></div>`).join("");
     $("#lvWho").innerHTML = todays.length ? todays.sort((a, b) => String(b.at).localeCompare(String(a.at))).map(a => `<div class="bar"><span class="muted" style="width:70px">${esc(hhmm(a.at))}</span>${esc(a.email || a.uid)}</div>`).join("") : '<p class="muted">Nobody active on this day.</p>';
   }
   function listen(d) {
-    unsubs.forEach(u => u()); unsubs = []; day = d || lagos(); act7 = []; rolls = [];
-    const from = shift(day, -6), fs = Store.fs, err = e => { const m = $("#lvErr"); if (m) m.textContent = "Could not load (" + (e.code || e.message) + "). Publish the new Firestore rules (firestore.rules) first."; };
+    unsubs.forEach(u => u()); unsubs = []; day = d || lagos(); act7 = [];
+    const from = shift(day, -6), fs = Store.fs, err = e => { const m = $("#lvErr"); if (m) m.textContent = "Could not load (" + (e.code || e.message) + "). Publish the Firestore rules (firestore.rules) first."; };
     unsubs.push(fs.collection("activity").where("ymd", ">=", from).onSnapshot(s => { act7 = []; s.forEach(d => { const x = d.data(); if (x.ymd <= day) act7.push(x); }); draw(); }, err));
-    unsubs.push(fs.collection("dice_log").where("ymd", "==", day).onSnapshot(s => { rolls = []; s.forEach(d => rolls.push(d.data())); draw(); }, err));
   }
   function start() {
     if (started) return; started = true; listen();

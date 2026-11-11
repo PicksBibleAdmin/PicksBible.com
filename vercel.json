@@ -116,6 +116,16 @@
       "permanent": true
     },
     {
+      "source": "/dice.html",
+      "destination": "/",
+      "permanent": false
+    },
+    {
+      "source": "/dice",
+      "destination": "/",
+      "permanent": false
+    },
+    {
       "source": "/index.html",
       "destination": "/",
       "permanent": true

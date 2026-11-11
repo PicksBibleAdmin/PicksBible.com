@@ -170,7 +170,7 @@
           <div><label>Market</label><select class="lgk"><option value="">Select market</option>${mk}</select></div>
           <div><label>Selection</label><input class="lgs" list="vpkdl${i}" placeholder="${l.market ? "e.g. " + esc(MARKETS[l.market][0]) : "Select market first"}" value="${esc(l.sel)}"><datalist id="vpkdl${i}">${dl}</datalist></div>
         </div>
-        ${(() => { const cur = findEntry(state.pk, state.ymd); const sv = cur && !cur.draft && (cur.legs || []).find(x => x.fid === l.fid && x.market === l.market && x.sel === l.sel.trim()); return sv ? `<div style="margin-top:8px"><label>Result of this pick</label><select class="lgr"><option value="">Automatic${sv.res ? " (now " + sv.res + ")" : ""}</option><option value="won" ${sv.resMan === "won" ? "selected" : ""}>Won</option><option value="lost" ${sv.resMan === "lost" ? "selected" : ""}>Lost</option></select></div>` : ""; })()}
+        ${(() => { const cur = findEntry(state.pk, state.ymd); const sv = cur && !cur.draft && (cur.legs || []).find(x => x.fid === l.fid && x.market === l.market && x.sel === l.sel.trim()); return sv ? `<div style="margin-top:8px"><label>Result of this pick</label><select class="lgr"><option value="">Automatic${sv.res ? " (now " + sv.res + ")" : ""}</option><option value="won" ${sv.resMan === "won" ? "selected" : ""}>Won</option><option value="lost" ${sv.resMan === "lost" ? "selected" : ""}>Lost</option></select></div><div style="margin-top:8px"><label>Final score / stat (small box on the site)</label><input class="lgf" value="${esc(sv.ftMan || "")}" placeholder="${sv.ft ? "Automatic: " + esc(sv.ft) : "Automatic from the match score. For a player prop type e.g. 9"}" maxlength="24"></div>` : ""; })()}
         <div class="legfoot"><span class="muted">${f ? esc(f.competition || "") + " · " + esc(String(f.kickoff).slice(0, 16).replace("T", " ")) : ""}</span>${state.legs.length > 1 ? '<button type="button" class="btn danger lgx" style="padding:5px 10px">Remove</button>' : ""}</div>
       </div>`;
     }).join("");
@@ -215,6 +215,8 @@
       const out = { fid: l.fid, sport: f.sport || "football", home: f.home || "", away: f.away || "", comp: f.competition || "", ko: f.kickoff || "", market: l.market, sel: l.sel.trim() };
       if (prev.resMan) out.resMan = prev.resMan;
       if (prev.res) out.res = prev.res;
+      if (prev.ftMan) out.ftMan = prev.ftMan;
+      if (prev.ft) out.ft = prev.ft;
       return out;
     });
     e.draft = !!draft;
@@ -308,6 +310,10 @@
       const leg = e.target.closest(".leg"); if (!leg) return; const i = +leg.dataset.i;
       if (e.target.classList.contains("lgk")) { state.legs[i].market = e.target.value; state.legs[i].sel = ""; paint(); }
       if (e.target.classList.contains("lgs")) state.legs[i].sel = e.target.value;
+      if (e.target.classList.contains("lgf")) {
+        const cur = findEntry(state.pk, state.ymd), l = state.legs[i], sv = cur && (cur.legs || []).find(x => x.fid === l.fid && x.market === l.market && x.sel === l.sel.trim());
+        if (sv) { const v = e.target.value.trim(); if (v) { sv.ftMan = v; sv.ft = v; } else { delete sv.ftMan; delete sv.ft; } commit(); paint(); toast(v ? "Final score saved" : "Automatic: the match score is used"); }
+      }
       if (e.target.classList.contains("lgr")) {
         const cur = findEntry(state.pk, state.ymd), l = state.legs[i], sv = cur && (cur.legs || []).find(x => x.fid === l.fid && x.market === l.market && x.sel === l.sel.trim());
         if (sv) { if (e.target.value) sv.resMan = e.target.value; else { delete sv.resMan; sv.res = ""; } commit(); paint(); toast(e.target.value ? "Pick marked " + e.target.value : "Automatic: the scores decide"); }
