@@ -96,7 +96,12 @@
       v.legs.forEach((l, i) => {
         if ((l.res || "") !== res[i]) { l.res = res[i]; ch = true; }
         const f = (db.fixtures || []).find(x => x.id === l.fid), sc = f && scoreOf(f);     /* the box on the site: your typed final result, else the match's full-time score */
-        const ft = (l.ftMan || "").trim() || (sc ? sc.join("-") : "");
+        let ft = (l.ftMan || "").trim();
+        if (!ft && l.market === "Player Prop") {                      /* a player prop shows the PLAYER'S final number, never the match score: taken from the uploaded props result, else left empty for you to type */
+          const sel = String(l.sel || "").toLowerCase();
+          const pr = (db.props || []).find(x => x.fixtureId === l.fid && x.stat != null && x.stat !== "" && x.player && sel.indexOf(String(x.player).toLowerCase()) >= 0);
+          ft = pr ? String(pr.stat) : "";
+        } else if (!ft) ft = sc ? sc.join("-") : "";
         if ((l.ft || "") !== ft) { if (ft) l.ft = ft; else delete l.ft; ch = true; }
       });
       if (v.draft) { if (ch) out.changed = true; return; }          /* drafts are never settled */
