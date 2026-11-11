@@ -1450,3 +1450,5 @@ html[data-theme="light"] .ck-total span,html[data-theme="light"] .ck-total b{col
 .ftrow{display:flex;justify-content:center;margin:0 14px 8px}
 .bbvs .ftrow{margin:6px 0 0}
 .proppick .ftb{margin-top:3px}
+
+.ftrow.ftslot{min-height:26px;align-items:center}   /* always reserve the line so the Football and Basketball Banker Bet buttons line up */

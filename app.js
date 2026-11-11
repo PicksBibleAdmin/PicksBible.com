@@ -647,7 +647,7 @@ $$("[data-home]").forEach(function(hero){
     if(!v)return head+'<div class="empty">No matches available.</div></div>';
     return head+
       '<div class="vb-lg"><span class="fl">'+flagByLabel(v.lg)+'</span>'+esc(v.lg)+'</div><div class="vb-main"><div class="vb-t">'+teamCrest(v.h,v.hl,v.sp,v.hc)+'<div class="vb-team">'+esc(v.h)+'</div></div><div class="vb-mid"><strong>'+esc(v.t)+'</strong><span class="vs">VS</span></div><div class="vb-t">'+teamCrest(v.a,v.al,v.sp,v.ac)+'<div class="vb-team">'+esc(v.a)+'</div></div></div>'+
-      (etFT(v)?'<div class="ftrow">'+etFT(v)+'</div>':'')+
+      '<div class="ftrow ftslot">'+etFT(v)+'</div>'+
       '<a class="etlock'+(v.st==="won"?" won":v.st==="lost"?" lost":"")+'" href="expert-tips.html?s='+sp+'&d='+selYmd()+'" aria-label="Open the reasoning for this Banker Bet of the Day"><span class="lockico" aria-hidden="true">'+(v.st==="won"?"&#10003;":"&#128274;")+'</span><span class="locktxt">View Banker Bet</span></a>'+
       '<div class="vb-by"><span>BANKER BET OF THE DAY BY: <b>'+esc(v.by)+'</b></span><span>'+(sp==="football"?"&#9917; Football":"&#127936; Basketball")+'</span></div>'+
       '</div>';
