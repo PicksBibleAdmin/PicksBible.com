@@ -178,8 +178,7 @@
   }
   function options(q, legIdx) {
     q = q.trim().toLowerCase();
-    const used = new Set(state.legs.map((l, i) => i === legIdx ? "" : l.fid));
-    let list = db.fixtures.filter(f => f.home && f.away && !used.has(f.id));
+    let list = db.fixtures.filter(f => f.home && f.away);      /* the same match can be used in several picks (for example 3 players from one game) */
     if (!state.allDates) list = list.filter(f => String(f.kickoff).slice(0, 10) === state.ymd);
     if (q) list = list.filter(f => (f.home + " " + f.away + " " + (f.competition || "")).toLowerCase().includes(q));
     list.sort((a, b) => String(a.kickoff).localeCompare(String(b.kickoff)));
@@ -202,6 +201,8 @@
     const done = state.legs.filter(l => l.fid && l.market && l.sel.trim());
     if (!done.length) out.push("Add at least one complete pick (match, market and selection).");
     if (forPublish && done.length !== state.legs.length) out.push("Finish or remove the incomplete pick.");
+    const keys = done.map(l => l.fid + "|" + l.market + "|" + l.sel.trim().toLowerCase());
+    if (keys.some((k, i) => keys.indexOf(k) !== i)) out.push("Two picks are exactly the same (same match, market and selection). Remove one.");
     return out;
   }
   function buildEntry(draft) {
