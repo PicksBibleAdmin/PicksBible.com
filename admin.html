@@ -561,7 +561,7 @@ async function onSignedIn(user){
 /* ============ TABS ============ */
 function showTab(name){
   document.querySelectorAll("nav.tabs button").forEach(b=>b.setAttribute("aria-selected", b.dataset.tab===name));
-  ["fixtures","fbtable","bbtable","bbprops","home","results","vip","hub","gifts","live","blog","xtips","picks","published","data"].forEach(t=>{ const el=$("#tab-"+t); if(el) el.hidden = t!==name; });
+  ["fixtures","fbtable","bbtable","bbprops","home","results","vip","aff","hub","gifts","live","blog","xtips","picks","published","data"].forEach(t=>{ const el=$("#tab-"+t); if(el) el.hidden = t!==name; });
   { const vb=document.querySelector(".viewbar"); if(vb) vb.style.display = ["fixtures","fbtable","bbtable","bbprops"].includes(name) ? "" : "none"; }   /* the Showing / search bar does not apply to the Results tab */
 }
 document.querySelectorAll("nav.tabs button").forEach(b=>b.onclick=()=>{ if(b.dataset.tab==="picks") resetPick(); showTab(b.dataset.tab); });
@@ -1209,6 +1209,7 @@ try{
 </script>
 <script src="admin-csv-import.js"></script>
 <script src="admin-vip.js"></script>
+<script src="admin-aff.js"></script>
 <script>(function(){var r=document.documentElement,b=document.getElementById("themeBtn");
 function day(){var h=new Date().getHours();return h>=6&&h<18}
 function nextSwitch(){var d=new Date(),t=new Date(d);t.setMinutes(0,0,0);if(d.getHours()<6)t.setHours(6);else if(d.getHours()<18)t.setHours(18);else{t.setDate(t.getDate()+1);t.setHours(6)}return t.getTime()}

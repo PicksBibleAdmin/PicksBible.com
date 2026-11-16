@@ -80,6 +80,40 @@ function applyLive(P,live){
   props.sort(function(a,b){return String(a.kickoff).localeCompare(String(b.kickoff))});
   props.forEach(function(p){addProp(P,p)});
 }
+/* ---------- AFFILIATE PARTNER BUTTONS: one master list (admin tab "8. Partners") shown in four places ----------
+   Each place has a fixed number of slots [desktop, phone], so buttons never overflow. Partners are matched to the visitor's country,
+   ordered by priority, and only partners with a logo and an https link are ever shown. */
+var AFF_URL="https://firestore.googleapis.com/v1/projects/picksbible-7fa7f/databases/(default)/documents/public/aff?key=AIzaSyBBnSFHx_z1YWwOXz6sdKOSzelTIuvusa8";
+var AFF={list:[],cc:""}, AFFCAP={bets:[3,2],table:[2,2],props:[3,2],banker:[4,3]};
+function affBlob(d){try{var m=/^data:([^;]+);base64,(.*)$/.exec(d);if(!m)return"";var b=atob(m[2]),a=new Uint8Array(b.length);for(var i=0;i<b.length;i++)a[i]=b.charCodeAt(i);return URL.createObjectURL(new Blob([a],{type:m[1]}))}catch(e){return""}}
+function loadAff(done){
+  var fin=false,n=2;
+  function one(){if(--n===0)end()}
+  function end(){if(fin)return;fin=true;clearTimeout(t);done()}
+  var t=setTimeout(end,2500);
+  try{fetch(AFF_URL).then(function(r){return r.ok?r.json():{}}).then(function(j){try{var d=j&&j.fields?fsMap(j.fields):null;AFF.list=((d&&d.partners)||[]).filter(function(p){return p&&p.on!==false&&p.logo&&/^https:\/\//i.test(p.url||"")});AFF.list.forEach(function(p){p.src=affBlob(p.logo);p.logo=""})}catch(e){}one()}).catch(one)}catch(e){one()}
+  try{var q=new URLSearchParams(location.search).get("affcc");if(q){AFF.cc=q.toUpperCase().slice(0,2);one()}else fetch("/api/geo").then(function(r){return r.ok?r.json():{}}).then(function(j){AFF.cc=String((j&&j.c)||"").toUpperCase();one()}).catch(one)}catch(e){one()}
+}
+/* ax = the match's own override: "" (use the dashboard), "none", or "id1,id2" */
+function affFor(pl,ax){
+  var ids=ax?(ax==="none"?[]:String(ax).split(",")):null;
+  var L=(AFF.list||[]).filter(function(p){
+    if(!p.src)return false;
+    var c=p.cc||[]; if(c.length&&!(AFF.cc&&c.indexOf(AFF.cc)>=0))return false;
+    return ids?ids.indexOf(p.id)>=0:!!(p.pl&&p.pl[pl]);
+  });
+  L.sort(function(a,b){return (a.pri||99)-(b.pri||99)});
+  return L.slice(0,AFFCAP[pl][window.matchMedia("(max-width:700px)").matches?1:0]);
+}
+function affEsc(s){return String(s==null?"":s).replace(/[&<>"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]})}
+function affHtml(pl,ax,cap){
+  var L=affFor(pl,ax); if(!L.length)return "";
+  return '<span class="affwrap">'+(cap?'<span class="affcap">'+affEsc(cap)+'</span>':'')+'<span class="affg">'+L.map(function(p){
+    return '<a class="ax" href="'+affEsc(p.url)+'" target="_blank" rel="sponsored nofollow noopener" data-pl="'+pl+'" data-pn="'+affEsc(p.name)+'" aria-label="Bet with '+affEsc(p.name)+' (18+, opens their site)" title="Bet with '+affEsc(p.name)+'"><span class="lg" style="background:'+affEsc(p.bg||"#fff")+'"><img src="'+affEsc(p.src)+'" alt="" width="30" height="30" loading="lazy"></span><b>Bet</b></a>';
+  }).join("")+'</span></span>';
+}
+/* a logo that fails to load turns into the partner's letters in its own colour, so a button never shows a broken image */
+document.addEventListener("error",function(e){var i=e.target;if(i&&i.tagName==="IMG"&&i.closest&&i.closest(".ax")){var a=i.closest(".ax"),t=document.createElement("i");t.textContent=String(a.dataset.pn||"?").slice(0,2).toUpperCase();i.replaceWith(t)}},true);
 function addProp(P,p){
   var k=String(p.kickoff||"").slice(0,10); if(!k)return;
   var team=p.team||"", other=team===p.home?p.away:p.home;
@@ -110,13 +144,13 @@ function addFx(P,f,days){
     var cname=(function(){var c=String(f.country||""),k=String(f.competition||"");if(!c)return k;if(k.toLowerCase().indexOf(c.toLowerCase())===0)k=k.slice(c.length).replace(/^[\s:\-\u00b7]+/,"");return c+": "+k})();
     if(f.et&&f.et.on&&hd)(P.home.etl[sp][hd]=P.home.etl[sp][hd]||[]).push({h:f.home,a:f.away,lg:cname,t:lt(f.kickoff),by:"Admin",st:f.et.st||"",sp:sp});
     var bm=(f.et&&f.et.on)?etBM(f):null;
-    if(f.et&&f.et.on&&hd)P.home.et[sp][hd]={bm:bm,h:f.home,a:f.away,lg:cname,t:lt(f.kickoff),by:"Admin",st:f.et.st||(f.et.mk==="Player Prop"?"":((sp==="basketball"?(f.bb&&f.bb.st):(f.fb&&f.fb.st))==="won"||(sp==="basketball"?(f.bb&&f.bb.st):(f.fb&&f.fb.st))==="lost"?(sp==="basketball"?f.bb.st:f.fb.st):"")),reasoning:f.et.reasoning||"",act:f.et.act||"",mk:f.et.mk||"",aff:f.et.aff||"",hl:f.et.hl||"",al:f.et.al||"",hc:f.hc||"",ac:f.ac||"",sp:sp,tip:(f.et.pick||(bm&&bm.i>=0?bm.l[bm.i]:"")||(sp==="basketball"?(f.bb&&f.bb.tip):(f.fb&&f.fb.tip))||""),conf:String(f.et.conf||(sp==="basketball"?(f.bb&&f.bb.conf):(f.fb&&f.fb.conf))||"").replace("%",""),score:(sp==="basketball"?(f.bb&&f.bb.score):(f.fb&&f.fb.score))||"",odd:String(f.et.odd||"").trim()||(bm&&bm.i>=0?String(bm.o[bm.i]||""):"")||(function(){var x=sp==="basketball"?(f.bb||{}):(f.fb||{}),t=String(f.et.pick||x.tip||"");return t==="1"?x.o1:t==="2"?x.o2:t==="X"?x.oX:t==="1X"?x.dcOdds:""})()||""};
-    if(f.bo&&f.bo.on&&hd){var bl=P.home.bo[sp][hd]=P.home.bo[sp][hd]||[];bl.push({lg:cname,t:(f.bo.st==="won"||f.bo.st==="lost")?"FT":lt(f.kickoff),h:f.home,a:f.away,pick:f.bo.pick||"",st:f.bo.st||"pending",sc:f.bo.score||""})}
+    if(f.et&&f.et.on&&hd)P.home.et[sp][hd]={bm:bm,h:f.home,a:f.away,lg:cname,t:lt(f.kickoff),by:"Admin",st:f.et.st||(f.et.mk==="Player Prop"?"":((sp==="basketball"?(f.bb&&f.bb.st):(f.fb&&f.fb.st))==="won"||(sp==="basketball"?(f.bb&&f.bb.st):(f.fb&&f.fb.st))==="lost"?(sp==="basketball"?f.bb.st:f.fb.st):"")),ax:String(f.affx||""),reasoning:f.et.reasoning||"",act:f.et.act||"",mk:f.et.mk||"",aff:f.et.aff||"",hl:f.et.hl||"",al:f.et.al||"",hc:f.hc||"",ac:f.ac||"",sp:sp,tip:(f.et.pick||(bm&&bm.i>=0?bm.l[bm.i]:"")||(sp==="basketball"?(f.bb&&f.bb.tip):(f.fb&&f.fb.tip))||""),conf:String(f.et.conf||(sp==="basketball"?(f.bb&&f.bb.conf):(f.fb&&f.fb.conf))||"").replace("%",""),score:(sp==="basketball"?(f.bb&&f.bb.score):(f.fb&&f.fb.score))||"",odd:String(f.et.odd||"").trim()||(bm&&bm.i>=0?String(bm.o[bm.i]||""):"")||(function(){var x=sp==="basketball"?(f.bb||{}):(f.fb||{}),t=String(f.et.pick||x.tip||"");return t==="1"?x.o1:t==="2"?x.o2:t==="X"?x.oX:t==="1X"?x.dcOdds:""})()||""};
+    if(f.bo&&f.bo.on&&hd){var bl=P.home.bo[sp][hd]=P.home.bo[sp][hd]||[];bl.push({ax:String(f.affx||""),lg:cname,t:(f.bo.st==="won"||f.bo.st==="lost")?"FT":lt(f.kickoff),h:f.home,a:f.away,pick:f.bo.pick||"",st:f.bo.st||"pending",sc:f.bo.score||""})}
     if(!((f.fb&&f.fb.live)||(f.bb&&f.bb.live)))return;
     if(f.sport==="basketball"){
       var bd=String(f.kickoff||"").slice(0,10), bday=days[bd]; if(!bd)return;
       var b=f.bb||{}, bt=(b.tip||"")+(b.tip&&String(b.spread||"").trim()?" "+String(b.spread).trim():"");   /* tip + handicap shown together, e.g. "1 -6.5" or "2 +10.5" */
-      var bm={lg:lgKey(P,"basketball",f.competition,f.country),t:lt(f.kickoff),k:f.kickoff,h:f.home,a:f.away,
+      var bm={ax:String(f.affx||""),lg:lgKey(P,"basketball",f.competition,f.country),t:lt(f.kickoff),k:f.kickoff,h:f.home,a:f.away,
         o:[b.o1||"",b.o2||""],mls:(b.tip==="1"||b.tip==="2")?b.tip:"",pk:bt,tip:bt||"-",to:b.tipOdds||"",conf:b.conf||"",spread:b.spread||"",ts:b.totalSide||"",tl:b.totalLine||"",sure:!!b.sure,xp:!!f.xp,xt:f.xt||[],st:b.st||"pending",score:b.score||""};
       (P.byDate.basketball[bd]=P.byDate.basketball[bd]||[]).push(bm);
       if(bday){var bl=P.basketball[bday];bm.featured=bl.length<6;bl.push(bm)}
@@ -125,7 +159,7 @@ function addFx(P,f,days){
     if(f.sport!=="football")return;
     var date=String(f.kickoff||"").slice(0,10), day=days[date]; if(!date)return;
     var v=f.fb||{};
-    var m={lg:lgKey(P,"football",f.competition,f.country),t:lt(f.kickoff),k:f.kickoff,h:f.home,a:f.away,
+    var m={ax:String(f.affx||""),lg:lgKey(P,"football",f.competition,f.country),t:lt(f.kickoff),k:f.kickoff,h:f.home,a:f.away,
       o:[v.o1||"",v.oX||"",v.o2||""],pk:v.tip||"",tip:v.tip||"-",gg:v.btts||"",ou:v.ou||"",conf:v.conf||"",to:v.tipOdds||"",dc:v.dc||"",dco:v.dcOdds||"",cs:v.cs||"",sure:!!v.sure,xp:!!f.xp,xt:f.xt||[],
       st:v.st||"pending",score:v.score||""};
     (P.byDate.football[date]=P.byDate.football[date]||[]).push(m);   /* any date: used by the calendar picker */
@@ -414,15 +448,16 @@ function mConf(m){var n=parseFloat(String(m.conf).replace("%","")),lv=isNaN(n)?"
 function mOdd(m,i){return '<td class="o">'+esc(m.o&&m.o[i]?m.o[i]:"-")+'</td>'}
 function mX(label,odds){return label?'<td class="x">'+esc(label)+(odds?'<small>('+esc(odds)+')</small>':'')+'</td>':'<td class="x na">-</td>'}
 /* ---------- prediction tables: traditional table, flat (no sideways scroll), same on every screen ---------- */
-function dMatch(m){var p=String(m.score||'').split(/[-:]/),h=p[0]&&p[0].trim(),a=p[1]&&p[1].trim(),hl=h&&a&&+h<+a,al=h&&a&&+a<+h;return '<td class="l dm"><div class="dmi"><span class="t">'+esc(m.t)+'</span><span class="tn"><b>'+esc(m.h)+'</b>'+scoreBox(h,hl)+'</span><span class="tn"><b>'+esc(m.a)+'</b>'+scoreBox(a,al)+'</span></div></td>'}
-function lgBar(name,labels,flag){return '<tr class="lgb"><td class="n">'+(flag?'<span class="fl">'+flag+'</span>':'')+esc(name)+'</td>'+labels.map(function(l){return '<td>'+esc(l)+'</td>'}).join("")+'</tr>'}
+function dMatch(m,aff){var p=String(m.score||'').split(/[-:]/),h=p[0]&&p[0].trim(),a=p[1]&&p[1].trim(),hl=h&&a&&+h<+a,al=h&&a&&+a<+h;return '<td class="l dm"><div class="dmi"><span class="t">'+esc(m.t)+'</span><span class="tn"><b>'+esc(m.h)+'</b>'+scoreBox(h,hl)+'</span><span class="tn"><b>'+esc(m.a)+'</b>'+scoreBox(a,al)+'</span>'+(aff?'<span class="affm">'+aff+'</span>':'')+'</div></td>'}
+function lgBar(name,labels,flag,ex){return '<tr class="lgb"><td class="n">'+(flag?'<span class="fl">'+flag+'</span>':'')+esc(name)+'</td>'+(ex?'<td class="affh">Bet</td>':'')+labels.map(function(l){return '<td>'+esc(l)+'</td>'}).join("")+'</tr>'}
 function footballTable(list){
   if(!list.length)return '<div class="empty">No football \u26bd predictions for this day yet.</div>';
   var ph=PHONE.matches, lbl=ph?["1","X","2","Tip / Conf","O/U 2.5","BTTS","CS"]:["1","X","2","Tip","Conf","O/U 2.5","BTTS","CS"], lastL=null;
-  return '<div class="tscroll bwwrap"><table class="pt bw lgbars'+(ph?' ph':'')+'"><tbody>'+
+  var AF=list.some(function(m){return affFor("table",m.ax).length>0});
+  return '<div class="tscroll bwwrap"><table class="pt bw lgbars'+(AF?' haff':'')+(ph?' ph':'')+'"><tbody>'+
     sortByLeague(list).map(function(m){
-      var bar="",k=lgName(m.lg); if(k!==lastL){lastL=k;bar=lgBar(k,lbl,lgFlag(m.lg))}
-      return bar+'<tr>'+dMatch(m)+oddCell(m,0,"1")+oddCell(m,1,"X")+oddCell(m,2,"2")+'<td class="kv" data-l="Tip">'+pkBadge(m)+(ph?confSpan(m):'')+'</td>'+(ph?'':confCell(m))+
+      var bar="",k=lgName(m.lg); if(k!==lastL){lastL=k;bar=lgBar(k,lbl,lgFlag(m.lg),AF&&!ph)}
+      return bar+'<tr>'+dMatch(m,AF&&ph?affHtml("table",m.ax):"")+(AF&&!ph?'<td class="affc">'+affHtml("table",m.ax)+'</td>':'')+oddCell(m,0,"1")+oddCell(m,1,"X")+oddCell(m,2,"2")+'<td class="kv" data-l="Tip">'+pkBadge(m)+(ph?confSpan(m):'')+'</td>'+(ph?'':confCell(m))+
         extraPick(m.ou?(m.ou==="Over"?"Over 2.5":"Under 2.5"):"","","Over/Under 2.5")+extraPick(m.gg,"","BTTS")+
         '<td class="cs kv'+(m.cs?'':' na')+'" data-l="CS Tip">'+esc(m.cs||"-")+'</td></tr>';
     }).join("")+'</tbody></table></div>';
@@ -431,11 +466,12 @@ function bbOdd(m,i,k){var v=m.o&&m.o[i]?m.o[i]:"-";return '<td class="od"><span 
 function basketballTable(list){
   if(!list.length)return '<div class="empty">No basketball \ud83c\udfc0 predictions for this day yet.</div>';
   var ph=PHONE.matches, lbl=ph?["1","2","Tip / Conf","Point Total"]:["1","2","Tip","Conf","Point Total"], lastL=null;
-  return '<div class="tscroll bwwrap"><table class="pt bw bk lgbars'+(ph?' ph':'')+'"><tbody>'+
+  var AF=list.some(function(m){return affFor("table",m.ax).length>0});
+  return '<div class="tscroll bwwrap"><table class="pt bw bk lgbars'+(AF?' haff':'')+(ph?' ph':'')+'"><tbody>'+
     sortByLeague(list).map(function(m){
-      var bar="",k=lgName(m.lg); if(k!==lastL){lastL=k;bar=lgBar(k,lbl,lgFlag(m.lg))}
+      var bar="",k=lgName(m.lg); if(k!==lastL){lastL=k;bar=lgBar(k,lbl,lgFlag(m.lg),AF&&!ph)}
       var tot=m.ts?'<span class="xp"><b>'+esc(m.ts)+(m.tl?' '+esc(m.tl):'')+'</b></span>':'-';
-      return bar+'<tr>'+dMatch(m)+bbOdd(m,0,"1")+bbOdd(m,1,"2")+'<td>'+pkBadge(m)+(ph?confSpan(m):'')+'</td>'+(ph?'':confCell(m))+'<td>'+tot+'</td></tr>';
+      return bar+'<tr>'+dMatch(m,AF&&ph?affHtml("table",m.ax):"")+(AF&&!ph?'<td class="affc">'+affHtml("table",m.ax)+'</td>':'')+bbOdd(m,0,"1")+bbOdd(m,1,"2")+'<td>'+pkBadge(m)+(ph?confSpan(m):'')+'</td>'+(ph?'':confCell(m))+'<td>'+tot+'</td></tr>';
     }).join("")+'</tbody></table></div>';
 }
 function compactTable(list,sport){
@@ -641,13 +677,14 @@ $$("[data-home]").forEach(function(hero){
   function selYmd(){return customDate?ymdOf(customDate):wat({yesterday:-1,today:0,tomorrow:1}[day])}
   function setSport(sp){sport=sp;store("pb.sport",sp);if(etMode!=="both")etMode=sp;drawAll()}
 
-  function etHalf(sp){
+  function etHalf(sp,keep){
     var v=getET(sp,selYmd());
     var head='<div class="ethalf"><h3>'+(sp==="football"?"&#9917; Football":"&#127936; Basketball")+'</h3>';
     if(!v)return head+'<div class="empty">No matches available.</div></div>';
     return head+
       '<div class="vb-lg"><span class="fl">'+flagByLabel(v.lg)+'</span>'+esc(v.lg)+'</div><div class="vb-main"><div class="vb-t">'+teamCrest(v.h,v.hl,v.sp,v.hc)+'<div class="vb-team">'+esc(v.h)+'</div></div><div class="vb-mid"><strong>'+esc(v.t)+'</strong><span class="vs">VS</span></div><div class="vb-t">'+teamCrest(v.a,v.al,v.sp,v.ac)+'<div class="vb-team">'+esc(v.a)+'</div></div></div>'+
       '<div class="ftrow ftslot">'+etFT(v)+'</div>'+
+      (affFor("banker",v.ax).length?'<div class="affslot">'+affHtml("banker",v.ax,"Bet this pick on")+'</div>':keep?'<div class="affslot"></div>':'')+
       '<a class="etlock'+(v.st==="won"?" won":v.st==="lost"?" lost":"")+'" href="expert-tips.html?s='+sp+'&d='+selYmd()+'" aria-label="Open the reasoning for this Banker Bet of the Day"><span class="lockico" aria-hidden="true">'+(v.st==="won"?"&#10003;":"&#128274;")+'</span><span class="locktxt">View Banker Bet</span></a>'+
       '<div class="vb-by"><span>BANKER BET OF THE DAY BY: <b>'+esc(v.by)+'</b></span><span>'+(sp==="football"?"&#9917; Football":"&#127936; Basketball")+'</span></div>'+
       '</div>';
@@ -659,7 +696,8 @@ $$("[data-home]").forEach(function(hero){
     $$("[data-et]",et).forEach(function(b){b.setAttribute("aria-pressed",String(b.dataset.et===m))});
     var body=$("[data-etbody]",et);
     body.className="etbody "+(m==="both"?"split":"full");
-    body.innerHTML=m==="both"?etHalf("football")+etHalf("basketball"):etHalf(m);
+    var ky=selYmd(),keep=m==="both"&&["football","basketball"].some(function(x){var q=getET(x,ky);return q&&affFor("banker",q.ax).length>0});
+    body.innerHTML=m==="both"?etHalf("football",keep)+etHalf("basketball",keep):etHalf(m);
   }
   $$("[data-et]",et).forEach(function(b){b.addEventListener("click",function(){etMode=b.dataset.et;if(etMode!=="both"){sport=etMode;store("pb.sport",sport)}drawAll()})});
   window.addEventListener("resize",drawET);
@@ -669,7 +707,7 @@ $$("[data-home]").forEach(function(hero){
     var rows=getBO(sport,selYmd()).slice(0,5);
     $("[data-botdlist]",botd).innerHTML=rows.length?rows.map(function(r){
       var pk=esc(r.pick), st=r.st==="won"?"won":r.st==="lost"?"lost":"";
-      return '<div class="bdrow"><div class="bdt">'+esc(r.t)+'</div><div class="bdc"><div class="bdlg"><span class="fl">'+flagByLabel(r.lg)+'</span>'+esc(r.lg)+'</div><div class="bdm"><b>'+esc(r.h)+'</b><i>'+(r.sc?esc(r.sc):'VS')+'</i><b>'+esc(r.a)+'</b></div></div><div class="bdpk"><small>'+(st==="won"?"WON":st==="lost"?"LOST":"TIP")+'</small><span class="bdpick '+st+'">'+pk+'</span></div></div>';
+      return '<div class="bdrow'+(affFor("bets",r.ax).length?' hasaff':'')+'"><div class="bdt">'+esc(r.t)+'</div><div class="bdc"><div class="bdlg"><span class="fl">'+flagByLabel(r.lg)+'</span>'+esc(r.lg)+'</div><div class="bdm"><b>'+esc(r.h)+'</b><i>'+(r.sc?esc(r.sc):'VS')+'</i><b>'+esc(r.a)+'</b></div></div>'+affHtml("bets",r.ax,"Bet on")+'<div class="bdpk"><small>'+(st==="won"?"WON":st==="lost"?"LOST":"TIP")+'</small><span class="bdpick '+st+'">'+pk+'</span></div></div>';
     }).join(""):'<div class="empty">No matches available.</div>';
   }
   $$("[data-bsport]",botd).forEach(function(b){b.addEventListener("click",function(){setSport(b.dataset.bsport)})});
@@ -765,9 +803,9 @@ $$("[data-analysis]").forEach(function(el){
    '<section class="bbbox"><div class="bbbar"><span>Banker Bet of the Day</span>'+(done?'<em class="bbres '+v.st+'">'+(v.st==="won"?"&#10003; Won":"Lost")+'</em>':'<em class="bbres pend">Pending</em>')+'</div>'+
    '<div class="bbin"><div class="bbl"><span class="bbk">Our Best Bet</span><h2>'+(hasBM?'<span class="mk">'+esc(bm.m)+'</span><span class="dash"> - </span><span class="sl">'+esc(bm.sel||bm.l[bm.i])+'</span>':(selTxt?'<span class="sl">'+esc(selTxt)+'</span>':'<span class="na">Coming soon</span>'))+'</h2>'+
    (paras.length?paras.map(function(t){return '<p>'+esc(t)+'</p>'}).join(""):'')+
-   affPills(v.aff)+
+   (affFor("banker",v.ax).length?"":affPills(v.aff))+
    '<p class="note by">Banker Bet by <b>'+esc(v.by)+'</b> &middot; '+(sp==="football"?"&#9917; Football":"&#127936; Basketball")+'</p></div>'+
-   '<div class="bbr">'+(oddsHtml?'<div class="bbcard"><span class="bbk">Market Odds</span>'+oddsHtml+'</div>':'')+
+   '<div class="bbr">'+(oddsHtml?'<div class="bbcard"><span class="bbk">Market Odds</span>'+oddsHtml+(affFor("banker",v.ax).length?'<div class="bbaff">'+affHtml("banker",v.ax,"Bet this pick on")+'</div>':'')+'</div>':'')+
    (clv?'<div class="bbcard"><span class="bbk">Rating</span><div class="bbrate"><b class="'+ccl+'">'+clv+'</b><span>'+esc(String(Math.round(cn)))+'% confidence</span></div><i class="etmeter"><u class="'+ccl+'" style="width:'+Math.max(4,Math.min(100,cn))+'%"></u></i></div>':'')+'</div></div></section>'+
    '<p class="note center" style="margin-top:14px">'+(sp==="football"?"Football":"Basketball")+' predictions are based on statistical analysis and are not guaranteed. Please bet responsibly.</p>';
 });
@@ -820,9 +858,9 @@ $$("[data-props]").forEach(function(el){
   function mk(k){for(var i=0;i<markets.length;i++)if(markets[i].k===k)return markets[i];return {k:k,name:k,kind:"player"}}
   function card(p){
     var m=mk(p.k), team=m.kind==="team";
-    return '<div class="propcard'+(p.st==="won"?" won":p.st==="lost"?" lost":"")+'">'+
+    return '<div class="propcard'+(p.st==="won"?" won":p.st==="lost"?" lost":"")+(affFor("props","").length?" hasaff":"")+'">'+
       '<div class="propav">🏀</div>'+
-      '<div class="propinfo"><b>'+esc(team?p.team:p.player)+'</b><span>'+esc(team?"":p.team+" ")+esc(p.opp||"")+'</span></div>'+
+      '<div class="propinfo"><b>'+esc(team?p.team:p.player)+'</b><span>'+esc(team?"":p.team+" ")+esc(p.opp||"")+'</span></div>'+affHtml("props","")+
       '<div class="propmkt">'+esc(m.name)+'</div>'+
       '<div class="proppick"><span class="pick">'+esc(team?(m.short||"Pick"):p.pick+" "+p.line)+'</span><span class="o">'+(p.odds?'@ '+esc(p.odds):'')+'</span>'+((p.st==="won"||p.st==="lost")?ftBox(p.a,"Final"):'')+'</div>'+(p.st==="won"?'<span class="bigmark won" aria-label="Won">&#10003;</span>':p.st==="lost"?'<span class="bigmark lost" aria-label="Did not land"></span>':'')+
     '</div>';
@@ -1116,7 +1154,8 @@ $$("[data-checkout]").forEach(function(root){
 })();
 
 }
-loadLive(main);
+var _bn=2;function _bg(){if(--_bn===0)main()}
+loadLive(_bg);loadAff(_bg);
 
 /* ---------- Google Analytics 4 (switched on by site.ga in data.js) + the three events that matter ---------- */
 (function(){
@@ -1127,6 +1166,19 @@ loadLive(main);
   var q=new URLSearchParams(location.search);
   if(/usdt-payment\.html$/.test(location.pathname))gtag("event","view_usdt_payment",{plan:q.get("plan")||""});
 })();
+
+/* ---------- affiliate click tracking: every "Bet now" / sponsored link click is sent to GA4 as "affiliate_click" (partner = the bookmaker's site, placement = where on PicksBible) ---------- */
+document.addEventListener("click",function(e){
+  try{
+    if(typeof gtag!=="function")return;
+    var a=e.target.closest&&e.target.closest("a.affpill,a.ax,a[rel~='sponsored']"); if(!a||!a.href)return;
+    var host=""; try{host=new URL(a.href).hostname.replace(/^www\./,"")}catch(_){}
+    if(!host||host===location.hostname)return;
+    var place=a.closest("[data-experttip]")?"banker_home":/expert-tips\.html$/.test(location.pathname)?"banker_page":a.closest(".bbhero,.bbr")?"banker_page":"site";
+    if(a.dataset.pl){place="partner_"+a.dataset.pl;host=a.dataset.pn||host}
+    gtag("event","affiliate_click",{partner:host,placement:place,page:location.pathname});
+  }catch(_){}
+},true);
 
 /* ---------- GA event listener that works even if GA hasn't loaded yet ---------- */
 document.addEventListener("click",function(e){
