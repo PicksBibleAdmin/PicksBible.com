@@ -170,7 +170,7 @@
           <div><label>Market</label><select class="lgk"><option value="">Select market</option>${mk}</select></div>
           <div><label>Selection</label><input class="lgs" list="vpkdl${i}" placeholder="${l.market ? "e.g. " + esc(MARKETS[l.market][0]) : "Select market first"}" value="${esc(l.sel)}"><datalist id="vpkdl${i}">${dl}</datalist></div>
         </div>
-        ${(() => { const cur = findEntry(state.pk, state.ymd); const sv = cur && !cur.draft && (cur.legs || []).find(x => x.fid === l.fid && x.market === l.market && x.sel === l.sel.trim()); return sv ? `<div style="margin-top:8px"><label>Result of this pick</label><select class="lgr"><option value="">Automatic${sv.res ? " (now " + sv.res + ")" : ""}</option><option value="won" ${sv.resMan === "won" ? "selected" : ""}>Won</option><option value="lost" ${sv.resMan === "lost" ? "selected" : ""}>Lost</option></select></div><div style="margin-top:8px"><label>${sv.market === "Player Prop" ? "Player's final number (small box on the site)" : "Final score (small box on the site)"}</label><input class="lgf" value="${esc(sv.ftMan || "")}" placeholder="${sv.ft ? "Automatic: " + esc(sv.ft) : sv.market === "Player Prop" ? "Type the player's final number, e.g. 9" : "Automatic from the match score"}" maxlength="24"></div>` : ""; })()}
+        ${(() => { const cur = findEntry(state.pk, state.ymd); const sv = cur && !cur.draft && (cur.legs || []).find(x => x.fid === l.fid && x.market === l.market && x.sel === l.sel.trim()); return sv ? `<div style="margin-top:8px"><label>Result of this pick</label><select class="lgr"><option value="">Automatic${sv.res ? " (now " + sv.res + ")" : ""}</option><option value="won" ${sv.resMan === "won" ? "selected" : ""}>Won</option><option value="lost" ${sv.resMan === "lost" ? "selected" : ""}>Lost</option><option value="dnp" ${sv.resMan === "dnp" ? "selected" : ""}>Did not play (void)</option><option value="injured" ${sv.resMan === "injured" ? "selected" : ""}>Injured (void)</option></select></div><div style="margin-top:8px"><label>${sv.market === "Player Prop" ? "Player's final number (small box on the site)" : "Final score (small box on the site)"}</label><input class="lgf" value="${esc(sv.ftMan || "")}" placeholder="${sv.ft ? "Automatic: " + esc(sv.ft) : sv.market === "Player Prop" ? "Type the player's final number, e.g. 9" : "Automatic from the match score"}" maxlength="24"></div>` : ""; })()}
         <div class="legfoot"><span class="muted">${f ? esc(f.competition || "") + " · " + esc(String(f.kickoff).slice(0, 16).replace("T", " ")) : ""}</span>${state.legs.length > 1 ? '<button type="button" class="btn danger lgx" style="padding:5px 10px">Remove</button>' : ""}</div>
       </div>`;
     }).join("");
@@ -317,7 +317,7 @@
       }
       if (e.target.classList.contains("lgr")) {
         const cur = findEntry(state.pk, state.ymd), l = state.legs[i], sv = cur && (cur.legs || []).find(x => x.fid === l.fid && x.market === l.market && x.sel === l.sel.trim());
-        if (sv) { if (e.target.value) sv.resMan = e.target.value; else { delete sv.resMan; sv.res = ""; } commit(); paint(); toast(e.target.value ? "Pick marked " + e.target.value : "Automatic: the scores decide"); }
+        if (sv) { if (e.target.value) sv.resMan = e.target.value; else { delete sv.resMan; sv.res = ""; } commit(); paint(); toast(e.target.value ? "Pick marked " + ({ dnp: "Did not play (void)", injured: "Injured (void)" }[e.target.value] || e.target.value) : "Automatic: the scores decide"); }
       }
     });
     legs.addEventListener("click", e => {

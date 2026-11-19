@@ -65,6 +65,15 @@
     return "";
   }
 
+  /* "dnp" | "injured" | "": marked by hand on the pick, or the same player's prop was settled that way in the Results tab */
+  function voidOf(db, l) {
+    if (l.resMan === "dnp" || l.resMan === "injured") return l.resMan;
+    if (l.resMan === "won" || l.resMan === "lost" || l.market !== "Player Prop") return "";
+    const sel = String(l.sel || "").toLowerCase();
+    const pr = (db.props || []).find(x => x.fixtureId === l.fid && (x.st === "dnp" || x.st === "injured") && x.player && sel.indexOf(String(x.player).toLowerCase()) >= 0);
+    return pr ? pr.st : "";
+  }
+
   function settleAll(db) {
     const out = { et: 0, bo: 0, vip: [], changed: false };
     (db.fixtures || []).forEach(f => {
@@ -89,15 +98,19 @@
       const res = v.legs.map(l => {
         const f = (db.fixtures || []).find(x => x.id === l.fid), sc = f && scoreOf(f);
         if (l.resMan === "won" || l.resMan === "lost") return l.resMan;      /* marked by hand: never overwritten */
+        if (voidOf(db, l)) return "push";                                    /* player did not play / was injured: the pick is void, the other picks decide the package */
         const r = sc ? evalPick(l.market, l.sel, sc) : "";
         return r;
       });
       let ch = false;
       v.legs.forEach((l, i) => {
         if ((l.res || "") !== res[i]) { l.res = res[i]; ch = true; }
+        const vr = voidOf(db, l);
+        if ((l.vr || "") !== vr) { if (vr) l.vr = vr; else delete l.vr; ch = true; }
         const f = (db.fixtures || []).find(x => x.id === l.fid), sc = f && scoreOf(f);     /* the box on the site: your typed final result, else the match's full-time score */
         let ft = (l.ftMan || "").trim();
-        if (!ft && l.market === "Player Prop") {                      /* a player prop shows the PLAYER'S final number, never the match score: taken from the uploaded props result, else left empty for you to type */
+        if (!ft && vr) ft = vr === "dnp" ? "DNP" : "INJ";
+        else if (!ft && l.market === "Player Prop") {                      /* a player prop shows the PLAYER'S final number, never the match score: taken from the uploaded props result, else left empty for you to type */
           const sel = String(l.sel || "").toLowerCase();
           const pr = (db.props || []).find(x => x.fixtureId === l.fid && x.stat != null && x.stat !== "" && x.player && sel.indexOf(String(x.player).toLowerCase()) >= 0);
           ft = pr ? String(pr.stat) : "";
@@ -118,7 +131,7 @@
     });
     return out;
   }
-  const api = { evalPick, settleAll, packageResult, parseScore };
+  const api = { evalPick, settleAll, packageResult, parseScore, voidOf };
   if (typeof module !== "undefined" && module.exports) module.exports = api;
   root.PBSettle = api;
 
@@ -134,7 +147,7 @@
         if (r && r.changed) {
           if (r.vip.length) {
             r.vip.forEach(v => {                                  /* keep the members' private copy in step */
-              try { Store.fs.collection("vip_feed").doc(v.id).set({ st: v.st, legs: v.legs.map(l => ({ sport: l.sport, home: l.home, away: l.away, comp: l.comp, ko: l.ko, market: l.market, sel: l.sel, res: l.res || "" })) }, { merge: true }).catch(() => {}); } catch (_) {}
+              try { Store.fs.collection("vip_feed").doc(v.id).set({ st: v.st, legs: v.legs.map(l => ({ sport: l.sport, home: l.home, away: l.away, comp: l.comp, ko: l.ko, market: l.market, sel: l.sel, res: l.res || "", vr: l.vr || "" })) }, { merge: true }).catch(() => {}); } catch (_) {}
             });
           }
           const bits = [];

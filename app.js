@@ -418,7 +418,7 @@ function sortByLeague(list){
 function firstIdx(list,lg){for(var i=0;i<list.length;i++)if(list[i].lg===lg)return i;return 0}
 /* small "full time" box: shown only when there is a real final result to show */
 function ftBox(txt,lab){txt=String(txt==null?"":txt).trim();return txt?'<span class="ftb" title="Final result"><i>'+esc(lab||"")+'</i><b>'+esc(txt)+'</b></span>':""}
-function etFT(v){if(!v||(v.st!=="won"&&v.st!=="lost"))return"";var prop=v.mk==="Player Prop";return ftBox(v.act||(prop?"":v.score),prop?"Final":"FT")}
+function etFT(v){if(v&&(v.st==="dnp"||v.st==="injured"))return ftBox(v.st==="dnp"?"DNP":"INJ","");if(!v||(v.st!=="won"&&v.st!=="lost"))return"";var prop=v.mk==="Player Prop";return ftBox(v.act||(prop?"":v.score),prop?"Final":"FT")}
 function scoreLine(m){return m.score?'<span class="sc">'+esc(m.score)+'</span>':'<span class="sc" style="color:var(--muted)">-:-</span>'}
 
 /* ---------- full prediction tables ---------- */
@@ -628,7 +628,7 @@ function showVipDay(label,x){
   el.innerHTML='<div class="vd" role="dialog" aria-modal="true" aria-label="'+label+' VIP picks"><button class="vx" type="button" aria-label="Close">&times;</button>'+
     '<h3>'+label+' VIP picks</h3><div class="vsub">'+esc(d)+'</div><div style="margin:8px 0"><span class="vr '+x.st+'">'+(x.st==="won"?"&#10003; Won":"Lost")+'</span></div>'+
     '<table><thead><tr><th>Match</th><th>Market</th><th>Pick</th><th>FT</th></tr></thead><tbody>'+x.legs.map(function(l){
-      return '<tr><td>'+esc(l.home)+' v '+esc(l.away)+'<br><small>'+esc(l.comp||"")+(l.ko?" &middot; "+esc(lt(l.ko)):"")+'</small></td><td>'+esc(l.market)+'</td><td><b>'+esc(l.sel)+'</b> '+(l.res==="won"?'<span style="color:var(--won)">&#10003;</span>':l.res==="lost"?'<span style="color:var(--lost)">&#10005;</span>':l.res==="push"?'<small>(void)</small>':'')+'</td><td>'+(ftBox(l.ft,"")||'<small>&ndash;</small>')+'</td></tr>'}).join("")+
+      return '<tr><td>'+esc(l.home)+' v '+esc(l.away)+'<br><small>'+esc(l.comp||"")+(l.ko?" &middot; "+esc(lt(l.ko)):"")+'</small></td><td>'+esc(l.market)+'</td><td><b>'+esc(l.sel)+'</b> '+(l.res==="won"?'<span style="color:var(--won)">&#10003;</span>':l.res==="lost"?'<span style="color:var(--lost)">&#10005;</span>':(l.res==="push"||l.vr)?'<small>('+(l.vr==="dnp"?"did not play, void":l.vr==="injured"?"injured, void":"void")+')</small>':'')+'</td><td>'+(ftBox(l.ft,"")||'<small>&ndash;</small>')+'</td></tr>'}).join("")+
     '</tbody></table><div class="vt">Total odds: '+esc(x.odds)+'</div></div>';
   document.body.appendChild(el);
   function close(){el.remove();document.removeEventListener("keydown",esc_)}
@@ -685,7 +685,7 @@ $$("[data-home]").forEach(function(hero){
       '<div class="vb-lg"><span class="fl">'+flagByLabel(v.lg)+'</span>'+esc(v.lg)+'</div><div class="vb-main"><div class="vb-t">'+teamCrest(v.h,v.hl,v.sp,v.hc)+'<div class="vb-team">'+esc(v.h)+'</div></div><div class="vb-mid"><strong>'+esc(v.t)+'</strong><span class="vs">VS</span></div><div class="vb-t">'+teamCrest(v.a,v.al,v.sp,v.ac)+'<div class="vb-team">'+esc(v.a)+'</div></div></div>'+
       '<div class="ftrow ftslot">'+etFT(v)+'</div>'+
       (affFor("banker",v.ax).length?'<div class="affslot">'+affHtml("banker",v.ax,"Bet this pick on")+'</div>':keep?'<div class="affslot"></div>':'')+
-      '<a class="etlock'+(v.st==="won"?" won":v.st==="lost"?" lost":"")+'" href="expert-tips.html?s='+sp+'&d='+selYmd()+'" aria-label="Open the reasoning for this Banker Bet of the Day"><span class="lockico" aria-hidden="true">'+(v.st==="won"?"&#10003;":"&#128274;")+'</span><span class="locktxt">View Banker Bet</span></a>'+
+      '<a class="etlock'+(v.st==="won"?" won":(v.st==="lost"||v.st==="dnp"||v.st==="injured")?" lost":"")+'" href="expert-tips.html?s='+sp+'&d='+selYmd()+'" aria-label="Open the reasoning for this Banker Bet of the Day"><span class="lockico" aria-hidden="true">'+(v.st==="won"?"&#10003;":"&#128274;")+'</span><span class="locktxt">View Banker Bet</span></a>'+
       '<div class="vb-by"><span>BANKER BET OF THE DAY BY: <b>'+esc(v.by)+'</b></span><span>'+(sp==="football"?"&#9917; Football":"&#127936; Basketball")+'</span></div>'+
       '</div>';
   }
@@ -800,7 +800,7 @@ $$("[data-analysis]").forEach(function(el){
    '<div class="bbteam">'+teamCrest(v.a,v.al,v.sp,v.ac)+'<b>'+esc(v.a)+'</b></div></div>'+
    '<h1>'+esc(title)+' | '+esc(shortDate)+'</h1>'+
    '<p class="bbintro">'+esc(v.h)+' welcome '+esc(v.a)+' in the '+esc(v.lg)+' on '+esc(dateTxt)+', with our prediction model identifying '+(selTxt?'<b>'+esc(selTxt)+'</b>':'our selection')+' as the best betting opportunity for this fixture.</p></div>'+
-   '<section class="bbbox"><div class="bbbar"><span>Banker Bet of the Day</span>'+(done?'<em class="bbres '+v.st+'">'+(v.st==="won"?"&#10003; Won":"Lost")+'</em>':'<em class="bbres pend">Pending</em>')+'</div>'+
+   '<section class="bbbox"><div class="bbbar"><span>Banker Bet of the Day</span>'+((v.st==="dnp"||v.st==="injured")?'<em class="bbres pend">Void &middot; '+(v.st==="dnp"?"Did not play":"Injured")+'</em>':done?'<em class="bbres '+v.st+'">'+(v.st==="won"?"&#10003; Won":"Lost")+'</em>':'<em class="bbres pend">Pending</em>')+'</div>'+
    '<div class="bbin"><div class="bbl"><span class="bbk">Our Best Bet</span><h2>'+(hasBM?'<span class="mk">'+esc(bm.m)+'</span><span class="dash"> - </span><span class="sl">'+esc(bm.sel||bm.l[bm.i])+'</span>':(selTxt?'<span class="sl">'+esc(selTxt)+'</span>':'<span class="na">Coming soon</span>'))+'</h2>'+
    (paras.length?paras.map(function(t){return '<p>'+esc(t)+'</p>'}).join(""):'')+
    (affFor("banker",v.ax).length?"":affPills(v.aff))+
@@ -858,11 +858,12 @@ $$("[data-props]").forEach(function(el){
   function mk(k){for(var i=0;i<markets.length;i++)if(markets[i].k===k)return markets[i];return {k:k,name:k,kind:"player"}}
   function card(p){
     var m=mk(p.k), team=m.kind==="team";
-    return '<div class="propcard'+(p.st==="won"?" won":p.st==="lost"?" lost":"")+(affFor("props","").length?" hasaff":"")+'">'+
+    var vd=p.st==="dnp"||p.st==="injured";
+    return '<div class="propcard'+(p.st==="won"?" won":p.st==="lost"?" lost":vd?" void":"")+(affFor("props","").length?" hasaff":"")+'">'+
       '<div class="propav">🏀</div>'+
       '<div class="propinfo"><b>'+esc(team?p.team:p.player)+'</b><span>'+esc(team?"":p.team+" ")+esc(p.opp||"")+'</span></div>'+affHtml("props","")+
       '<div class="propmkt">'+esc(m.name)+'</div>'+
-      '<div class="proppick"><span class="pick">'+esc(team?(m.short||"Pick"):p.pick+" "+p.line)+'</span><span class="o">'+(p.odds?'@ '+esc(p.odds):'')+'</span>'+((p.st==="won"||p.st==="lost")?ftBox(p.a,"Final"):'')+'</div>'+(p.st==="won"?'<span class="bigmark won" aria-label="Won">&#10003;</span>':p.st==="lost"?'<span class="bigmark lost" aria-label="Did not land"></span>':'')+
+      '<div class="proppick"><span class="pick">'+esc(team?(m.short||"Pick"):p.pick+" "+p.line)+'</span><span class="o">'+(p.odds?'@ '+esc(p.odds):'')+'</span>'+((p.st==="won"||p.st==="lost")?ftBox(p.a,"Final"):vd?'<span class="vtag">'+(p.st==="dnp"?"Did not play":"Injured")+' &middot; void</span>':'')+'</div>'+(p.st==="won"?'<span class="bigmark won" aria-label="Won">&#10003;</span>':p.st==="lost"?'<span class="bigmark lost" aria-label="Did not land"></span>':'')+
     '</div>';
   }
   var expertOnly=el.hasAttribute("data-expert");   /* Best NBA Player Props page: only the props the analyst ticked, strongest first */
@@ -1223,10 +1224,10 @@ document.addEventListener("click",function(e){
 
 })();
 
-/* ---------- floating "Chat Us" (every page, collapsible) + Telegram bar (home page) ---------- */
+/* ---------- floating "Chat Us" (every page, collapsible) ---------- */
 (function(){
   if(document.querySelector(".chatus"))return;
-  var WA="https://wa.me/2349129823308", TG="https://t.me/picksbibleforum";
+  var WA="https://wa.me/2349129823308";
   var WAI='<svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" fill="currentColor"><path d="M12 2a10 10 0 00-8.6 15.1L2 22l5-1.3A10 10 0 1012 2zm5.2 13.9c-.2.6-1.3 1.2-1.8 1.2-.5.1-1 .2-3.3-.7-2.8-1.2-4.6-4-4.7-4.2-.1-.2-1.1-1.5-1.1-2.8s.7-2 1-2.3c.2-.3.5-.3.7-.3h.5c.2 0 .4 0 .6.5l.8 2c.1.2.1.3 0 .5l-.3.5-.4.4c-.1.2-.3.3-.1.6.2.3.8 1.3 1.7 2.1 1.1 1 2 1.3 2.3 1.4.3.1.4.1.6-.1l.8-1c.2-.3.4-.2.6-.1l2 1c.3.1.5.2.5.3.1.2.1.8-.1 1.4z"/></svg>';
   var open=true; try{open=localStorage.getItem("pb.chatClosed")!=="1"}catch(e){}
   var c=document.createElement("div");c.className="chatus";

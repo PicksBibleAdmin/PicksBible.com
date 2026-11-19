@@ -457,7 +457,7 @@ const Store = {
       const recent = r => { const k=String(r.kickoff||"").slice(0,10); return k >= cutoff && k <= farOut; };
       const snap = {
         fixtures: db.fixtures.filter(f=>liveOf("fixtures",f) && (recent(f) || homeBox(f))).map(f=>this.docOf("fixtures",f)),
-        vip:      (db.vip||[]).filter(v=>v.tier==="bronze"&&v.ymd>=cut120).map(v=>{ const o={ymd:v.ymd,tier:"bronze",odds:v.draft?"":(v.odds||""),st:v.st||""}; if((v.st==="won"||v.st==="lost")&&!v.draft&&v.legs&&v.legs.length) o.legs=v.legs.map(l=>({sport:l.sport,home:l.home,away:l.away,comp:l.comp,ko:l.ko,market:l.market,sel:l.sel,res:l.res||"",ft:l.ft||""})); else if(!v.draft&&v.legs&&v.legs.length){ const g=v.legs[0]; o.teaser={n:v.legs.length,g:{sport:g.sport,home:g.home,away:g.away,comp:g.comp,ko:g.ko}}; } return o; }),
+        vip:      (db.vip||[]).filter(v=>v.tier==="bronze"&&v.ymd>=cut120).map(v=>{ const o={ymd:v.ymd,tier:"bronze",odds:v.draft?"":(v.odds||""),st:v.st||""}; if((v.st==="won"||v.st==="lost")&&!v.draft&&v.legs&&v.legs.length) o.legs=v.legs.map(l=>({sport:l.sport,home:l.home,away:l.away,comp:l.comp,ko:l.ko,market:l.market,sel:l.sel,res:l.res||"",vr:l.vr||"",ft:l.ft||""})); else if(!v.draft&&v.legs&&v.legs.length){ const g=v.legs[0]; o.teaser={n:v.legs.length,g:{sport:g.sport,home:g.home,away:g.away,comp:g.comp,ko:g.ko}}; } return o; }),
         props:    db.props.filter(r=>liveOf("props",r)).map(r=>this.docOf("props",r)).filter(recent)
       };
       const sj = JSON.stringify(snap);
@@ -853,7 +853,10 @@ function carryTip(f,g){
   if(f.sport==="basketball" && !t){ if(x.spread) t=x.spread; else if(x.totalSide) t=(x.totalSide+" "+(x.totalLine||"")).trim(); }
   if(!t) return;
   f[g]=f[g]||{};
-  if(g==="bo"){ if(!f.bo.pick) f.bo.pick=t; return; }
+  if(g==="bo"){
+    /* a basketball win tip with a spread travels as one pick, e.g. "1 -3.5", exactly like the table shows it */
+    const bare=t; if(f.sport==="basketball" && /^[12]$/.test(t) && String(x.spread||"").trim()) { const sp=String(x.spread).trim(); t=/^[12]\s/.test(sp)?sp:t+" "+sp; }
+    if(!f.bo.pick || (f.bo.pick===bare && t!==bare)) f.bo.pick=t; return; }
   if(f.et.mk) return;
   const T=t.toUpperCase().replace(/\s+/g," "); let m;
   if(f.sport==="basketball"){
@@ -1069,7 +1072,9 @@ $("#fStatus").onchange = render;
 const hasTip = f => !!((f.fb&&f.fb.live)||(f.bb&&f.bb.live));
 const tipBox = f => f.sport==="basketball" ? bbOf(f) : fbOf(f);
 const dayOfF = f => String((f&&f.kickoff)||"").slice(0,10);
-const isDone = st => st==="won"||st==="lost"||st==="postponed";
+const isDone = st => st==="won"||st==="lost"||st==="postponed"||st==="dnp"||st==="injured";
+/* player props and player-prop banker bets can also be void when the player did not play or was injured */
+const resSelP = (val,attrs) => `<select ${attrs}><option value="">pending</option><option value="won" ${val==="won"?"selected":""}>won</option><option value="lost" ${val==="lost"?"selected":""}>lost</option><option value="dnp" ${val==="dnp"?"selected":""}>did not play (void)</option><option value="injured" ${val==="injured"?"selected":""}>injured (void)</option><option value="postponed" ${val==="postponed"?"selected":""}>postponed</option></select>`;
 const resSel = (val,attrs) => `<select ${attrs}><option value="">pending</option><option value="won" ${val==="won"?"selected":""}>won</option><option value="lost" ${val==="lost"?"selected":""}>lost</option><option value="postponed" ${val==="postponed"?"selected":""}>postponed</option></select>`;
 const fxById = id => db.fixtures.find(x=>x.id===id);
 /* everything that can still be settled: played in the last 30 days and not yet won / lost */
@@ -1109,7 +1114,7 @@ function renderResults(){
   $("#rsEtCount").textContent = et.length ? `(${et.filter(f=>isDone(f.et.st)).length} of ${et.length} settled)` : "";
   $("#rsEtBody").innerHTML = etShow.length ? etShow.map(f=>`<tr data-id="${f.id}"><td class="t">${esc(hhmm(f.kickoff))}</td>
       <td>${f.sport==="basketball"?"🏀":"⚽"} <b>${esc(f.home)}</b> v <b>${esc(f.away)}</b></td><td>${"Admin"}</td>
-      <td>${resSel(f.et.st,'data-f="st"')}</td></tr>`).join("") : `<tr><td colspan="4" class="empty">${et.length?"Settled.":"No Banker Bet of the Day on this day."}</td></tr>`;
+      <td>${(f.et.mk==="Player Prop"?resSelP:resSel)(f.et.st,'data-f="st"')}</td></tr>`).join("") : `<tr><td colspan="4" class="empty">${et.length?"Settled.":"No Banker Bet of the Day on this day."}</td></tr>`;
   /* bets of the day */
   const bo=db.fixtures.filter(f=>f.bo&&f.bo.on&&dayOfF(f)===day).sort(byKick), boShow=bo.filter(f=>!onlyOpen||!isDone(f.bo.st));
   $("#rsBoCount").textContent = bo.length ? `(${bo.filter(f=>isDone(f.bo.st)).length} of ${bo.length} settled)` : "";
@@ -1122,7 +1127,7 @@ function renderResults(){
   $("#rsPrCount").textContent = pr.length ? `(${pr.filter(p=>isDone(p.st)).length} of ${pr.length} settled)` : "";
   $("#rsPrBody").innerHTML = prShow.length ? prShow.map(p=>{ const f=fxById(p.fixtureId)||{home:"?",away:"?"}, m=PROP_MARKETS.find(x=>x.k===p.market);
     return `<tr data-id="${p.id}"><td><b>${esc(f.home)}</b> v <b>${esc(f.away)}</b></td><td>${esc(m?m.name:p.market)}</td><td>${esc(propPick(p))}</td><td>${esc(p.odds||"-")}</td>
-      <td>${resSel(p.st==="pending"?"":p.st,'data-f="st"')}</td>
+      <td>${resSelP(p.st==="pending"?"":p.st,'data-f="st"')}</td>
       <td><input class="odd" type="number" step="0.5" data-f="stat" value="${p.stat==null?"":esc(p.stat)}" placeholder="e.g. 9" style="width:80px" aria-label="Final stat"></td></tr>`; }).join("") : `<tr><td colspan="6" class="empty">${pr.length?"Settled.":"No live props on this day."}</td></tr>`;
   setResultsBtn();
 }

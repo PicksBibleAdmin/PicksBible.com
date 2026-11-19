@@ -1483,3 +1483,8 @@ td.affc{text-align:center;white-space:nowrap;padding:6px 10px!important}
 .affslot{display:flex;justify-content:center;align-items:center;margin:2px 14px 10px}
 .etbody.split .affslot{min-height:58px}.etbody.full .affslot{margin-inline:30px}
 .bbaff{margin-top:12px;padding-top:10px;border-top:1px solid var(--line)}.bbaff .affwrap{align-items:flex-start}
+
+/* player did not play / injured: the prop is void */
+.propcard.void{opacity:.8;border-style:dashed}
+.propcard.void .proppick .pick{color:#9ca3af;background:#6b728033;text-decoration:line-through}
+.vtag{font:700 10.5px var(--body);letter-spacing:.04em;color:#64748b;background:#e2e8f0;border-radius:6px;padding:2px 7px;text-transform:uppercase;white-space:nowrap}
