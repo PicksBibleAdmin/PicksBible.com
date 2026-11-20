@@ -90,9 +90,12 @@ function loadAff(done){
   var fin=false,n=2;
   function one(){if(--n===0)end()}
   function end(){if(fin)return;fin=true;clearTimeout(t);done()}
-  var t=setTimeout(end,2500);
+  var t=setTimeout(end,1200);
   try{fetch(AFF_URL).then(function(r){return r.ok?r.json():{}}).then(function(j){try{var d=j&&j.fields?fsMap(j.fields):null;AFF.list=((d&&d.partners)||[]).filter(function(p){return p&&p.on!==false&&p.logo&&/^https:\/\//i.test(p.url||"")});AFF.list.forEach(function(p){p.src=affBlob(p.logo);p.logo=""})}catch(e){}one()}).catch(one)}catch(e){one()}
-  try{var q=new URLSearchParams(location.search).get("affcc");if(q){AFF.cc=q.toUpperCase().slice(0,2);one()}else fetch("/api/geo").then(function(r){return r.ok?r.json():{}}).then(function(j){AFF.cc=String((j&&j.c)||"").toUpperCase();one()}).catch(one)}catch(e){one()}
+  try{var q=new URLSearchParams(location.search).get("affcc"),sc="";try{sc=localStorage.getItem("pb.cc")||""}catch(_){}
+    if(q){AFF.cc=q.toUpperCase().slice(0,2);one()}
+    else if(/^[A-Z]{2}$/.test(sc)){AFF.cc=sc;one();fetch("/api/geo").then(function(r){return r.ok?r.json():{}}).then(function(j){var c=String((j&&j.c)||"").toUpperCase();if(/^[A-Z]{2}$/.test(c))try{localStorage.setItem("pb.cc",c)}catch(_){}}).catch(function(){})}
+    else fetch("/api/geo").then(function(r){return r.ok?r.json():{}}).then(function(j){AFF.cc=String((j&&j.c)||"").toUpperCase();if(/^[A-Z]{2}$/.test(AFF.cc))try{localStorage.setItem("pb.cc",AFF.cc)}catch(_){}one()}).catch(one)}catch(e){one()}
 }
 /* ax = the match's own override: "" (use the dashboard), "none", or "id1,id2" */
 function affFor(pl,ax){
@@ -685,7 +688,7 @@ $$("[data-home]").forEach(function(hero){
       '<div class="vb-lg"><span class="fl">'+flagByLabel(v.lg)+'</span>'+esc(v.lg)+'</div><div class="vb-main"><div class="vb-t">'+teamCrest(v.h,v.hl,v.sp,v.hc)+'<div class="vb-team">'+esc(v.h)+'</div></div><div class="vb-mid"><strong>'+esc(v.t)+'</strong><span class="vs">VS</span></div><div class="vb-t">'+teamCrest(v.a,v.al,v.sp,v.ac)+'<div class="vb-team">'+esc(v.a)+'</div></div></div>'+
       '<div class="ftrow ftslot">'+etFT(v)+'</div>'+
       (affFor("banker",v.ax).length?'<div class="affslot">'+affHtml("banker",v.ax,"Bet this pick on")+'</div>':keep?'<div class="affslot"></div>':'')+
-      '<a class="etlock'+(v.st==="won"?" won":(v.st==="lost"||v.st==="dnp"||v.st==="injured")?" lost":"")+'" href="expert-tips.html?s='+sp+'&d='+selYmd()+'" aria-label="Open the reasoning for this Banker Bet of the Day"><span class="lockico" aria-hidden="true">'+(v.st==="won"?"&#10003;":"&#128274;")+'</span><span class="locktxt">View Banker Bet</span></a>'+
+      '<a class="etlock'+(v.st==="won"?" won":v.st==="lost"?" lost":"")+'" href="expert-tips.html?s='+sp+'&d='+selYmd()+'" aria-label="Open the reasoning for this Banker Bet of the Day"><span class="lockico" aria-hidden="true">'+(v.st==="won"?"&#10003;":"&#128274;")+'</span><span class="locktxt">View Banker Bet</span></a>'+
       '<div class="vb-by"><span>BANKER BET OF THE DAY BY: <b>'+esc(v.by)+'</b></span><span>'+(sp==="football"?"&#9917; Football":"&#127936; Basketball")+'</span></div>'+
       '</div>';
   }
@@ -800,7 +803,7 @@ $$("[data-analysis]").forEach(function(el){
    '<div class="bbteam">'+teamCrest(v.a,v.al,v.sp,v.ac)+'<b>'+esc(v.a)+'</b></div></div>'+
    '<h1>'+esc(title)+' | '+esc(shortDate)+'</h1>'+
    '<p class="bbintro">'+esc(v.h)+' welcome '+esc(v.a)+' in the '+esc(v.lg)+' on '+esc(dateTxt)+', with our prediction model identifying '+(selTxt?'<b>'+esc(selTxt)+'</b>':'our selection')+' as the best betting opportunity for this fixture.</p></div>'+
-   '<section class="bbbox"><div class="bbbar"><span>Banker Bet of the Day</span>'+((v.st==="dnp"||v.st==="injured")?'<em class="bbres pend">Void &middot; '+(v.st==="dnp"?"Did not play":"Injured")+'</em>':done?'<em class="bbres '+v.st+'">'+(v.st==="won"?"&#10003; Won":"Lost")+'</em>':'<em class="bbres pend">Pending</em>')+'</div>'+
+   '<section class="bbbox"><div class="bbbar"><span>Banker Bet of the Day</span>'+((v.st==="dnp"||v.st==="injured")?'<em class="bbres pend">Pending &middot; '+(v.st==="dnp"?"Did not play":"Injured")+'</em>':done?'<em class="bbres '+v.st+'">'+(v.st==="won"?"&#10003; Won":"Lost")+'</em>':'<em class="bbres pend">Pending</em>')+'</div>'+
    '<div class="bbin"><div class="bbl"><span class="bbk">Our Best Bet</span><h2>'+(hasBM?'<span class="mk">'+esc(bm.m)+'</span><span class="dash"> - </span><span class="sl">'+esc(bm.sel||bm.l[bm.i])+'</span>':(selTxt?'<span class="sl">'+esc(selTxt)+'</span>':'<span class="na">Coming soon</span>'))+'</h2>'+
    (paras.length?paras.map(function(t){return '<p>'+esc(t)+'</p>'}).join(""):'')+
    (affFor("banker",v.ax).length?"":affPills(v.aff))+

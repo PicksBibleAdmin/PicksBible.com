@@ -1,4 +1,4 @@
-/* PicksBible email capture popup. Shows once to new visitors and once when a desktop visitor moves to leave.
+/* PicksBible email capture popup. Only for visitors who never signed up, only after 10 seconds on the page (see the rules below).
    Saves the email to the Firestore "leads" collection (create only; only the admin can read it). */
 (function () {
   "use strict";
@@ -7,7 +7,7 @@
   var KEY = "pb.lead", DIS = "pb.leadDismissed";
   function get(k) { try { return localStorage.getItem(k); } catch (_) { return null; } }
   function set(k, v) { try { localStorage.setItem(k, v); } catch (_) {} }
-  if (get(KEY)) return;
+  if (get(KEY) || get("pb.member") === "1") return;
   var shown = false, exitShown = false;
   var API = "AIzaSyBBnSFHx_z1YWwOXz6sdKOSzelTIuvusa8";
   var URL_ = "https://firestore.googleapis.com/v1/projects/picksbible-7fa7f/databases/(default)/documents/leads";
@@ -79,25 +79,30 @@
       .catch(function () { btn.disabled = false; msg.className = "lm e"; msg.textContent = "Could not save right now. Please try again."; });
   };
 
-  var touch = false; try { touch = window.matchMedia("(pointer:coarse)").matches; } catch (_) {}
+  /* WHO sees it: only visitors who have never signed up (no saved sign-up, not a logged-in member) and who are not in the 7-day quiet period after closing it.
+     WHEN: after the visitor has really been on the page for more than 10 seconds (time with the tab in the background does not count),
+     the same on phones and desktops. Repeat visitors who still have not signed up also get it when they move to leave, even before 10 seconds,
+     because they already know the site. A first-time visitor who leaves in under 10 seconds is never interrupted. */
+  var visits = +get("pb.visits") || 0;
+  try { if (!sessionStorage.getItem("pb.vs")) { visits++; set("pb.visits", String(visits)); sessionStorage.setItem("pb.vs", "1"); } } catch (_) {}
+  var repeat = visits > 1;
   var dis = +get(DIS) || 0, quiet = dis && Date.now() - dis < 7 * 864e5;
-  /* 1) new visitor. Desktop: after 6 seconds. Phones: only after they have scrolled a bit or stayed 20 seconds
-        (a popup the instant a phone visitor lands from Google can hurt search rankings) */
-  function first() { if (!shown && el.hidden && !quiet) { shown = true; open("popup"); } }
-  if (!touch) setTimeout(first, 6000);
-  else {
-    setTimeout(first, 20000);
-    window.addEventListener("scroll", function onS() {
-      var h = document.documentElement; if ((window.scrollY + window.innerHeight) / h.scrollHeight > 0.35) { window.removeEventListener("scroll", onS); first(); }
-    }, { passive: true });
-  }
-  /* 2) leaving. Desktop: the mouse leaves through the top of the window. Phones: a quick scroll back up towards the address bar */
+  var active = 0, lastTick = Date.now();
+  function first() { if (!shown && el.hidden && !quiet && !get(KEY)) { shown = true; open("popup"); } }
+  var ticker = setInterval(function () {
+    var n = Date.now(), dt = n - lastTick; lastTick = n;
+    if (document.visibilityState === "visible" && dt < 2000) active += dt;
+    if (active > 10000) { clearInterval(ticker); first(); }
+  }, 500);
+  /* leaving. Desktop: the mouse leaves through the top of the window. Phones: a quick scroll back up towards the address bar */
   function leave() {
-    if (exitShown || !el.hidden) return;
+    if (exitShown || !el.hidden || quiet || get(KEY)) return;
+    if (!(active > 10000 || repeat)) return;
     var d = +get(DIS) || 0; if (d && Date.now() - d < 864e5) return;
     exitShown = true; open("exit");
   }
   document.addEventListener("mouseout", function (e) { if (!e.relatedTarget && e.clientY <= 8) leave(); });
+  var touch = false; try { touch = window.matchMedia("(pointer:coarse)").matches; } catch (_) {}
   if (touch) {
     var lastY = window.scrollY, lastT = Date.now(), maxY = 0;
     window.addEventListener("scroll", function () {
