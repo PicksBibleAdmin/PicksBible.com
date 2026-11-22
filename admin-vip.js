@@ -80,7 +80,7 @@
 </style>
 <div class="card">
   <h2>VIP package builder</h2>
-  <p class="note">Pick the day and the package, enter the total odd, then add the matches (3 to 6 on average). <b>Save draft</b> keeps it private. <b>Publish to VIP members</b> sends it to members. Picks stay private until the package is settled by the results upload.</p>
+  <p class="note">Pick the day and the package, enter the total odd, then add the matches (3 to 6 on average). <b>Save draft</b> keeps it private. <b>Save &amp; publish (quiet)</b> puts it in members' VIP dashboard right away with no email and no notification. <b>Publish &amp; notify members</b> also sends the notification and email. Once published, change the odds or picks any time with <b>Save changes</b>: members and the site get the new details straight away, nobody is emailed. Picks stay private until the package is settled by the results upload.</p>
   <div class="row" style="margin-bottom:12px">
     <div><label>Date</label><input type="date" id="vpkDate"></div>
     <div><label>Package</label><select id="vpkPk"><option value="gold">Gold (2 to 3 odds)</option></select></div>
@@ -91,7 +91,9 @@
   <div class="addrow"><button type="button" class="btn ghost" id="vpkAdd">+ Add pick</button></div>
   <div class="acts">
     <button type="button" class="btn ghost" id="vpkDraft">Save draft</button>
-    <button type="button" class="btn" id="vpkPub">Publish to VIP members</button>
+    <button type="button" class="btn" id="vpkUpd" hidden>Save changes (no email, no notification)</button>
+    <button type="button" class="btn" id="vpkQuiet">Save &amp; publish (no email, no notification)</button>
+    <button type="button" class="btn ghost" id="vpkPub">Publish &amp; notify members</button>
     <button type="button" class="btn danger" id="vpkDel" hidden>Delete this package</button>
   </div>
 </div>
@@ -148,7 +150,7 @@
     if (!e || !(e.legs && e.legs.length)) return "New package. Not saved yet.";
     if (e.st === "won" || e.st === "lost") return "Settled (" + e.st + "). The matches and picks are now public on the site.";
     if (e.draft) return "Draft saved. Private. Members have not been told.";
-    return "Published to members on " + (e.pubAt || "").slice(0, 16).replace("T", " ") + " (delivered to " + (e.delivered != null ? e.delivered : "?") + " members). Still hidden from the public until the results upload settles it.";
+    return "Published to members on " + (e.pubAt || "").slice(0, 16).replace("T", " ") + (e.silent && !e.notified ? " (no notification or email sent)" : " (delivered to " + (e.delivered != null ? e.delivered : "?") + " members)") + ". Still hidden from the public until the results upload settles it. Changes you make now go through Save changes, with no email.";
   }
 
   /* ---------- painting ---------- */
@@ -156,6 +158,10 @@
     $("#vpkStatus").textContent = statusText();
     const cur = findEntry(state.pk, state.ymd), live = !!(cur && !cur.draft && cur.legs && cur.legs.length);
     $("#vpkDel").hidden = !cur;
+    $("#vpkDraft").hidden = live;           /* a published package can no longer go back to a draft by accident */
+    $("#vpkUpd").hidden = !live;
+    $("#vpkQuiet").hidden = live;           /* new or draft package: publish it quietly. A live package uses Save changes. */
+    $("#vpkPub").textContent = live ? "Send notification & email again" : "Publish & notify members";
     $("#vpkResCard").hidden = !live;
     if (live) { $("#vpkRes").value = cur.stMan || ""; $("#vpkResNote").textContent = "Showing on the site as: " + (cur.st === "won" ? "WON" : cur.st === "lost" ? "LOST" : "pending") + (cur.stMan ? " (set by you)" : " (automatic)") + "."; }
     $("#vpkLegs").innerHTML = state.legs.map((l, i) => {
@@ -229,6 +235,42 @@
     buildEntry(true); Store.save(db); $("#stats").textContent = statsText();
     toast("Draft saved"); load();
   }
+  /* change a package that is already published: members' copy and the site update, nobody is emailed or notified */
+  async function updatePublished() {
+    const cur = findEntry(state.pk, state.ymd);
+    if (!cur || cur.draft) return toast("Publish the package first.");
+    const p = problems(true); if (p.length) return toast(p[0]);
+    const btn = $("#vpkUpd"); btn.disabled = true;
+    const e = buildEntry(false); e.updatedAt = new Date().toISOString();
+    let note = "";
+    try {
+      await Store.fs.collection("vip_feed").doc(e.id).set({
+        pkg: state.pk, ymd: state.ymd, odds: e.odds, st: e.st || "",
+        legs: e.legs.map(l => ({ sport: l.sport, home: l.home, away: l.away, comp: l.comp, ko: l.ko, market: l.market, sel: l.sel, res: l.res || "", vr: l.vr || "" }))
+      }, { merge: true });
+    } catch (err) { note = " But members' copy could not be updated (" + (err.code || err.message) + ")."; }
+    commit(); $("#stats").textContent = statsText();
+    btn.disabled = false;
+    toast("Package updated for members and the site. No email or notification was sent." + note);
+    load();
+  }
+  /* publish a new or draft package to members and the site WITHOUT any notification or email */
+  async function quietPublish() {
+    const p = problems(true); if (p.length) return toast(p[0]);
+    const btn = $("#vpkQuiet"); btn.disabled = true;
+    const e = buildEntry(false); e.pubAt = e.pubAt || new Date().toISOString(); e.silent = true; e.updatedAt = new Date().toISOString();
+    let note = "";
+    try {
+      await Store.fs.collection("vip_feed").doc(e.id).set({
+        pkg: state.pk, ymd: state.ymd, odds: e.odds, audience: ["gold"], createdAt: e.pubAt, st: e.st || "",
+        legs: e.legs.map(l => ({ sport: l.sport, home: l.home, away: l.away, comp: l.comp, ko: l.ko, market: l.market, sel: l.sel, res: l.res || "", vr: l.vr || "" }))
+      }, { merge: true });
+    } catch (err) { note = " But members' copy could not be saved (" + (err.code || err.message) + ")."; }
+    commit(); $("#stats").textContent = statsText();
+    btn.disabled = false;
+    toast("Saved and published to members and the site. No email or notification was sent." + note);
+    load();
+  }
   function openPublish() {
     const p = problems(true); if (p.length) return toast(p[0]);
     const o = parseFloat(readOdds()), r = PK[state.pk].range;
@@ -246,7 +288,7 @@
     if (!title || !body) return toast("Fill in the title and the message");
     $("#vpMsgSend").disabled = true; $("#vpMsgSend").textContent = "Publishing...";
     const e = buildEntry(false);
-    e.msgTitle = title; e.msgBody = body; e.pubAt = new Date().toISOString();
+    e.msgTitle = title; e.msgBody = body; e.pubAt = new Date().toISOString(); e.notified = true;
     const aud = ["gold"];
     let n = 0, note = "", mailTo = [];
     try {
@@ -291,6 +333,8 @@
     $("#vpkAdd").onclick = () => { if (state.legs.length < MAXLEGS) { state.legs.push(emptyLeg()); paint(); } };
     $("#vpkDraft").onclick = saveDraft;
     $("#vpkPub").onclick = openPublish;
+    $("#vpkUpd").onclick = updatePublished;
+    $("#vpkQuiet").onclick = quietPublish;
     $("#vpkDel").onclick = delPackage;
     $("#vpMsgCancel").onclick = () => { $("#vipPop").hidden = true; };
     $("#vpMsgSend").onclick = publish;
