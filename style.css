@@ -1488,3 +1488,10 @@ td.affc{text-align:center;white-space:nowrap;padding:6px 10px!important}
 .propcard.void{opacity:.8;border-style:dashed}
 .propcard.void .proppick .pick{color:#9ca3af;background:#6b728033;text-decoration:line-through}
 .vtag{font:700 10.5px var(--body);letter-spacing:.04em;color:#64748b;background:#e2e8f0;border-radius:6px;padding:2px 7px;text-transform:uppercase;white-space:nowrap}
+
+/* VIP bar: published but not settled = a pulsing gold padlock; tap to see the matches (picks stay hidden) */
+.vmark.lock{background:#f9a01b;color:#2a1a00}
+@keyframes vpulseG{0%{box-shadow:0 0 0 0 rgba(249,160,27,.75)}70%{box-shadow:0 0 0 9px rgba(249,160,27,0)}100%{box-shadow:0 0 0 0 rgba(249,160,27,0)}}
+.vcol.has .vmark.lock{animation:vpulseG 1.5s ease-out infinite}
+.vcol.has:has(.vmark.lock){border-color:#f9a01b}
+@media(prefers-reduced-motion:reduce){.vcol.has .vmark.lock{animation:none}}

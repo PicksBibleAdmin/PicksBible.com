@@ -457,7 +457,7 @@ const Store = {
       const recent = r => { const k=String(r.kickoff||"").slice(0,10); return k >= cutoff && k <= farOut; };
       const snap = {
         fixtures: db.fixtures.filter(f=>liveOf("fixtures",f) && (recent(f) || homeBox(f))).map(f=>this.docOf("fixtures",f)),
-        vip:      (db.vip||[]).filter(v=>v.tier==="bronze"&&v.ymd>=cut120).map(v=>{ const o={ymd:v.ymd,tier:"bronze",odds:v.draft?"":(v.odds||""),st:v.st||""}; if((v.st==="won"||v.st==="lost")&&!v.draft&&v.legs&&v.legs.length) o.legs=v.legs.map(l=>({sport:l.sport,home:l.home,away:l.away,comp:l.comp,ko:l.ko,market:l.market,sel:l.sel,res:l.res||"",vr:l.vr||"",ft:l.ft||""})); else if(!v.draft&&v.legs&&v.legs.length){ const g=v.legs[0]; o.teaser={n:v.legs.length,g:{sport:g.sport,home:g.home,away:g.away,comp:g.comp,ko:g.ko}}; } return o; }),
+        vip:      (db.vip||[]).filter(v=>v.tier==="bronze"&&v.ymd>=cut120).map(v=>{ const o={ymd:v.ymd,tier:"bronze",odds:v.draft?"":(v.odds||""),st:v.st||""}; if((v.st==="won"||v.st==="lost")&&!v.draft&&v.legs&&v.legs.length) o.legs=v.legs.map(l=>({sport:l.sport,home:l.home,away:l.away,comp:l.comp,ko:l.ko,market:l.market,sel:l.sel,res:l.res||"",vr:l.vr||"",ft:l.ft||""})); else if(!v.draft&&v.legs&&v.legs.length){ const g=v.legs[0]; o.teaser={n:v.legs.length,g:{sport:g.sport,home:g.home,away:g.away,comp:g.comp,ko:g.ko}}; o.lk=v.legs.map(l=>({sport:l.sport,home:l.home,away:l.away,comp:l.comp,ko:l.ko})); /* matches only: the market and the selection stay private until the package is settled */ } return o; }),
         props:    db.props.filter(r=>liveOf("props",r)).map(r=>this.docOf("props",r)).filter(recent)
       };
       const sj = JSON.stringify(snap);

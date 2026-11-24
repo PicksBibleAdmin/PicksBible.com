@@ -8,15 +8,17 @@
   function get(k) { try { return localStorage.getItem(k); } catch (_) { return null; } }
   function set(k, v) { try { localStorage.setItem(k, v); } catch (_) {} }
   if (get(KEY) || get("pb.member") === "1") return;
-  var shown = false, exitShown = false;
+  var shown = false, exitShown = false, lastTouch = 0, leaving = false;
+  var coarse = false; try { coarse = window.matchMedia("(pointer:coarse)").matches; } catch (_) {}
+  var fine = false; try { fine = window.matchMedia("(hover:hover) and (pointer:fine)").matches; } catch (_) {}
   var API = "AIzaSyBBnSFHx_z1YWwOXz6sdKOSzelTIuvusa8";
   var URL_ = "https://firestore.googleapis.com/v1/projects/picksbible-7fa7f/databases/(default)/documents/leads";
 
   var css = document.createElement("style");
-  css.textContent = "#pbLead{position:fixed;inset:0;z-index:9999;background:rgba(40,44,52,.55);display:flex;align-items:center;justify-content:center;padding:16px;overflow:auto}#pbLead[hidden]{display:none}" +
-    "#pbLead .lb{position:relative;width:min(560px,100%);background:#fff;color:#1a1a1a;border-radius:24px;padding:48px 36px 30px;box-shadow:0 20px 60px rgba(0,0,0,.35);font-family:inherit;overflow:hidden}" +
-    "#pbLead .bar{position:absolute;left:0;top:0;height:8px;width:38%;background:#5b4ee0;border-radius:0 8px 8px 0}" +
-    "#pbLead .lx{position:absolute;right:10px;top:14px;width:26px;height:26px;background:none;border:0;color:#8a8a93;font-size:20px;cursor:pointer;line-height:24px;padding:0;border-radius:50%}#pbLead .lx:hover{background:#eee;color:#333}" +
+  css.textContent = "#pbLead{position:fixed;inset:0;z-index:9999;background:rgba(40,44,52,.55);display:flex;padding:16px;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch}#pbLead[hidden]{display:none}" +
+    "#pbLead .lb{position:relative;margin:auto;width:min(560px,100%);background:#fff;color:#1a1a1a;border-radius:24px;padding:48px 36px 30px;box-shadow:0 20px 60px rgba(0,0,0,.35);font-family:inherit}" +
+    "#pbLead .lb{overflow:hidden}#pbLead .bar{position:absolute;left:0;top:0;height:8px;width:38%;background:#5b4ee0;border-radius:0 8px 8px 0}" +
+    "#pbLead .lx{position:absolute;right:6px;top:8px;width:44px;height:44px;background:none;border:0;color:#6b6b75;font-size:28px;cursor:pointer;line-height:44px;padding:0;border-radius:50%;z-index:2}#pbLead .lx:hover{background:#eee;color:#333}" +
     "#pbLead .logo{display:block;margin:0 auto 10px;height:44px;width:auto}" +
     "#pbLead h2{margin:0 0 26px;text-align:center;font-size:32px;line-height:1.15;color:#111;font-weight:700}" +
     "#pbLead .g{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:16px}@media(max-width:480px){#pbLead .g{grid-template-columns:1fr}#pbLead .lb{padding:44px 20px 24px}#pbLead h2{font-size:26px}}" +
@@ -26,7 +28,9 @@
     "#pbLead .tx{margin:0;color:#222;font-size:17px;line-height:1.5}" +
     "#pbLead .ft{display:flex;justify-content:flex-end;margin-top:22px}" +
     "#pbLead button.lg{padding:16px 30px;border:0;border-radius:999px;background:#16a34a;color:#fff;font-weight:700;font-size:18px;font-family:inherit;cursor:pointer}#pbLead button.lg:hover{background:#15803d}#pbLead button.lg[disabled]{opacity:.6}" +
-    "#pbLead .lm{margin:12px 0 0;font-size:15px;min-height:18px;text-align:right}#pbLead .lm.e{color:#d93025}#pbLead .lm.o{color:#188038}";
+    "#pbLead .lm{margin:12px 0 0;font-size:15px;min-height:18px;text-align:right}#pbLead .lm.e{color:#d93025}#pbLead .lm.o{color:#188038}" +
+    "@media(max-width:480px),(max-height:700px){#pbLead{padding:10px}#pbLead .lb{padding:40px 16px 16px;border-radius:18px}#pbLead .logo{height:32px;margin-bottom:6px}#pbLead h2{font-size:22px;margin-bottom:14px}#pbLead .g{gap:10px;margin-bottom:10px}#pbLead label{font-size:15px;margin-bottom:5px}#pbLead input{padding:11px 14px;font-size:16px}#pbLead .fw{margin-bottom:10px}#pbLead hr{margin:12px 0 10px}#pbLead .tx{font-size:15px}#pbLead .ft{margin-top:12px}#pbLead button.lg{width:100%;padding:14px 16px;font-size:16px}#pbLead .lm{margin-top:8px;font-size:14px}}" +
+    "@media(max-height:480px){#pbLead .logo,#pbLead .tx,#pbLead hr{display:none}#pbLead .lb{padding-top:34px}}";
   document.head.appendChild(css);
 
   var el = document.createElement("div");
@@ -46,7 +50,7 @@
   function open(why) {
     if (get(KEY)) return;
     el.hidden = false; el.dataset.why = why;
-    setTimeout(function () { var i = el.querySelector("#pbF"); i && i.focus && i.focus({ preventScroll: true }); }, 50);
+    if (!coarse) setTimeout(function () { var i = el.querySelector("#pbF"); i && i.focus && i.focus({ preventScroll: true }); }, 50); /* on phones the keyboard would hide the form */
   }
   function close() { el.hidden = true; if (!get(KEY)) set(DIS, String(Date.now())); }
   el.querySelector(".lx").onclick = close;
@@ -96,13 +100,17 @@
   }, 500);
   /* leaving. Desktop: the mouse leaves through the top of the window. Phones: a quick scroll back up towards the address bar */
   function leave() {
+    if (leaving || Date.now() - lastTouch < 1500) return; /* a tap on a link or menu is not a visitor leaving */
     if (exitShown || !el.hidden || quiet || get(KEY)) return;
     if (!(active > 10000 || repeat)) return;
     var d = +get(DIS) || 0; if (d && Date.now() - d < 864e5) return;
     exitShown = true; open("exit");
   }
-  document.addEventListener("mouseout", function (e) { if (!e.relatedTarget && e.clientY <= 8) leave(); });
-  var touch = false; try { touch = window.matchMedia("(pointer:coarse)").matches; } catch (_) {}
+  ["touchstart", "pointerdown", "click"].forEach(function (t) { document.addEventListener(t, function () { lastTouch = Date.now(); }, { passive: true, capture: true }); });
+  ["pagehide", "beforeunload"].forEach(function (t) { window.addEventListener(t, function () { leaving = true; }); });
+  /* mouse exit-intent only on real mouse devices: phones fire fake mouse events when you tap, which opened the popup on every page change */
+  if (fine) document.addEventListener("mouseout", function (e) { if (!e.relatedTarget && e.clientY <= 8) leave(); });
+  var touch = coarse;
   if (touch) {
     var lastY = window.scrollY, lastT = Date.now(), maxY = 0;
     window.addEventListener("scroll", function () {

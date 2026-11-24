@@ -75,7 +75,7 @@ function applyLive(P,live){
   fixtures.sort(function(a,b){return String(a.kickoff).localeCompare(String(b.kickoff))});
   P.byDate={football:{},basketball:{}};
   P.home={etl:{football:{},basketball:{}},et:{football:{},basketball:{}},bo:{football:{},basketball:{}},vip:{bronze:{}}};
-  (live&&live.vip||[]).forEach(function(x){if(x&&x.ymd&&x.tier==="bronze")P.home.vip.bronze[x.ymd]={odds:x.odds||"",st:x.st||"",legs:x.legs||null}});
+  (live&&live.vip||[]).forEach(function(x){if(x&&x.ymd&&x.tier==="bronze")P.home.vip.bronze[x.ymd]={odds:x.odds||"",st:x.st||"",legs:x.legs||null,lk:x.lk||null}});
   fixtures.forEach(function(f){addFx(P,f,days)});
   props.sort(function(a,b){return String(a.kickoff).localeCompare(String(b.kickoff))});
   props.forEach(function(p){addProp(P,p)});
@@ -240,6 +240,9 @@ function teamCrest(name,logo,sp,color){
 var DAYLABEL={yesterday:"Yesterday",today:"Today",tomorrow:"Tomorrow"};
 /* "2026-10-25" -> "25th October 2026" (used in table banners instead of Yesterday / Today / Tomorrow) */
 function pbDate(ymd){var p=String(ymd||"").split("-");if(p.length!==3)return "";var d=+p[2],M=["January","February","March","April","May","June","July","August","September","October","November","December"],sf=(d%10===1&&d!==11)?"st":(d%10===2&&d!==12)?"nd":(d%10===3&&d!==13)?"rd":"th";return d+sf+" "+M[+p[1]-1]+" "+p[0]}
+
+/* "Tuesday 24th November": the day name used in the home page box titles */
+function pbDateW(ymd){var p=String(ymd||"").split("-");if(p.length!==3)return "";var w=["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"][new Date(+p[0],+p[1]-1,+p[2]).getDay()];return w+" "+pbDate(ymd)}
 
 /* ---------- header menus ---------- */
 var drawer=$("#drawer"), more=$("#more");
@@ -609,6 +612,7 @@ function getVIP(year,month,tier){ /* month is 0-11; one entry per calendar day *
   for(var d=1;d<=n;d++){
     var ymd=year+"-"+("0"+(month+1)).slice(-2)+"-"+("0"+d).slice(-2), x=V[ymd];
     if(x&&(x.st==="won"||x.st==="lost")){out.push({ymd:ymd,d:d,odds:x.odds||"",st:x.st,legs:(x.legs&&x.legs.length)?x.legs:null});continue}
+    if(x&&x.lk&&x.lk.length){out.push({ymd:ymd,d:d,odds:x.odds||"",st:"locked",legs:x.lk});continue}   /* published but not settled yet: padlock, matches visible, picks hidden */
     out.push({ymd:ymd,d:d,odds:(x&&x.odds)||"",st:ymd>today?"soon":"none"});
   }
   return out;
@@ -622,6 +626,7 @@ function showVipDay(label,x){
     "#pbVipDay .vd{position:relative;width:min(560px,100%);max-height:90vh;overflow:auto;background:var(--panel);color:var(--text);border:1px solid var(--line);border-radius:16px;padding:22px 18px}"+
     "#pbVipDay .vx{position:absolute;right:12px;top:8px;background:none;border:0;color:var(--muted);font-size:28px;cursor:pointer;line-height:1}"+
     "#pbVipDay h3{margin:0 0 4px;font-size:20px}#pbVipDay .vr{display:inline-block;padding:3px 12px;border-radius:99px;font-weight:700;font-size:13px;margin-bottom:10px}"+
+    "#pbVipDay .vr.lock{background:#f9a01b;color:#2a1a00}#pbVipDay .vlk{display:inline-flex;align-items:center;gap:5px;font-weight:700;color:#f9a01b}#pbVipDay .vcta{display:block;margin-top:14px;text-align:center;padding:12px 16px;border-radius:12px;background:linear-gradient(180deg,#fcc04a,#f9a01b);color:#2a1a00;font-weight:800;text-decoration:none}"+
     "#pbVipDay .vr.won{background:var(--won);color:#fff}#pbVipDay .vr.lost{background:#555a7a;color:#fff}"+
     "#pbVipDay table{width:100%;border-collapse:collapse;font-size:14px}#pbVipDay td,#pbVipDay th{padding:9px 5px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}#pbVipDay th{color:var(--muted);font-size:12px;text-transform:uppercase}"+
     "#pbVipDay .vt{margin-top:12px;font-size:17px;font-weight:700}#pbVipDay small{color:var(--muted)}";document.head.appendChild(st)}
@@ -629,16 +634,17 @@ function showVipDay(label,x){
   var d=new Date(x.ymd+"T12:00:00").toLocaleDateString("en-GB",{weekday:"long",day:"numeric",month:"long",year:"numeric"});
   var el=document.createElement("div");el.id="pbVipDay";
   el.innerHTML='<div class="vd" role="dialog" aria-modal="true" aria-label="'+label+' VIP picks"><button class="vx" type="button" aria-label="Close">&times;</button>'+
-    '<h3>'+label+' VIP picks</h3><div class="vsub">'+esc(d)+'</div><div style="margin:8px 0"><span class="vr '+x.st+'">'+(x.st==="won"?"&#10003; Won":"Lost")+'</span></div>'+
+    '<h3>'+label+' VIP picks</h3><div class="vsub">'+esc(d)+'</div><div style="margin:8px 0"><span class="vr '+x.st+'">'+(x.st==="locked"?"&#128274; Picks locked":x.st==="won"?"&#10003; Won":"Lost")+'</span></div>'+
+    (x.st==="locked"?'<table><thead><tr><th>Match</th><th>Pick</th></tr></thead><tbody>'+x.legs.map(function(l){return '<tr><td>'+esc(l.home)+' v '+esc(l.away)+'<br><small>'+esc(l.comp||"")+(l.ko?" &middot; "+esc(lt(l.ko)):"")+'</small></td><td><span class="vlk">&#128274; Locked</span></td></tr>'}).join("")+'</tbody></table><div class="vt">Total odds: '+esc(x.odds)+'</div><a class="vcta" href="premium.html">Unlock premium football and basketball predictions</a></div>':
     '<table><thead><tr><th>Match</th><th>Market</th><th>Pick</th><th>FT</th></tr></thead><tbody>'+x.legs.map(function(l){
       return '<tr><td>'+esc(l.home)+' v '+esc(l.away)+'<br><small>'+esc(l.comp||"")+(l.ko?" &middot; "+esc(lt(l.ko)):"")+'</small></td><td>'+esc(l.market)+'</td><td><b>'+esc(l.sel)+'</b> '+(l.res==="won"?'<span style="color:var(--won)">&#10003;</span>':l.res==="lost"?'<span style="color:var(--lost)">&#10005;</span>':(l.res==="push"||l.vr)?'<small>('+(l.vr==="dnp"?"did not play, void":l.vr==="injured"?"injured, void":"void")+')</small>':'')+'</td><td>'+(ftBox(l.ft,"")||'<small>&ndash;</small>')+'</td></tr>'}).join("")+
-    '</tbody></table><div class="vt">Total odds: '+esc(x.odds)+'</div></div>';
+    '</tbody></table><div class="vt">Total odds: '+esc(x.odds)+'</div></div>');
   document.body.appendChild(el);
   function close(){el.remove();document.removeEventListener("keydown",esc_)}
   function esc_(e){if(e.key==="Escape")close()}
   el.addEventListener("click",function(e){if(e.target===el||e.target.classList.contains("vx"))close()});
   document.addEventListener("keydown",esc_);
-  try{if(window.gtag)gtag("event","view_vip_day",{tier:label,day:x.ymd})}catch(_){}
+  try{if(window.gtag)gtag("event","view_vip_day",{tier:label,day:x.ymd,locked:x.st==="locked"?1:0})}catch(_){}
 }
 
 /* VIP results bar (one column per day, scrollable): used by the home page and by any other page that carries [data-vipbox] */
@@ -651,7 +657,7 @@ function makeVIP(vipbox,getSel){
     var wrap=$("[data-vipdays]",vipbox);
     wrap.innerHTML=data.map(function(x){
       if(x.st==="won")won++; if(x.st==="lost")lost++;
-      var mark=x.st==="won"?'<span class="vmark won" aria-label="Won">&#10003;</span>':x.st==="lost"?'<span class="vmark lost" aria-label="Lost">&#10005;</span>':'<span class="vmark none" aria-label="No result yet">&ndash;</span>';
+      var mark=x.st==="locked"?'<span class="vmark lock" aria-label="Picks locked. Tap to see the matches"><svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true"><path fill="currentColor" d="M17 9V7a5 5 0 00-10 0v2H5v12h14V9h-2zm-8-2a3 3 0 016 0v2H9V7zm4 10.7V19h-2v-1.3a2 2 0 112 0z"/></svg></span>':x.st==="won"?'<span class="vmark won" aria-label="Won">&#10003;</span>':x.st==="lost"?'<span class="vmark lost" aria-label="Lost">&#10005;</span>':'<span class="vmark none" aria-label="No result yet">&ndash;</span>';
       var dow=new Date(Y,M,x.d).toLocaleDateString("en-GB",{weekday:"short"});
       return '<div class="vcol'+(x.legs?" has":"")+(x.ymd===sel?" sel":"")+(x.ymd===today?" today":"")+'" data-ymd="'+x.ymd+'"'+(x.legs?' role="button" tabindex="0" title="See the picks for this day" aria-label="See the picks for '+x.d+' '+MON[M]+'"':'')+'><span class="vdow">'+dow+'</span><b class="vday">'+x.d+'</b><span class="vodds">'+(x.odds?esc(x.odds):'&ndash;')+'</span><span class="voddsl">odds</span>'+mark+'</div>';
     }).join("");
@@ -733,7 +739,7 @@ $$("[data-home]").forEach(function(hero){
       }else{list=D[sport][day]||[];title=DAYLABEL[day]}
     }
     var t=$("[data-slot=title]",sure);
-    t.textContent="Sure "+(sport==="football"?"⚽ Football":"🏀 Basketball")+" Predictions \u2014 "+(pbDate(ymd)||title);
+    t.textContent="Sure "+(sport==="football"?"⚽ Football":"🏀 Basketball")+" Predictions \u2014 "+(pbDateW(ymd)||title);
     var all=$("[data-sureall]",sure.parentNode)||$("[data-sureall]");if(all)all.href=sport==="football"?"football-predictions.html":"basketball-predictions.html";
     var short=list.filter(function(m){return m.sure}).slice(0,10);
     $("[data-slot=table]",sure).innerHTML=short.length?(sport==="football"?footballTable(short):basketballTable(short)):'<p class="note center" style="padding:28px 10px">No sure predictions posted for this day yet.</p>';
@@ -744,7 +750,7 @@ $$("[data-home]").forEach(function(hero){
     $$("[data-ssport]",sure).forEach(function(b){b.setAttribute("aria-pressed",String(b.dataset.ssport===sport))});
     $$("[data-hday]",hero).forEach(function(b){b.setAttribute("aria-pressed",String(!customDate&&b.dataset.hday===day))});
   }
-  function titleDates(){$$(".etbar h2").forEach(function(h){if(!h.dataset.base)h.dataset.base=h.textContent.replace(/\s+\u2014.*$/,"");if(/^(Banker Bet of the Day|Bets of the Day)$/.test(h.dataset.base))h.textContent=h.dataset.base+" \u2014 "+pbDate(selYmd())})}
+  function titleDates(){$$(".etbar h2").forEach(function(h){if(!h.dataset.base)h.dataset.base=h.textContent.replace(/\s+\u2014.*$/,"");if(/^(Banker Bet of the Day|Bets of the Day)$/.test(h.dataset.base))h.textContent=h.dataset.base+" \u2014 "+pbDateW(selYmd())})}
   function drawAll(){titleDates();putUrl(selYmd(),sport);syncHero();drawET();drawBO();drawVIP();drawSure();window.__pbSport=sport;document.dispatchEvent(new CustomEvent("pb:sport",{detail:sport}));window.__pbDay=selYmd();document.dispatchEvent(new CustomEvent("pb:day",{detail:window.__pbDay}))}
   $$("[data-ssport]",sure).forEach(function(b){b.addEventListener("click",function(){setSport(b.dataset.ssport)})});
   $$("[data-hday]",hero).forEach(function(b){b.addEventListener("click",function(){
@@ -879,7 +885,9 @@ $$("[data-props]").forEach(function(el){
     el.innerHTML=groups.map(function(g){return '<div class="propmatch"><div class="pm-title">'+esc(g.t)+'</div>'+g.items.map(card).join("")+'</div>'}).join("");
   }
   var cur=store("pb.propmkt");
+  var ptl=sec&&$(".bar > span",sec);
   function pick(){
+    if(ptl){if(!ptl.dataset.base)ptl.dataset.base=ptl.textContent.replace(/\s*\u2014.*$/,"");ptl.textContent=ptl.dataset.base+" \u2014 "+pbDateW(day)}
     if(!markets.some(function(m){return m.k===cur}))cur=markets[0]&&markets[0].k;
     if(!listFor(cur).length){for(var i=0;i<markets.length;i++)if(listFor(markets[i].k).length){cur=markets[i].k;break}}   /* open on a prop type that actually has props */
     if(sel)sel.value=cur;
