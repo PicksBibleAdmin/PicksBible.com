@@ -663,6 +663,18 @@ function makeVIP(vipbox,getSel){
     }).join("");
     $("[data-vipmonth]",vipbox).textContent=MON[M]+" "+Y;
     $("[data-vipstat]",vipbox).innerHTML='';
+    (function(){ /* VIP tracker: bets placed this month and units up or down, from settled packages (1 unit staked per daily package at the listed total odds) */
+      var tk=document.querySelector("[data-viptrack]"); if(!tk)return;
+      var set=data.filter(function(x){return x.st==="won"||x.st==="lost"});
+      if(!set.length){tk.hidden=true;tk.innerHTML="";return}
+      var units=0, per=set.map(function(x){var o=parseFloat(x.odds),u=x.st==="won"?((o>1?o:2)-1):-1;units+=u;return u});
+      var max=Math.max.apply(null,per.map(Math.abs).concat([1])), fmt=function(n){return (n>0?"+":n<0?"\u2212":"")+Math.abs(n).toFixed(2)};
+      var bars=per.map(function(u){var h=Math.round(Math.abs(u)/max*22);return '<i class="'+(u>=0?"up":"dn")+'" style="height:'+Math.max(h,2)+'px"></i>'}).join("");
+      tk.innerHTML='<div class="vtrk"><div class="vtrk-h"><div><h3>VIP <b>Tracker</b></h3><span class="vsub">'+MON[M]+' '+Y+'</span></div><div class="vtrk-u '+(units>=0?"up":"dn")+'">'+fmt(units)+'u</div></div>'+
+        '<div class="vtrk-g"><div><small>BETS PLACED</small><strong>'+set.length+'</strong></div><div><small>WON / LOST</small><strong>'+won+' / '+lost+'</strong></div><div><small>WIN RATE</small><strong>'+Math.round(won/set.length*100)+'%</strong></div><div><small>UNITS '+(units>=0?"UP":"DOWN")+'</small><strong class="'+(units>=0?"up":"dn")+'">'+fmt(units)+'</strong></div></div>'+
+        '<div class="vtrk-b" aria-hidden="true">'+bars+'</div><div class="vtrk-n">1 unit per daily package at the listed odds</div></div>';
+      tk.hidden=false;
+    })();
     var target=$(".vcol.sel",wrap)||$(".vcol.today",wrap);
     if(target)wrap.scrollLeft=Math.max(0,target.offsetLeft-wrap.clientWidth/2+target.offsetWidth/2);
   }

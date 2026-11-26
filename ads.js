@@ -6,7 +6,9 @@
     catfish:{enabled:true,img:"",phoneImg:"",href:"contact.html",alt:"Advertisement"},   // 728x90 and 320x50
     popup:{enabled:true,img:"",href:"contact.html",alt:"Advertisement",delayMs:5000,minVisit:2}, // 600x560
     inline1:{enabled:true,img:"",href:"contact.html",alt:"Advertisement"},   // 300x250, phone, between Banker bet and Bets of the day
-    inline2:{enabled:true,img:"",href:"contact.html",alt:"Advertisement"}    // 300x250, phone, under the football table
+    inline2:{enabled:true,img:"",href:"contact.html",alt:"Advertisement"},   // 300x250, phone, under the football table
+    railC:{enabled:true,img:"",href:"contact.html",alt:"Advertisement"},     // 300x250, desktop right rail (1100px+)
+    railD:{enabled:true,img:"",href:"contact.html",alt:"Advertisement"}      // 300x600, desktop right rail, sticky
   };
   var d=document,ls,ss;
   try{ls=window.localStorage;ss=window.sessionStorage}catch(e){ls=ss=null}
@@ -60,13 +62,39 @@
   function inline(){
     var banker=d.querySelector("[data-experttip]"),botd=d.querySelector("[data-botd]"),sure=d.querySelector("[data-sure]");
     if(botd){
-      var old=banker&&banker.nextElementSibling;
-      if(old&&old.getAttribute("aria-label")==="Advertising"&&old!==botd)old.classList.add("pbad-hide-phone");
+      var old=d.querySelector('main>.wrap>section[aria-label="Advertising"]');
+      if(old)old.classList.add("pbad-hide-phone");
       slot(CFG.inline1,"inline1",null,botd);
     }
     if(sure)slot(CFG.inline2,"inline2",sure,null);
   }
 
-  function init(){catfish();inline();popup()}
+
+  /* 4. Desktop layout: right ad rail (1100px+), left panel (1500px+), banker bet strip beside the date picker (1500px+) */
+  function desktop(){
+    var wrap=d.querySelector("main>.wrap");if(!wrap)return;
+    var vip=d.querySelector("[data-vipbox]"),vipSec=vip&&vip.closest(".sec"),trk=d.querySelector("[data-viptrack]");
+    wrap.classList.add("pb-grid");
+    if(vipSec){var left=d.createElement("aside");left.className="pb-left";left.setAttribute("aria-label","VIP results");wrap.insertBefore(left,wrap.firstChild);left.appendChild(vipSec);if(trk)left.appendChild(trk)}
+    var rail=d.createElement("aside");rail.className="pb-rail";rail.setAttribute("aria-label","Advertisements");
+    rail.innerHTML='<div class="pbad-inline"><div class="pbad-frame">'+creative(CFG.railC,"Advertise Here!","300 × 250")+'</div></div><div class="pbad-sticky"><div class="pbad-frame">'+creative(CFG.railD,"Advertise Here!","300 × 600")+'</div></div>';
+    if(!CFG.railC.enabled)rail.firstChild.style.display="none";
+    if(!CFG.railD.enabled)rail.lastChild.style.display="none";
+    wrap.appendChild(rail);
+    /* banker bet: strip beside the date picker on wide screens, original place otherwise */
+    var banker=d.querySelector("[data-experttip]"),dates=d.querySelector(".hero .hdates");
+    if(banker&&dates&&window.matchMedia){
+      var home=d.createComment("banker-home");banker.parentNode.insertBefore(home,banker);
+      var row=d.createElement("div");row.className="pb-herorow";
+      var mq=window.matchMedia("(min-width:1500px)");
+      function place(){
+        if(mq.matches){if(!row.parentNode){dates.parentNode.insertBefore(row,dates);row.appendChild(dates)}row.appendChild(banker)}
+        else{if(row.parentNode){row.parentNode.insertBefore(dates,row);row.remove()}home.parentNode.insertBefore(banker,home.nextSibling)}
+      }
+      place();(mq.addEventListener?mq.addEventListener("change",place):mq.addListener(place));
+    }
+  }
+
+  function init(){desktop();catfish();inline();popup()}
   if(d.readyState==="loading")d.addEventListener("DOMContentLoaded",init);else init();
 })();
