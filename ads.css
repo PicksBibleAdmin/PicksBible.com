@@ -1,0 +1,102 @@
+/* PicksBible ads: catfish footer, repeat-visitor popup, phone inline slots.
+   Sizes: catfish 728x90 (tablet/desktop) and 320x50 (phone); popup 600x560; inline 300x250. */
+:root{--pb-catfish-h:0px}
+.pbad-link{display:block;color:inherit;text-decoration:none}
+.pbad-link img{display:block;width:100%;height:100%;object-fit:contain}
+.pbad-house{width:100%;height:100%;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:4px;text-align:center;background:#0F172A;border:1.5px dashed #475569;border-radius:8px;color:#94A3B8;font:500 11px var(--body);box-sizing:border-box}
+.pbad-house b{font:700 19px var(--display);color:#3B82F6}
+
+/* Catfish: fixed to the bottom of the device screen on every device, always fits the width */
+.pbad-catfish{position:fixed;left:0;right:0;bottom:0;z-index:8000;background:rgba(2,6,23,.96);border-top:2px solid #f9a01b;display:flex;justify-content:center;padding:6px 12px calc(6px + env(safe-area-inset-bottom,0px));box-sizing:border-box}
+.pbad-catfish .pbad-frame{width:min(728px,100%);aspect-ratio:728/90;border-radius:6px;overflow:hidden}
+.pbad-catfish .pbad-frame.phone{display:none}
+.pbad-catfish .pbad-house{flex-direction:row;gap:14px;border-radius:6px}
+@media(max-width:599px){
+  .pbad-catfish{padding:0 0 env(safe-area-inset-bottom,0px)}
+  .pbad-catfish .pbad-frame{display:none}
+  .pbad-catfish .pbad-frame.phone{display:block;width:100%;aspect-ratio:32/5;border-radius:0}
+  .pbad-catfish .pbad-house b{font-size:15px}
+}
+/* keep the Chat Us button and page content clear of the catfish */
+.chatus{bottom:calc(var(--pb-catfish-h) + 14px)!important}
+body.pbad-has-catfish{padding-bottom:var(--pb-catfish-h)}
+
+/* Inline 300x250 (phones only; tablet and desktop keep their existing 728x90 blocks) */
+.pbad-inline{display:none}
+@media(max-width:699px){
+  .pbad-inline{display:block;margin:18px auto;width:300px;max-width:100%;height:250px}
+  .pbad-inline .pbad-frame{width:100%;height:100%}
+  .pbad-hide-phone{display:none!important}
+}
+
+/* Popup 600x560, scaled to fit any screen */
+.pbad-pop{position:fixed;inset:0;z-index:9500;display:flex;align-items:center;justify-content:center;background:rgba(2,6,23,.78);padding:16px;box-sizing:border-box}
+.pbad-pop[hidden]{display:none}
+.pbad-pop .pbad-card{position:relative;width:min(600px,100%,calc((100vh - 48px) * 600 / 560));aspect-ratio:600/560;border-radius:10px;overflow:hidden;box-shadow:0 20px 60px #000a}
+.pbad-pop .pbad-x{position:absolute;top:8px;right:8px;z-index:2;width:44px;height:44px;border-radius:50%;border:0;background:rgba(2,6,23,.85);color:#fff;font:700 24px/1 var(--body);cursor:pointer}
+
+/* ---------- VIP tracker card ---------- */
+.vtrk{background:linear-gradient(#10182f,#0a1124);border:2px solid #f9a01b;border-radius:var(--r,10px);box-shadow:0 0 18px rgba(249,160,27,.35);padding:12px;display:flex;flex-direction:column;gap:10px;box-sizing:border-box}
+.vtrk-h{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.vtrk-h h3{margin:0;font:700 18px var(--display)}.vtrk-h h3 b{color:#f9a01b}
+.vtrk-h .vsub{font:600 10px var(--body);color:var(--muted);letter-spacing:.08em;text-transform:uppercase}
+.vtrk-u{font:700 22px var(--display)}
+.vtrk .up{color:#22c55e}.vtrk .dn{color:#ef4444}
+.vtrk-g{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}
+.vtrk-g>div{background:#0b1226;border:1px solid #2b3a5c;border-radius:7px;padding:6px 9px}
+.vtrk-g small{display:block;font:600 9px var(--body);color:var(--muted);letter-spacing:.08em}
+.vtrk-g strong{font:700 20px/1.1 var(--display);color:var(--text)}
+.vtrk-b{display:flex;align-items:center;gap:2px;height:46px}
+.vtrk-b i{flex:1;min-width:0;border-radius:2px}.vtrk-b i.up{background:#22c55e;align-self:flex-end;margin-bottom:23px}.vtrk-b i.dn{background:#64748b;align-self:flex-start;margin-top:23px}
+.vtrk-n{text-align:center;font:600 10px var(--body);color:var(--muted)}
+/* phones: tracker sits inside the VIP results card as one block */
+@media(max-width:699px){
+  [data-vipbox]{margin-bottom:0}
+  [data-viptrack]{margin-top:-1px}
+  [data-viptrack] .vtrk{border-top-width:1px;border-radius:0 0 var(--r,10px) var(--r,10px);box-shadow:none}
+  .vtrk-g{grid-template-columns:repeat(4,minmax(0,1fr))}
+  .vtrk-g>div{padding:5px 3px;text-align:center}.vtrk-g strong{font-size:17px}
+  .vtrk-b{display:none}
+}
+
+/* ---------- Desktop: right ad rail (1100px+) and left panel (1500px+) ---------- */
+.pb-rail{display:none}.pb-left{display:contents}
+@media(min-width:1100px){
+  main>.wrap.pb-grid{display:grid;grid-template-columns:minmax(0,1fr) 300px;column-gap:24px;row-gap:0;align-items:start;max-width:1520px}
+  main>.wrap.pb-grid>.sec{grid-column:1}
+  main>.wrap.pb-grid>.pb-left{display:contents}
+  main>.wrap.pb-grid>.pb-rail{display:flex;flex-direction:column;gap:28px;grid-column:2;grid-row:1 / span 40;padding-top:22px}
+  .pb-rail .pbad-inline{display:block;margin:0;width:300px;height:250px}
+  .pb-rail .pbad-sticky{position:sticky;top:84px;width:300px;height:600px}
+  .pb-rail .pbad-frame{width:100%;height:100%}
+  .pbad-hide-phone{display:revert!important}
+  /* tablet and small desktop: the in-feed 728x90 stays */
+}
+@media(min-width:1500px){
+  main>.wrap.pb-grid{grid-template-columns:280px minmax(0,1fr) 300px}
+  main>.wrap.pb-grid>.sec{grid-column:2}
+  main>.wrap.pb-grid>.pb-left{display:grid;grid-column:1;grid-row:1 / span 40;grid-auto-rows:1fr;align-self:start}
+  main>.wrap.pb-grid>.pb-rail{grid-column:3}
+  .pb-left>.sec{grid-column:auto;display:flex;margin-block:22px 0}
+  .pb-left>.sec>.vipbox,.pb-left>.sec>.vtrk{flex:1;box-sizing:border-box}
+  .pb-left>.sec:last-child{margin-bottom:22px}
+  .pb-left .vipscroll{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));overflow:visible}
+  .hero .wrap{max-width:1520px}
+}
+/* Banker bet strip, beside the date picker (1500px+) */
+@media(min-width:1500px){
+  .pb-herorow{display:flex;gap:20px;align-items:center}
+  .pb-herorow>.hdates{flex:none}
+  .pb-herorow>[data-experttip]{flex:1;min-width:0;margin:0}
+  [data-experttip] .etbar{padding:4px 14px;min-height:0}
+  [data-experttip] .etbar h2{font-size:13px;letter-spacing:.04em;margin:0}
+  .pb-herorow [data-experttip] .ettabs{display:none}
+  .pb-herorow .etbody.split{grid-template-columns:1fr 1fr}
+  .pb-herorow .crest{width:34px;height:34px;font-size:13px;margin-bottom:3px}
+  .pb-herorow .vb-lg{padding:6px 10px 0;font-size:10.5px}
+  .pb-herorow .vb-main{padding:6px 8px 4px!important;gap:6px}
+  .pb-herorow .vb-mid strong{font-size:18px!important}
+  .pb-herorow .vb-t .vb-team{font-size:11px;margin-top:2px}
+  .pb-herorow .vb-by{padding:4px 10px;gap:6px}
+  .pb-herorow .vb-foot{padding:6px 10px}
+}
