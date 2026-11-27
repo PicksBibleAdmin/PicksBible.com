@@ -1004,17 +1004,41 @@ $$("[data-results]").forEach(function(el){
 
 /* ---------- plans ---------- */
 var TIER_ICON={free:"🎯",gold:"🥇"};
-(function(){D.plans.forEach(function(p){if(p.tier==="gold"){p.price="$5";p.ngn="\u20a62,500";p.per="1 Week";p.perks=["2 to 4 odds VIP tips everyday","Guaranteed 5 wins out of 7 days - any extra lost day is refunded to you","Priority support","VIP lounge access"]}})})();
+var DURS=D.durs||{14:{label:"2 weeks",usd:10,ngn:10000},30:{label:"30 days",usd:20,ngn:20000}};
+/* Africa (outside Nigeria) sees USD only. Local-currency toggle for the rest is approximate: edit the rates here. */
+var AFR_ALL={};("Algeria,Angola,Benin,Botswana,Burkina Faso,Burundi,Cameroon,Cape Verde,Central African Republic,Chad,Comoros,Congo,DR Congo,Cote d'Ivoire,Ivory Coast,Djibouti,Egypt,Equatorial Guinea,Eritrea,Eswatini,Ethiopia,Gabon,Gambia,Ghana,Guinea,Guinea-Bissau,Kenya,Lesotho,Liberia,Libya,Madagascar,Malawi,Mali,Mauritania,Mauritius,Morocco,Mozambique,Namibia,Niger,Rwanda,Senegal,Seychelles,Sierra Leone,Somalia,South Africa,South Sudan,Sudan,Tanzania,Togo,Tunisia,Uganda,Zambia,Zimbabwe").split(",").forEach(function(n){AFR_ALL[n]=1});
+var LOCAL_CUR={"United Kingdom":["GBP","£",0.79],"Ireland":["EUR","€",0.93],"Germany":["EUR","€",0.93],"France":["EUR","€",0.93],"Spain":["EUR","€",0.93],"Italy":["EUR","€",0.93],"Netherlands":["EUR","€",0.93],"Portugal":["EUR","€",0.93],"Belgium":["EUR","€",0.93],"Canada":["CAD","CA$",1.38],"Australia":["AUD","A$",1.55],"India":["INR","₹",84]};
 function detectCountry(){try{var tz=Intl.DateTimeFormat().resolvedOptions().timeZone||"",l=navigator.language||"";if(tz==="Africa/Lagos"||/-NG$/i.test(l))return "Nigeria"}catch(e){}return ""}
 function isAF(){try{var tz=Intl.DateTimeFormat().resolvedOptions().timeZone||"";return /^Africa\//.test(tz)}catch(e){return false}}
-function isNG(){var c=store("premCountry");return c?c==="Nigeria":detectCountry()==="Nigeria"}
+function pbCountry(){return store("premCountry")||detectCountry()||"United States"}
+function isNG(){return pbCountry()==="Nigeria"}
+function pbDur(){var d=+store("premDur");return DURS[d]?d:14}
+function pbLocal(country){if(country==="Nigeria")return {code:"NGN",sym:"₦"};if(AFR_ALL[country])return null;var l=LOCAL_CUR[country];return l?{code:l[0],sym:l[1],rate:l[2]}:null}
+function pbUseLocal(country){return !!pbLocal(country)&&store("premCur")!=="usd"}
+function pbCur(country){return pbUseLocal(country)?pbLocal(country).code:"USD"}
+function pbPrice(country,dur,useLocal){
+  var d=DURS[dur]||DURS[14],loc=pbLocal(country);
+  if(country==="Nigeria"&&useLocal)return "₦"+d.ngn.toLocaleString("en-US");
+  if(loc&&loc.rate&&useLocal)return "≈ "+loc.sym+Math.round(d.usd*loc.rate).toLocaleString("en-US");
+  return "$"+d.usd;
+}
+function pbCurToggle(country){
+  var loc=pbLocal(country);
+  if(!loc)return '<span class="cur-note">Price in USD. Check your local rate.</span>';
+  var on=pbUseLocal(country);
+  return '<span class="curtg" role="group" aria-label="Currency"><button type="button" data-cur="local" aria-pressed="'+on+'">'+loc.code+'</button><button type="button" data-cur="usd" aria-pressed="'+!on+'">USD</button></span>';
+}
+function pbDurSelect(attr,dur){return '<select class="dur-sel" '+attr+' aria-label="Duration">'+Object.keys(DURS).map(function(k){return '<option value="'+k+'"'+(+k===dur?' selected':'')+'>'+esc(DURS[k].label)+'</option>'}).join("")+'</select>'}
 $$("[data-plans]").forEach(function(el){
-  function drawPlans(){el.innerHTML=D.plans.filter(function(p){return p.tier!=="free"}).map(function(p,i){var price=isNG()&&p.ngn?p.ngn:p.price;
-    return '<div class="pcard tier-'+esc(p.tier)+'"><div class="pc-head"><span class="pc-chip">'+(TIER_ICON[p.tier]||"")+' '+esc(p.name)+'</span></div>'+
-      '<div class="pc-price"><b>'+esc(price)+'</b><span>'+(p.tier==="free"?"free forever":"/ week")+'</span></div>'+(p.tier==="free"||isNG()?'':'<p class="pc-alt">'+(isAF()?'Pay 5 USDT or $5 USD weekly':'$5 USD weekly')+'</p>')+
+  function drawPlans(){var country=pbCountry(),dur=pbDur(),price=pbPrice(country,dur,pbUseLocal(country));
+    el.innerHTML=D.plans.filter(function(p){return p.tier!=="free"}).map(function(p){
+    return '<div class="pcard tier-'+esc(p.tier)+'"><div class="pc-head"><span class="pc-chip">'+(TIER_ICON[p.tier]||"")+' '+esc(p.name)+'</span>'+pbDurSelect('data-pdur',dur)+'</div>'+
+      '<div class="pc-price"><b>'+esc(price)+'</b><span>/ '+esc(DURS[dur].label)+'</span></div><div class="pc-cur">'+pbCurToggle(country)+'</div>'+
       '<ul class="pc-list">'+p.perks.map(function(k){var no=k.charAt(0)==="!";return '<li class="'+(no?'no':'')+'"><b>'+(no?'&#10005;':'&#10003;')+'</b><span>'+esc(no?k.slice(1):k)+'</span></li>'}).join("")+'</ul>'+
-      (p.tier==="free"?'<a class="btn ghost wide" href="predictions.html">Start free</a>':'<a class="btn wide" href="checkout.html?plan='+esc(p.tier)+'">Join '+esc(p.name)+'</a>')+'</div>'}).join("");
-  $$("[data-pay]",el).forEach(function(b){b.addEventListener("click",function(){$('[data-paynote="'+b.dataset.pay+'"]',el).hidden=false})})}
+      '<a class="btn wide" href="checkout.html?plan='+esc(p.tier)+'&dur='+dur+'">Join '+esc(p.name)+'</a></div>'}).join("");
+    var ds=$("[data-pdur]",el);if(ds)ds.addEventListener("change",function(){store("premDur",ds.value);drawPlans()});
+    $$("[data-cur]",el).forEach(function(b){b.addEventListener("click",function(){store("premCur",b.dataset.cur);drawPlans()})});
+  }
   drawPlans(); window.PB_DRAWPLANS=drawPlans;
 });
 
@@ -1071,58 +1095,49 @@ $$("form[data-local]").forEach(function(f){
 });
 /* ---------- checkout page ---------- */
 $$("[data-checkout]").forEach(function(root){
-  var q=new URLSearchParams(location.search), plan=null;
+  var q=new URLSearchParams(location.search), plan=null, SS=(window.PB&&PB.site)||{};
   D.plans.forEach(function(p){if(p.tier===q.get("plan")&&p.tier!=="free")plan=p});
   if(!plan){location.replace("premium.html");return}
+  var dur=+q.get("dur")||pbDur(); if(!DURS[dur])dur=14; store("premDur",dur);
   var $q=function(s){return root.querySelector(s)}, cs=$q("[data-ck=country]");
-  var AFR={"Ghana":1,"Kenya":1,"Uganda":1,"Tanzania":1,"Zambia":1,"Cameroon":1,"Rwanda":1,"Senegal":1,"Ivory Coast":1,"Cote d'Ivoire":1,"Malawi":1,"Zimbabwe":1,"South Africa":1,"Sierra Leone":1,"Liberia":1,"Ethiopia":1,"Botswana":1,"Namibia":1};
-  var names={Nigeria:1};
+  var names={Nigeria:1,"United States":1};
   Object.keys(D.leagues).forEach(function(c){var l=D.leagues[c];if(l.country)names[l.country]=1});
   Object.keys(D.countryFlags||{}).forEach(function(n){names[n]=1});
   cs.innerHTML=Object.keys(names).sort(function(x,y){return x.localeCompare(y)}).map(function(n){return '<option>'+esc(n)+'</option>'}).join("");
-  names["United States"]=1;cs.innerHTML=Object.keys(names).sort(function(x,y){return x.localeCompare(y)}).map(function(n){return '<option>'+esc(n)+'</option>'}).join("");var start=store("premCountry");cs.value=(start&&names[start])?start:(detectCountry()==="Nigeria"?"Nigeria":"United States");
-  var METHODS={bank:{i:"&#127974;",n:"Bank Transfer",s:"Pay from your bank app"},card:{i:"&#128179;",n:"Card",s:"Visa, Mastercard, Verve"},whop:{i:"&#128142;",n:"Whop",s:"Pay on Whop checkout"},usdt:{i:"&#8366;",n:"USDT (TRC20)",s:"Crypto transfer on the TRON network"},momo:{i:"&#128241;",n:"Mobile Money",s:"Pay from your mobile wallet"},stripe:{i:"&#128179;",n:"Stripe",s:"Pay by card with Stripe"}};
+  var start=store("premCountry");cs.value=(start&&names[start])?start:(detectCountry()==="Nigeria"?"Nigeria":"United States");
+  var METHODS={bank:{i:"&#127974;",n:"Bank Transfer",s:"Pay from your bank app"},card:{i:"&#128179;",n:"Card",s:"Visa, Mastercard, Verve"},usdt:{i:"&#8366;",n:"USDT (TRC20)",s:"Crypto transfer on the TRON network"},momo:{i:"&#128241;",n:"Mobile Money",s:"Pay from your mobile wallet"}};
   var LIVE=(D.pay&&D.pay.live)||{usdt:true};
   function isLive(k){return !!LIVE[k]}
   var method=null;
   function ng(){return cs.value==="Nigeria"}
-  function methodsFor(){return ng()?["usdt","bank","card","stripe","whop"]:AFR[cs.value]?["usdt","card","stripe","whop","momo"]:["usdt","card","stripe","whop"]}
+  function methodsFor(){return ng()?["usdt","bank","card"]:["usdt","card"]}
+  function total(){return pbPrice(cs.value,dur,pbUseLocal(cs.value))}
+  function usdAmt(){return "$"+DURS[dur].usd}
+  function orderText(name,email,wa){return "Name: "+(name||"-")+"\nEmail: "+(email||"-")+(wa?"\nWhatsApp: "+wa:"")+"\nCountry: "+cs.value+"\nPlan: "+plan.name+" ("+DURS[dur].label+", "+total()+")\nPayment method: "+METHODS[method].n}
+  function waLink(text){return "https://api.whatsapp.com/send/?phone="+String(SS.whatsapp).replace(/[^0-9]/g,"")+"&text="+encodeURIComponent(text)}
   function draw(){
-    var price=ng()?plan.ngn:plan.price, cur=ng()?"NGN":"USD", ms=methodsFor();
+    var ms=methodsFor();
     if(ms.indexOf(method)<0||!isLive(method))method=null;
     if(!method&&isLive("usdt"))method="usdt";
     $q("[data-ck-chip]").textContent=(TIER_ICON[plan.tier]||"")+" "+plan.name;
-    $q("[data-ck-plan]").textContent=plan.name; $q("[data-ck-c]").textContent=cs.value; $q("[data-ck-cur]").textContent=cur; $q("[data-ck-total]").textContent=price;
+    $q("[data-ck-plan]").textContent=plan.name; $q("[data-ck-c]").textContent=cs.value; $q("[data-ck-total]").textContent=total();
+    var ds=$q("[data-ck-dur]");ds.innerHTML=Object.keys(DURS).map(function(k){return '<option value="'+k+'"'+(+k===dur?' selected':'')+'>'+esc(DURS[k].label)+'</option>'}).join("");ds.onchange=function(){dur=+ds.value;store("premDur",dur);draw()};
+    var cur=$q("[data-ck-cur]");cur.innerHTML=pbCurToggle(cs.value);$$("[data-cur]",cur).forEach(function(b){b.addEventListener("click",function(){store("premCur",b.dataset.cur);draw()})});
     $q("[data-ck-pay]").textContent=method?METHODS[method].n:"Not selected";
-    $q("[data-ck-info]").innerHTML="<b>"+esc(cs.value)+"</b>Preferred currency: "+cur;
+    $q("[data-ck-info]").innerHTML="<b>"+esc(cs.value)+"</b>Preferred currency: "+pbCur(cs.value);
     $q("[data-ck-psub]").textContent="Payment options available for "+cs.value+".";
     $q("[data-ck-methods]").innerHTML=ms.map(function(k){var m=METHODS[k],on=isLive(k);return '<button type="button" class="ck-m'+(on?'':' off')+'" data-m="'+k+'" aria-pressed="'+(method===k)+'"'+(on?'':' disabled aria-disabled="true"')+'><i aria-hidden="true">'+m.i+'</i><span>'+m.n+'<small>'+(on?(k==="bank"?"Nigeria only. ":"")+m.s:"Temporarily unavailable")+'</small></span></button>'}).join("");
-    $$("[data-m]:not([disabled])",root).forEach(function(b){b.addEventListener("click",function(){method=b.dataset.m;draw()})});
-    var sum=$q(".ck-sum"); sum.className="ckcard ck-sum tier-"+plan.tier;
-    var bx=$q("[data-ck-pay-box]");
-    if(method==="bank"){var pb=payRows("bank");if(pb)renderPayBox(pb.rows,pb.warn,false,true)}else if(bx){bx.hidden=true;bx.innerHTML=""}
+    $$("[data-m]:not([disabled])",root).forEach(function(b){b.addEventListener("click",function(){method=b.dataset.m;var bx=$q("[data-ck-pay-box]");if(bx){bx.hidden=true;bx.innerHTML=""}draw()})});
+    $q(".ck-sum").className="ckcard ck-sum tier-"+plan.tier;
   }
-  /* the payment details panel (bank transfer and others): shown at once when the method is picked, so people see where to pay before anything else */
-  function payRows(m){
-    var cfg=D.pay||{}, price=ng()?plan.ngn:plan.price, bank=cfg.bank&&cfg.bank.number?cfg.bank:null;
-    if(m==="bank"&&bank)return {rows:[["Amount (per week)","<b>"+esc(price)+"</b>"],["Bank","<b>"+esc(bank.bank||"")+"</b>"]].concat(bank.name?[["Account name","<b>"+esc(bank.name)+"</b>"]]:[]).concat([["Account number",'<code>'+esc(bank.number)+'</code>',bank.number]]),warn:""};
-    if(m==="usdt"&&cfg.usdt&&cfg.usdt.address)return {rows:[["Send","<b>"+esc(String(plan.price).replace("$",""))+" USDT</b>"],["Network","<b>TRC20</b>"],["Wallet address",'<code>'+esc(cfg.usdt.address)+'</code>',cfg.usdt.address]],warn:"Send only USDT on the TRC20 network. Sending on another network can lose your funds."};
-    return null;
+  /* shown after the payment page opens in a new tab (card, Whop, mobile money): the next step is always the receipt on WhatsApp */
+  function showReceiptStep(link,order){
+    var box=$q("[data-ck-pay-box]");box.hidden=false;
+    box.innerHTML='<h2>Complete your payment</h2><p class="ck-sub">Your payment page opened in a new tab. Finish paying there, then come back here.</p>'+(link?'<p class="ck-sub"><a href="'+esc(link)+'" target="_blank" rel="noopener">Payment page did not open? Open it here</a></p>':'')+'<button class="btn wide" type="button" data-ck-paid>I have paid, send receipt on WhatsApp</button>';
+    $q("[data-ck-paid]").addEventListener("click",function(){location.href=waLink("Hi PicksBible, I have made my payment for "+plan.name+" and here is my receipt.\n"+order)});
+    box.scrollIntoView({behavior:"smooth",block:"center"});
   }
-  function renderPayBox(rows,warn,scroll,isBank){
-    var box=$q("[data-ck-pay-box]"); box.hidden=false;
-    box.innerHTML='<h2>Complete your payment</h2><dl>'+rows.map(function(r){return '<div><dt>'+r[0]+'</dt><dd>'+r[1]+(r[2]?' <button type="button" class="ck-copy" data-copy-v="'+esc(r[2])+'">Copy</button>':'')+'</dd></div>'}).join("")+'</dl>'+(warn?'<p class="ck-warn">'+esc(warn)+'</p>':'')+
-      (isBank?'<ol class="ck-steps"><li>Open your bank app and transfer the exact amount above to this account.</li><li>Take a screenshot of your payment receipt.</li><li>Tap the button below and send us the receipt on WhatsApp.</li><li>We authenticate your payment and activate your VIP access.</li></ol>':'')+
-      '<button class="btn wide" type="button" data-ck-paid>I have paid, send receipt on WhatsApp</button>';
-    $$("[data-copy-v]",box).forEach(function(b){b.addEventListener("click",function(){var v=b.dataset.copyV;function done(){b.textContent="Copied"}if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(v).then(done,done);else done()})});
-    $q("[data-ck-paid]").addEventListener("click",function(){
-      var name=$q("[data-ck=name]").value.trim(), email=$q("[data-ck=email]").value.trim(), wa=$q("[data-ck=wa]").value.trim(), price=ng()?plan.ngn:plan.price, num=String(S.whatsapp).replace(/[^0-9]/g,"");
-      var order="Name: "+(name||"-")+"\nEmail: "+(email||"-")+(wa?"\nWhatsApp: "+wa:"")+"\nCountry: "+cs.value+"\nPlan: "+plan.name+" (1 week, "+price+" per week)\nPayment method: "+METHODS[method].n;
-      location.href="https://api.whatsapp.com/send/?phone="+num+"&text="+encodeURIComponent("Hi PicksBible, I have made my payment for "+plan.name+" and here is my receipt.\n"+order);
-    });
-    if(scroll)box.scrollIntoView({behavior:"smooth",block:"center"});
-  }
-  cs.addEventListener("change",function(){store("premCountry",cs.value);draw()});
+  cs.addEventListener("change",function(){store("premCountry",cs.value);var bx=$q("[data-ck-pay-box]");if(bx){bx.hidden=true;bx.innerHTML=""}draw()});
   $q("[data-ck-go]").addEventListener("click",function(){
     var err=$q("[data-ck-err]"), name=$q("[data-ck=name]").value.trim(), email=$q("[data-ck=email]").value.trim(), wa=$q("[data-ck=wa]").value.trim();
     function bad(t){err.textContent=t;err.hidden=false}
@@ -1130,20 +1145,17 @@ $$("[data-checkout]").forEach(function(root){
     if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email))return bad("Please enter a valid email address.");
     if(!method)return bad("Please choose a payment method.");
     err.hidden=true;
-    /* remember the customer's details (admin sees them under Customers > Email list) before they leave for payment */
-    try{var fl=name.split(/\s+/),em=email.toLowerCase();fetch("https://firestore.googleapis.com/v1/projects/picksbible-7fa7f/databases/(default)/documents/leads?documentId="+encodeURIComponent("co_"+em)+"&key="+LIVE_URL.split("key=")[1],{method:"POST",keepalive:true,headers:{"Content-Type":"application/json"},body:JSON.stringify({fields:{email:{stringValue:em},firstName:{stringValue:fl[0]||""},lastName:{stringValue:fl.slice(1).join(" ")},whatsapp:{stringValue:wa},plan:{stringValue:String(plan.tier||"")},source:{stringValue:"checkout"},page:{stringValue:"checkout.html"},createdAt:{stringValue:new Date().toISOString()}}})}).catch(function(){})}catch(_){}
-    var cfg=D.pay||{}, cur=ng()?"NGN":"USD", price=ng()?plan.ngn:plan.price, num=String(S.whatsapp).replace(/[^0-9]/g,"");
-    var order="Name: "+name+"\nEmail: "+email+(wa?"\nWhatsApp: "+wa:"")+"\nCountry: "+cs.value+"\nPlan: "+plan.name+" (1 week, "+price+" per week)\nPayment method: "+METHODS[method].n;
-    function wa_(text){location.href="https://api.whatsapp.com/send/?phone="+num+"&text="+encodeURIComponent(text+"\n"+order)}
-    if(method==="usdt"){location.href="usdt-payment.html?plan="+encodeURIComponent(plan.tier)+"&n="+encodeURIComponent(name)+"&e="+encodeURIComponent(email);return}
-    var fw=cfg.flutterwave&&cfg.flutterwave[plan.tier]&&cfg.flutterwave[plan.tier][cur], bank=cfg.bank&&cfg.bank.number?cfg.bank:null, link="";
-    if(method==="whop")link=(cfg.whop&&cfg.whop[plan.tier])||"";
-    else if(method==="stripe")link=(cfg.stripe&&cfg.stripe[plan.tier])||"";
-    else if(method==="card"||method==="momo"||(method==="bank"&&!bank))link=fw||"";
-    if(link){location.href=link;return}
-    var pr=payRows(method);
-    if(!pr){location.href="https://api.whatsapp.com/send/?phone="+num+"&text="+encodeURIComponent("Hi PicksBible, I want to join "+plan.name+" (1 week, "+price+" per week). Please send me the payment details.\n"+order);return}
-    renderPayBox(pr.rows,pr.warn,true,method==="bank");
+    /* every attempt is recorded the moment Continue is pressed (admin sees it under Customers > Email list; method, duration and amount are in the interest field) */
+    try{var fl=name.split(/\s+/),em=email.toLowerCase();fetch("https://firestore.googleapis.com/v1/projects/picksbible-7fa7f/databases/(default)/documents/leads?documentId="+encodeURIComponent("co_"+em)+"&key="+LIVE_URL.split("key=")[1],{method:"POST",keepalive:true,headers:{"Content-Type":"application/json"},body:JSON.stringify({fields:{email:{stringValue:em},firstName:{stringValue:fl[0]||""},lastName:{stringValue:fl.slice(1).join(" ")},whatsapp:{stringValue:wa},plan:{stringValue:String(plan.tier||"")},interest:{stringValue:METHODS[method].n+" | "+DURS[dur].label+" | "+total()},source:{stringValue:"checkout"},page:{stringValue:"checkout.html"},createdAt:{stringValue:new Date().toISOString()}}})}).catch(function(){})}catch(_){}
+    if(typeof gtag==="function")gtag("event","checkout_continue",{method:method,plan:plan.tier||"",duration:DURS[dur].label,country:cs.value});
+    var cfg=D.pay||{}, order=orderText(name,email,wa);
+    var common="plan="+encodeURIComponent(plan.tier)+"&dur="+dur+"&n="+encodeURIComponent(name)+"&e="+encodeURIComponent(email)+"&w="+encodeURIComponent(wa)+"&c="+encodeURIComponent(cs.value)+"&a="+encodeURIComponent(total());
+    if(method==="usdt"){location.href="usdt-payment.html?"+common;return}
+    if(method==="bank"){location.href="bank-payment.html?"+common;return}
+    var link="";
+    if(method==="card"){var ps=(cfg.paystack&&cfg.paystack[plan.tier])||{};link=((ng()?ps.ng:ps.intl)||{})[dur]||""}
+    if(link){var w=window.open(link,"_blank");if(!w){location.href=link;return}showReceiptStep(link,order);return}
+    location.href=waLink("Hi PicksBible, I want to join "+plan.name+" ("+DURS[dur].label+", "+total()+") with "+METHODS[method].n+". Please send me the payment details.\n"+order);
   });
   draw();
 });

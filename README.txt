@@ -1,12 +1,17 @@
-PicksBible ads update (homepage only)
+PicksBible payments update
 
-Upload these 3 files to the root of your site, next to style.css and app.js:
-  ads.css   (new)
-  ads.js    (new)
-  index.html (replaces your current index.html; only 2 lines changed:
-             it loads ads.css in the <head> and ads.js at the bottom)
+Upload these 7 files to the root of your site (same folder as index.html), replacing the existing ones.
+bank-payment.html is new; the other six replace existing files.
 
-To revert instantly: re-upload index.html from picksbible-BACKUP-before-ads.zip.
-(ads.css and ads.js are then unused and can be deleted.)
+  app.js, data.js, style.css, premium.html, checkout.html, usdt-payment.html, bank-payment.html
 
-Turn any ad on/off, or set its image and link, in the config block at the top of ads.js.
+To revert: re-upload the same files from picksbible-BACKUP-before-payments.zip and delete bank-payment.html.
+
+BEFORE CARD PAYMENTS WORK, open data.js and paste your Paystack page links into the "paystack" block:
+  ng   = pages for Nigerian customers  (N10,000 for 2 weeks, N20,000 for 30 days)
+  intl = pages for everyone else       (naira amount equal to $10 and $20)
+Your Whop links go in the "whop" block.
+Any link left empty sends the customer to WhatsApp to get payment details instead.
+
+Bank account name: set "name" in the bank block of data.js to show it on the bank page.
+Approximate local-currency rates (UK, Euro, Canada, Australia, India) are in app.js, LOCAL_CUR.

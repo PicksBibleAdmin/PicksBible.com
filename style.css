@@ -1495,3 +1495,15 @@ td.affc{text-align:center;white-space:nowrap;padding:6px 10px!important}
 .vcol.has .vmark.lock{animation:vpulseG 1.5s ease-out infinite}
 .vcol.has:has(.vmark.lock){border-color:#f9a01b}
 @media(prefers-reduced-motion:reduce){.vcol.has .vmark.lock{animation:none}}
+
+/* duration select + currency toggle (premium and checkout) */
+.dur-sel{background:#020617;color:#F8FAFC;border:1px solid #334155;border-radius:8px;padding:6px 10px;font:600 13px var(--body);cursor:pointer;max-width:100%}
+.pc-cur{margin:-6px 0 12px}
+.curtg{display:inline-flex;border:1px solid #334155;border-radius:999px;overflow:hidden}
+.curtg button{background:transparent;color:var(--muted);border:0;padding:3px 11px;font:600 11.5px var(--body);cursor:pointer}
+.curtg button[aria-pressed=true]{background:#3B82F6;color:#fff}
+.cur-note{font:500 11.5px var(--body);color:var(--muted)}
+html[data-theme="light"] .dur-sel{background:#fff;color:#0F172A;border-color:#cbd5e1}
+html[data-theme="light"] .curtg{border-color:#cbd5e1}
+html[data-theme="light"] .curtg button{color:#475569}
+html[data-theme="light"] .curtg button[aria-pressed=true]{background:#2563EB;color:#fff}

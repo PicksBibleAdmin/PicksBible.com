@@ -317,28 +317,30 @@ window.PB = {
 
   /* ---------- PREMIUM PLANS ----------
      payLink = your Paystack / Flutterwave payment page link (Phase 3) */
+  /* durations: usd = price for everyone outside Nigeria, ngn = price for Nigerian customers */
+  durs: { 14:{label:"2 weeks",usd:10,ngn:10000}, 30:{label:"30 days",usd:20,ngn:20000} },
   plans: [
     { tier:"free", name:"Free", price:"$0", ngn:"₦0", per:"Forever", perks:["Daily free predictions","Match previews and analysis","!Premium 2-3 odds tips","!Priority support"], payLink:"" },
-    { tier:"gold", name:"Gold", price:"$5", ngn:"₦2,500", per:"1 Week", perks:["2 to 4 odds VIP tips everyday","Guaranteed 5 wins out of 7 days - any extra lost day is refunded to you","Priority support","VIP lounge access"], payLink:"" }
+    { tier:"gold", name:"Gold", price:"$10", ngn:"₦10,000", per:"2 weeks", perks:["2 to 4 odds VIP tips everyday","Guaranteed 5 wins out of 7 days - any extra lost day is refunded to you","Priority support","VIP lounge access"], payLink:"" }
   ],
 
   /* ---------- PAYMENT DETAILS ----------
      Fill these in one by one. Anything left empty falls back to sending the order to WhatsApp.
      flutterwave: your Flutterwave payment-link URLs, one per plan and currency (Nigeria pays NGN, everyone else USD).
                   Used for Card, Mobile Money and (if no bank details below) Bank Transfer.
-     whop:        your Whop checkout link for each plan.
      usdt:        your USDT TRC20 wallet address. Customers copy it from the checkout page.
      bank:        Nigerian bank account details shown for Bank Transfer (leave empty to use the Flutterwave link). */
   pay: {
-    /* WHICH METHODS ARE LIVE. true = customers can pick it. false = shown greyed as "Temporarily unavailable".
-       bankNgOnly: bank transfer is only offered to customers who pick Nigeria. Flip a method to true when it is ready. */
-    live: { usdt:true, bank:true, card:false, stripe:false, whop:false, momo:false },
+    /* WHICH METHODS ARE LIVE. true = customers can pick it. false = shown greyed as "Temporarily unavailable". */
+    live: { usdt:true, bank:true, card:true },
     bankNgOnly: true,
-    stripe:      { gold:"" },
-    flutterwave: { gold:{NGN:"",USD:""} },
-    whop:        { gold:"" },
+    /* Card (Visa, Mastercard, Verve) opens your Paystack payment page. One page per duration.
+       ng   = pages priced in naira for Nigerian customers (N10,000 for 2 weeks, N20,000 for 30 days)
+       intl = pages priced in naira for everyone else, equal to the dollar price ($10 and $20)
+       Leave a link empty and the order is sent to WhatsApp instead. */
+    paystack:    { gold:{ ng:{14:"https://paystack.shop/pay/frou50sg2l",30:"https://paystack.shop/pay/99ci8dzzs7"}, intl:{14:"https://paystack.shop/pay/9fn575g1c1",30:"https://paystack.shop/pay/3jkywl1rf7"} } },
     usdt:        { address:"TXoTZTaddtj7JJNNiMict6nQsbWUquJ6nW", network:"TRC20" },
-    bank:        { name:"", number:"8141285371", bank:"Moniepoint" }
+    bank:        { name:"OCHE PETER EJIGA", number:"8141285371", bank:"Moniepoint" }
   },
 
   /* ---------- BLOG POSTS ---------- */
