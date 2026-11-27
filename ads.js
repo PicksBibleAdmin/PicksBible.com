@@ -1,100 +1,150 @@
-/* PicksBible ads. One config, no dependencies.
-   To sell a slot: set `img` (and `phoneImg` for the catfish) and `href`. An empty creative shows a house "Advertise here" ad.
-   Turn any ad off with enabled:false. */
-(function(){
-  var CFG={
-    catfish:{enabled:true,img:"",phoneImg:"",href:"contact.html",alt:"Advertisement"},   // 728x90 and 320x50
-    popup:{enabled:true,img:"",href:"contact.html",alt:"Advertisement",delayMs:5000,minVisit:2}, // 600x560
-    inline1:{enabled:true,img:"",href:"contact.html",alt:"Advertisement"},   // 300x250, phone, between Banker bet and Bets of the day
-    inline2:{enabled:true,img:"",href:"contact.html",alt:"Advertisement"},   // 300x250, phone, under the football table
-    railC:{enabled:true,img:"",href:"contact.html",alt:"Advertisement"},     // 300x250, desktop right rail (1100px+)
-    railD:{enabled:true,img:"",href:"contact.html",alt:"Advertisement"}      // 300x600, desktop right rail, sticky
+/* PicksBible ad placements: desktop (1100px and wider) and tablet (768px to 1099px). Phones are untouched.
+   This file is self-contained: it adds its own styles and builds the slots when the page loads.
+
+   TO RUN AN ADVERTISER: fill in the slot below, for example
+     c: { img: "img/ads/brand-300x250.png", href: "https://advertiser.example/?ref=picksbible", alt: "Brand name" }
+   A slot left empty shows an "Advertise Here!" placeholder with a Book this slot link.
+
+   Slots
+     c       300x250  desktop: right column, top   | tablet: inline under Bets of the Day
+     d       300x600  desktop: right column, sticky (stays in view while scrolling)
+     e       728x90   desktop: in-feed under Bets of the Day (the existing banner moved here)
+     f       320x50   tablet: inline under the 300x250
+     catfish 728x90   desktop and tablet: fixed to the bottom of the screen, scales down to fit narrow screens, can be closed */
+(function () {
+  "use strict";
+  var AD = {
+    c: { img: "", href: "", alt: "" },
+    d: { img: "", href: "", alt: "" },
+    e: { img: "", href: "", alt: "" },
+    f: { img: "", href: "", alt: "" },
+    catfish: { img: "", href: "", alt: "" }
   };
-  var d=document,ls,ss;
-  try{ls=window.localStorage;ss=window.sessionStorage}catch(e){ls=ss=null}
-  function get(s,k){try{return s&&s.getItem(k)}catch(e){return null}}
-  function set(s,k,v){try{s&&s.setItem(k,v)}catch(e){}}
-  function house(label,size){return '<div class="pbad-house"><b>'+label+'</b><span>'+size+'</span></div>'}
-  function creative(c,houseLabel,size,img){
-    var src=img||c.img;
-    var inner=src?'<img src="'+src+'" alt="'+(c.alt||"Advertisement")+'" loading="lazy">':house(houseLabel,size);
-    return '<a class="pbad-link" style="height:100%" href="'+(c.href||"contact.html")+'" target="_blank" rel="sponsored noopener">'+inner+'</a>';
-  }
+  var BOOK = "contact.html";
+  var SIZE = { c: [300, 250], d: [300, 600], e: [728, 90], f: [320, 50], catfish: [728, 90] };
 
-  /* 1. Catfish: fixed to the bottom of the screen on every device */
-  function catfish(){
-    var c=CFG.catfish;if(!c.enabled)return;
-    var el=d.createElement("div");el.className="pbad-catfish";el.setAttribute("role","complementary");el.setAttribute("aria-label","Advertisement");
-    el.innerHTML='<div class="pbad-frame">'+creative(c,"Advertise Here!","728 × 90")+'</div><div class="pbad-frame phone">'+creative(c,"Advertise Here!","320 × 50",c.phoneImg)+'</div>';
-    d.body.appendChild(el);d.body.classList.add("pbad-has-catfish");
-    function fit(){d.documentElement.style.setProperty("--pb-catfish-h",el.offsetHeight+"px")}
-    fit();window.addEventListener("resize",fit);window.addEventListener("load",fit);
-    if(window.ResizeObserver)new ResizeObserver(fit).observe(el);
-  }
+  if (document.getElementById("pbAdsCss")) return;
+  var doc = document, body = doc.body;
+  var main = doc.querySelector("main > .wrap");
+  if (!main) return; /* only the homepage layout has these sections */
 
-  /* 2. Popup: only from a visitor's 2nd visit onward, 5s after load, once per session */
-  function popup(){
-    var c=CFG.popup;if(!c.enabled)return;
-    var visits=parseInt(get(ls,"pb_ad_visits")||"0",10);
-    if(!get(ss,"pb_ad_counted")){visits++;set(ls,"pb_ad_visits",String(visits));set(ss,"pb_ad_counted","1")}
-    if(visits<c.minVisit||get(ss,"pb_ad_popup_shown"))return;
-    setTimeout(function(){
-      if(get(ss,"pb_ad_popup_shown"))return;
-      var p=d.createElement("div");p.className="pbad-pop";p.setAttribute("role","dialog");p.setAttribute("aria-modal","true");p.setAttribute("aria-label","Advertisement");
-      p.innerHTML='<div class="pbad-card"><button type="button" class="pbad-x" aria-label="Close advertisement">&times;</button>'+creative(c,"Advertise Here!","600 × 560")+'</div>';
-      function close(){p.remove();d.removeEventListener("keydown",key)}
-      function key(e){if(e.key==="Escape")close()}
-      p.querySelector(".pbad-x").addEventListener("click",close);
-      p.addEventListener("click",function(e){if(e.target===p)close()});
-      d.addEventListener("keydown",key);
-      d.body.appendChild(p);set(ss,"pb_ad_popup_shown","1");
-    },c.delayMs);
-  }
+  /* ---------- styles ---------- */
+  var css = doc.createElement("style");
+  css.id = "pbAdsCss";
+  css.textContent =
+    ".pbad{display:block;margin:0 auto;max-width:100%}" +
+    ".pbad-lbl{display:block;text-align:center;font:600 10px/1 var(--body,sans-serif);letter-spacing:.14em;color:var(--muted,#94A3B8);text-transform:uppercase;margin:0 0 6px}" +
+    ".pbad a.pbad-l{display:block;line-height:0;border-radius:8px;overflow:hidden}" +
+    ".pbad img{display:block;width:100%;height:auto;border-radius:8px}" +
+    ".pbad-ph{box-sizing:border-box;width:100%;border:2px dashed #475569;border-radius:8px;background:#020617;color:var(--cyan,#3B82F6);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;text-align:center;font:700 18px var(--display,sans-serif);letter-spacing:.04em;padding:10px}" +
+    ".pbad-ph small{display:block;font:500 11px var(--body,sans-serif);color:var(--muted,#94A3B8);letter-spacing:0}" +
+    ".pbad-ph a{font:700 12px var(--body,sans-serif);color:#fff;background:var(--purple,#552583);border-radius:999px;padding:6px 14px;text-decoration:none;letter-spacing:.02em}" +
+    "html[data-theme=\"light\"] .pbad-ph{background:var(--panel,#F3F5F9);color:#2563EB}" +
+    /* layout: desktop rail */
+    ".pb-cols{display:block}.pb-rail,.pb-inl,.pb-cf{display:none}" +
+    ".pb-main .wrap{max-width:none;padding-inline:0}" +
+    "@media(min-width:1100px){" +
+    ".pb-cols{display:grid;grid-template-columns:minmax(0,1fr) 300px;column-gap:24px;align-items:start}" +
+    ".pb-main{min-width:0}" +
+    ".pb-rail{display:flex;flex-direction:column;gap:28px;padding-top:14px;align-self:stretch}" +
+    ".pb-rail .pb-d{position:sticky;top:84px}" +
+    ".pb-e{margin:0 auto}.pb-e .adwide{max-width:100%}" +
+    "}" +
+    /* layout: tablet */
+    "@media(min-width:768px) and (max-width:1099.98px){" +
+    ".pb-inl{display:flex;flex-direction:column;align-items:center;gap:18px;margin:6px 0 22px}" +
+    ".pb-main .adwide-sec,.pb-e{display:none}" +
+    "}" +
+    /* catfish */
+    "@media(min-width:768px){" +
+    ".pb-cf{display:block;position:fixed;left:0;right:0;bottom:0;z-index:9000;background:rgba(2,6,23,.96);border-top:1px solid #1E293B;padding:6px 0 calc(6px + env(safe-area-inset-bottom,0px));text-align:center}" +
+    ".pb-cf[hidden]{display:none}" +
+    ".pb-cf .pbad{width:min(728px,calc(100vw - 56px));position:relative}" +
+    ".pb-cf .pbad-ph{aspect-ratio:728/90;padding:4px;font-size:clamp(11px,2.2vw,18px);flex-direction:row;gap:12px}" +
+    ".pb-cf .pbad-lbl{display:none}" +
+    ".pb-cf .pb-x{position:absolute;right:-34px;top:50%;transform:translateY(-50%);width:28px;height:28px;border-radius:50%;border:1px solid #334155;background:#0F172A;color:#cbd5e1;font:400 18px/1 var(--body,sans-serif);cursor:pointer;padding:0}" +
+    "html[data-theme=\"light\"] .pb-cf{background:rgba(243,245,249,.97);border-color:#CBD5E1}" +
+    "body.pb-cfon{padding-bottom:var(--cf-h,100px)}" +
+    "}";
+  doc.head.appendChild(css);
 
-  /* 3. Phone inline 300x250 slots */
-  function slot(cfg,name,after,before){
-    if(!cfg.enabled)return;
-    var s=d.createElement("section");s.className="pbad-inline";s.setAttribute("aria-label","Advertisement");s.dataset.pbad=name;
-    s.innerHTML='<div class="pbad-frame">'+creative(cfg,"Advertise Here!","300 × 250")+'</div>';
-    if(before&&before.parentNode)before.parentNode.insertBefore(s,before);
-    else if(after&&after.parentNode)after.parentNode.insertBefore(s,after.nextSibling);
-  }
-  function inline(){
-    var banker=d.querySelector("[data-experttip]"),botd=d.querySelector("[data-botd]"),sure=d.querySelector("[data-sure]");
-    if(botd){
-      var old=d.querySelector('main>.wrap>section[aria-label="Advertising"]');
-      if(old)old.classList.add("pbad-hide-phone");
-      slot(CFG.inline1,"inline1",null,botd);
+  /* ---------- slot builder ---------- */
+  function slot(key, extra) {
+    var cfg = AD[key], s = SIZE[key], w = s[0], h = s[1], inner;
+    if (cfg.img) {
+      inner = '<a class="pbad-l" href="' + cfg.href + '" target="_blank" rel="sponsored noopener"><img src="' + cfg.img + '" alt="' + (cfg.alt || "Advertisement") + '" width="' + w + '" height="' + h + '" loading="lazy"></a>';
+    } else {
+      inner = '<div class="pbad-ph" style="aspect-ratio:' + w + "/" + h + '">Advertise Here!<small>' + w + " &times; " + h + '</small>' + (h >= 90 ? '<a href="' + BOOK + '">Book this slot</a>' : "") + "</div>";
     }
-    if(sure)slot(CFG.inline2,"inline2",sure,null);
+    var d = doc.createElement("div");
+    d.className = "pbad " + (extra || "");
+    d.style.width = w + "px";
+    d.setAttribute("data-ad", key);
+    d.innerHTML = '<span class="pbad-lbl">Advertisement</span>' + inner;
+    return d;
   }
 
+  /* ---------- page structure ---------- */
+  var built = false;
+  function build() {
+  if (built) return; built = true;
+  var first = main.querySelector("[data-experttip]");
+  var botd = main.querySelector("[data-botd]");
+  var sure = main.querySelector("[data-sure]");
+  if (first && botd && sure) {
+    var wide = null, secs = main.querySelectorAll("section.sec");
+    for (var i = 0; i < secs.length; i++) if (secs[i].querySelector(".adwide")) { wide = secs[i]; break; }
+    var tail = main.parentNode.querySelectorAll(".ads"), adsSec = tail.length ? tail[tail.length - 1].closest("section") : null;
 
-  /* 4. Desktop layout: right ad rail (1100px+), left panel (1500px+), banker bet strip beside the date picker (1500px+) */
-  function desktop(){
-    var wrap=d.querySelector("main>.wrap");if(!wrap)return;
-    var vip=d.querySelector("[data-vipbox]"),vipSec=vip&&vip.closest(".sec"),trk=d.querySelector("[data-viptrack]");
-    wrap.classList.add("pb-grid");
-    if(vipSec){var left=d.createElement("aside");left.className="pb-left";left.setAttribute("aria-label","VIP results");wrap.insertBefore(left,wrap.firstChild);left.appendChild(vipSec);if(trk)left.appendChild(trk)}
-    var rail=d.createElement("aside");rail.className="pb-rail";rail.setAttribute("aria-label","Advertisements");
-    rail.innerHTML='<div class="pbad-inline"><div class="pbad-frame">'+creative(CFG.railC,"Advertise Here!","300 × 250")+'</div></div><div class="pbad-sticky"><div class="pbad-frame">'+creative(CFG.railD,"Advertise Here!","300 × 600")+'</div></div>';
-    if(!CFG.railC.enabled)rail.firstChild.style.display="none";
-    if(!CFG.railD.enabled)rail.lastChild.style.display="none";
-    wrap.appendChild(rail);
-    /* banker bet: strip beside the date picker on wide screens, original place otherwise */
-    var banker=d.querySelector("[data-experttip]"),dates=d.querySelector(".hero .hdates");
-    if(banker&&dates&&window.matchMedia){
-      var home=d.createComment("banker-home");banker.parentNode.insertBefore(home,banker);
-      var row=d.createElement("div");row.className="pb-herorow";
-      var mq=window.matchMedia("(min-width:1500px)");
-      function place(){
-        if(mq.matches){if(!row.parentNode){dates.parentNode.insertBefore(row,dates);row.appendChild(dates)}row.appendChild(banker)}
-        else{if(row.parentNode){row.parentNode.insertBefore(dates,row);row.remove()}home.parentNode.insertBefore(banker,home.nextSibling)}
-      }
-      place();(mq.addEventListener?mq.addEventListener("change",place):mq.addListener(place));
-    }
+    var cols = doc.createElement("div"); cols.className = "pb-cols";
+    var left = doc.createElement("div"); left.className = "pb-main";
+    var rail = doc.createElement("aside"); rail.className = "pb-rail"; rail.setAttribute("aria-label", "Advertising");
+    first.parentNode.insertBefore(cols, first);
+    cols.appendChild(left); cols.appendChild(rail);
+
+    /* left column: banker bet, bets of the day, the 728x90 in-feed, then sure predictions, props, and the two "Advertise here" boxes */
+    left.appendChild(first);
+    if (wide) { wide.classList.add("adwide-sec"); }
+    left.appendChild(botd);
+    if (wide) { var e = doc.createElement("div"); e.className = "pb-e"; e.style.cssText = "margin:0 0 22px"; e.appendChild(wide); left.appendChild(e); }
+    var inl = doc.createElement("div"); inl.className = "pb-inl"; inl.appendChild(slot("c")); inl.appendChild(slot("f"));
+    left.appendChild(inl);
+    left.appendChild(sure);
+    var props = main.querySelector("[data-props-wrap]"); if (props) left.appendChild(props);
+    if (adsSec) left.appendChild(adsSec);
+
+    rail.appendChild(slot("c", "pb-c"));
+    var dwrap = doc.createElement("div"); dwrap.className = "pb-d"; dwrap.appendChild(slot("d"));
+    rail.appendChild(dwrap);
   }
+  }
+  if (window.matchMedia("(min-width:768px)").matches) build();
+  else { var mq = window.matchMedia("(min-width:768px)"), go = function () { if (mq.matches) build(); }; if (mq.addEventListener) mq.addEventListener("change", go); else mq.addListener(go); }
 
-  function init(){desktop();catfish();inline();popup()}
-  if(d.readyState==="loading")d.addEventListener("DOMContentLoaded",init);else init();
+  /* ---------- catfish: fixed to the bottom of the screen ---------- */
+  var closed = false; try { closed = sessionStorage.getItem("pb.cfClosed") === "1"; } catch (_) {}
+  var cf = doc.createElement("div"); cf.className = "pb-cf"; cf.hidden = true; cf.setAttribute("aria-label", "Advertisement");
+  var cfSlot = slot("catfish");
+  cfSlot.style.width = ""; /* width comes from CSS so it scales with the screen */
+  var x = doc.createElement("button"); x.type = "button"; x.className = "pb-x"; x.setAttribute("aria-label", "Close advertisement"); x.innerHTML = "&times;";
+  cfSlot.appendChild(x); cf.appendChild(cfSlot); body.appendChild(cf);
+  x.addEventListener("click", function () { closed = true; try { sessionStorage.setItem("pb.cfClosed", "1"); } catch (_) {} sync(); });
+
+  function isWide() { return window.matchMedia ? window.matchMedia("(min-width:768px)").matches : window.innerWidth >= 768; }
+
+  /* the cookie notice sits on top; show the catfish once it is dismissed. Chat, Telegram and theme buttons sit above the catfish. */
+  function sync() {
+    var cb = doc.getElementById("cookieBanner"), cookieUp = cb && !cb.classList.contains("hidden") && cb.offsetHeight > 0;
+    var on = isWide() && !closed && !cookieUp;
+    cf.hidden = !on;
+    body.classList.toggle("pb-cfon", on);
+    var h = on ? cf.offsetHeight : 0;
+    doc.documentElement.style.setProperty("--cf-h", h + "px");
+    var tg = doc.querySelector(".tgbar"), chat = doc.querySelector(".chatus"), th = doc.querySelector(".themebtn.float");
+    var tgH = tg && tg.offsetHeight ? tg.offsetHeight + 8 : 0;
+    if (tg) { if (on) tg.style.setProperty("bottom", h + "px", "important"); else tg.style.removeProperty("bottom"); }
+    if (chat && on) chat.style.setProperty("bottom", (h + tgH + 14) + "px", "important"); else if (chat) chat.style.removeProperty("bottom");
+    if (th && on) th.style.setProperty("bottom", (h + 16) + "px", "important"); else if (th) th.style.removeProperty("bottom");
+  }
+  sync(); window.addEventListener("resize", sync); setInterval(sync, 700);
 })();
