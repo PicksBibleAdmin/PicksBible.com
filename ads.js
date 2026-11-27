@@ -224,15 +224,16 @@
     var DOW = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"], SHM = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
     var t0 = new Date(Date.now() + 3600000).toISOString().slice(0, 10);
     var anchor = cal.closest(".hcal") || cal, chips = [];
-    for (var n = 6; n >= 0; n--) {
+    for (var n = 6; n >= -1; n--) {
       (function (n) {
         var d = new Date(t0 + "T12:00:00Z"); d.setUTCDate(d.getUTCDate() - n);
         var y = d.toISOString().slice(0, 10), b = doc.createElement("button");
         b.type = "button"; b.className = "pb-d7"; b.setAttribute("data-d7", y); b.setAttribute("aria-pressed", "false");
-        b.innerHTML = "<small>" + (n === 0 ? "Today" : DOW[d.getUTCDay()]) + "</small><b>" + d.getUTCDate() + " " + SHM[d.getUTCMonth()] + "</b>";
+        b.innerHTML = "<small>" + (n === 0 ? "Today" : n === -1 ? "Tomorrow" : DOW[d.getUTCDay()]) + "</small><b>" + d.getUTCDate() + " " + SHM[d.getUTCMonth()] + "</b>";
         b.title = DOW[d.getUTCDay()] + " " + d.getUTCDate() + " " + SHM[d.getUTCMonth()];
         b.addEventListener("click", function () {
           if (n === 0) { todayBtn.click(); return; }
+          if (n === -1) { var tb = strip.querySelector('[data-hday="tomorrow"]'); if (tb) { tb.click(); return; } }
           cal.value = y; cal.dispatchEvent(new Event("change", { bubbles: true }));
         });
         strip.insertBefore(b, anchor); chips.push(b);
