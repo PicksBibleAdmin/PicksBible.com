@@ -8,7 +8,7 @@
    Slots
      c       300x250  desktop: right column, top   | tablet: inline under Bets of the Day
      d       300x600  desktop: right column, sticky (stays in view while scrolling)
-     e       728x90   desktop: in-feed under Bets of the Day (the existing banner moved here)
+     (the old 728x90 in-feed banner and the two "Advertise Here" boxes are removed; a thin VIP Tracker strip sits under Bets of the Day instead)
      f       320x50   tablet: inline under the 300x250
      catfish 728x90   desktop and tablet: fixed to the bottom of the screen, scales down to fit narrow screens, can be closed */
 (function () {
@@ -16,12 +16,11 @@
   var AD = {
     c: { img: "", href: "", alt: "" },
     d: { img: "", href: "", alt: "" },
-    e: { img: "", href: "", alt: "" },
     f: { img: "", href: "", alt: "" },
     catfish: { img: "", href: "", alt: "" }
   };
   var BOOK = "contact.html";
-  var SIZE = { c: [300, 250], d: [300, 600], e: [728, 90], f: [320, 50], catfish: [728, 90] };
+  var SIZE = { c: [300, 250], d: [300, 600], f: [320, 50], catfish: [728, 90] };
 
   if (document.getElementById("pbAdsCss")) return;
   var doc = document, body = doc.body;
@@ -48,13 +47,11 @@
     ".pb-main{min-width:0}" +
     ".pb-rail{display:flex;flex-direction:column;gap:28px;padding-top:14px;align-self:stretch}" +
     ".pb-rail .pb-d{position:sticky;top:84px}" +
-    ".pb-e{margin:0 auto}.pb-e .adwide{max-width:100%}" +
-    "}" +
+        "}" +
     /* layout: tablet */
     "@media(min-width:768px) and (max-width:1099.98px){" +
     ".pb-inl{display:flex;flex-direction:column;align-items:center;gap:18px;margin:6px 0 22px}" +
-    ".pb-main .adwide-sec,.pb-e{display:none}" +
-    "}" +
+        "}" +
     /* catfish */
     "@media(min-width:768px){" +
     ".pb-cf{display:block;position:fixed;left:0;right:0;bottom:0;z-index:9000;background:rgba(2,6,23,.96);border-top:1px solid #1E293B;padding:6px 0 calc(6px + env(safe-area-inset-bottom,0px));text-align:center}" +
@@ -84,6 +81,121 @@
     return d;
   }
 
+
+  /* ---------- VIP Tracker strip (replaces the in-feed banner, same thin height) ----------
+     Reads the same published Gold results as the VIP Results strip (window.PB.home.vip.bronze).
+     Each settled day is 1 unit staked at the listed odds: a win returns (odds - 1) units, a loss costs 1 unit.
+     Return % = units won or lost divided by units staked. */
+  function startTracker(box) {
+    var MONS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+    var G = "#22c55e", R = "#ef4444", N = "#94A3B8";
+    var pick = "month", lastSig = "";
+    var tcss = doc.createElement("style");
+    tcss.textContent =
+      ".pbt{margin:0 0 22px;border-radius:var(--r,10px);overflow:hidden;border:1px solid #1E293B;background:linear-gradient(100deg,#2a1647 0,#0F172A 34%,#0F172A 100%);color:#F8FAFC;position:relative}" +
+      ".pbt[hidden]{display:none}" +
+      ".pbt:before{content:\"\";position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--c,#22c55e)}" +
+      ".pbt .t-row{display:flex;align-items:center;gap:0;min-height:92px;padding:0 6px 0 4px}" +
+      ".pbt .t-id{flex:none;padding:0 16px 0 16px;display:grid;gap:8px}" +
+      ".pbt .t-id h2{margin:0;font:700 15px/1 var(--display,sans-serif);letter-spacing:.06em;text-transform:uppercase;color:#fff;display:flex;align-items:center;gap:7px;white-space:nowrap}" +
+      ".pbt .t-id h2 em{font:600 10px var(--body,sans-serif);font-style:normal;letter-spacing:.1em;color:#c4b5e0;border:1px solid #4a2d78;border-radius:999px;padding:2px 7px}" +
+      ".pbt .t-tabs{display:inline-flex;background:#0b1326;border:1px solid #243049;border-radius:999px;padding:2px}" +
+      ".pbt .t-tabs button{appearance:none;border:0;background:transparent;color:#94A3B8;font:700 11.5px var(--body,sans-serif);padding:5px 11px;border-radius:999px;cursor:pointer;letter-spacing:.02em;white-space:nowrap}" +
+      ".pbt .t-tabs button[aria-pressed=\"true\"]{background:var(--c);color:#04130a}" +
+      ".pbt .t-spark{flex:1 1 90px;min-width:70px;height:56px;position:relative;margin:0 14px}" +
+      ".pbt .t-spark svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible}" +
+      ".pbt .t-ln{stroke-dasharray:1;stroke-dashoffset:1;animation:pbtd 1s ease-out forwards}@keyframes pbtd{to{stroke-dashoffset:0}}" +
+      ".pbt .t-dot{position:absolute;width:9px;height:9px;border-radius:50%;transform:translate(-50%,-50%);background:var(--c);box-shadow:0 0 0 3px color-mix(in srgb,var(--c) 30%,transparent),0 0 12px var(--c)}" +
+      ".pbt .t-empty{font:500 12px var(--body,sans-serif);color:#94A3B8;display:flex;align-items:center;height:100%}" +
+      ".pbt .t-c{flex:none;padding:0 14px;border-left:1px solid #1E293B;display:grid;gap:3px;align-content:center;min-width:64px}" +
+      ".pbt .t-c i{font:600 10px var(--body,sans-serif);letter-spacing:.12em;text-transform:uppercase;color:#94A3B8;font-style:normal;white-space:nowrap}" +
+      ".pbt .t-c b{font:700 24px/1 var(--display,sans-serif);font-variant-numeric:tabular-nums;white-space:nowrap}" +
+      ".pbt .t-c b small{font:600 11px var(--body,sans-serif);color:#94A3B8;margin-left:2px}" +
+      ".pbt .t-c.hero{background:linear-gradient(180deg,transparent,color-mix(in srgb,var(--c) 12%,transparent));align-self:stretch;border-left-color:color-mix(in srgb,var(--c) 35%,#1E293B)}" +
+      ".pbt .t-c.hero b{font-size:30px;color:var(--c)}" +
+      ".pbt .t-info{position:absolute;right:8px;top:6px;font:600 11px var(--body,sans-serif);color:#64748b;cursor:help;border:1px solid #334155;border-radius:50%;width:16px;height:16px;display:flex;align-items:center;justify-content:center}" +
+      "@media(max-width:1000px){.pbt .t-spark{display:none}.pbt .t-row{justify-content:space-between}.pbt .t-c.sm{display:none}}" +
+      "@media(max-width:820px){.pbt .t-c b{font-size:20px}.pbt .t-c.hero b{font-size:24px}.pbt .t-c{padding:0 10px}.pbt .t-id{padding:0 12px}}" +
+      "@media(prefers-reduced-motion:reduce){.pbt *{animation:none!important}.pbt .t-ln{stroke-dashoffset:0}}";
+    doc.head.appendChild(tcss);
+
+    function watToday() { return new Date(Date.now() + 3600000).toISOString().slice(0, 10); }
+    function addDays(ymd, n) { var d = new Date(ymd + "T12:00:00Z"); d.setUTCDate(d.getUTCDate() + n); return d.toISOString().slice(0, 10); }
+    function fx(n) { return Number(n).toFixed(2); }
+    function sgn(n) { return (n > 0 ? "+" : n < 0 ? "−" : "") + fx(Math.abs(n)); }
+    function col(n) { return n > 0 ? G : n < 0 ? R : N; }
+    function pct(n) { return (n > 0 ? "+" : n < 0 ? "−" : "") + Math.abs(n).toFixed(1) + "%"; }
+
+    function days() {
+      var V = (window.PB && window.PB.home && window.PB.home.vip && window.PB.home.vip.bronze) || {}, out = [];
+      Object.keys(V).sort().forEach(function (y) {
+        var x = V[y], o = parseFloat(x && x.odds);
+        if (x && (x.st === "won" || x.st === "lost") && o > 1) out.push({ y: y, won: x.st === "won", odds: o, u: x.st === "won" ? o - 1 : -1 });
+      });
+      return out;
+    }
+    function summarize(list) {
+      var w = 0, l = 0, u = 0;
+      list.forEach(function (d) { if (d.won) w++; else l++; u += d.u; });
+      var n = w + l;
+      return { n: n, w: w, l: l, u: u, rate: n ? w / n * 100 : 0, roi: n ? u / n * 100 : 0 };
+    }
+
+    function render() {
+      var all = days(), today = watToday();
+      if (!all.length) { box.hidden = true; return; }
+      var t = today.split("-"), mStart = t[0] + "-" + t[1] + "-01";
+      var dow = (new Date(today + "T12:00:00Z").getUTCDay() + 6) % 7, wStart = addDays(today, -dow), r30 = addDays(today, -29);
+      var P = {
+        week: { n: "Week", full: "this week (Monday to today)", list: all.filter(function (d) { return d.y >= wStart; }) },
+        month: { n: "Month", full: MONS[+t[1] - 1] + " " + t[0], list: all.filter(function (d) { return d.y >= mStart; }) },
+        d30: { n: "30 days", full: "the last 30 days", list: all.filter(function (d) { return d.y >= r30; }) }
+      };
+      var cur = P[pick], S = summarize(cur.list), c = S.n ? col(S.u) : N;
+      box.style.setProperty("--c", c);
+
+      var tabs = ["week", "month", "d30"].map(function (k) { return '<button type="button" data-k="' + k + '" aria-pressed="' + (k === pick) + '">' + P[k].n + "</button>"; }).join("");
+
+      var spark;
+      if (cur.list.length) {
+        var cum = [0], run = 0; cur.list.forEach(function (d) { run += d.u; cum.push(run); });
+        var mn = Math.min.apply(null, cum.concat(0)), mx = Math.max.apply(null, cum.concat(0)); if (mx === mn) { mx += 1; mn -= 1; }
+        var pad = (mx - mn) * 0.15; mn -= pad; mx += pad;
+        var W = 200, H = 56, X = function (i) { return i / (cum.length - 1) * W; }, Y = function (v) { return H - (v - mn) / (mx - mn) * H; };
+        var line = "M" + cum.map(function (v, i) { return X(i).toFixed(1) + "," + Y(v).toFixed(1); }).join(" L"), area = line + " L" + W + "," + H + " L0," + H + " Z";
+        spark = '<svg viewBox="0 0 ' + W + " " + H + '" preserveAspectRatio="none" role="img" aria-label="Units won or lost, ' + cur.full + '"><defs><linearGradient id="pbtG" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="' + c + '" stop-opacity=".4"/><stop offset="1" stop-color="' + c + '" stop-opacity="0"/></linearGradient></defs>' +
+          '<line x1="0" x2="' + W + '" y1="' + Y(0).toFixed(1) + '" y2="' + Y(0).toFixed(1) + '" stroke="#334155" stroke-dasharray="3 4" vector-effect="non-scaling-stroke"/>' +
+          '<path d="' + area + '" fill="url(#pbtG)"/><path class="t-ln" pathLength="1" d="' + line + '" fill="none" stroke="' + c + '" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round" vector-effect="non-scaling-stroke"/></svg>' +
+          '<span class="t-dot" style="left:100%;top:' + (Y(cum[cum.length - 1]) / H * 100).toFixed(1) + '%"></span>';
+      } else spark = '<div class="t-empty">No settled bets yet</div>';
+
+      var st = 0, sw = null; for (var i = all.length - 1; i >= 0; i--) { if (sw === null) sw = all[i].won; if (all[i].won === sw) st++; else break; }
+      var streak = st > 1 ? (sw ? " 🔥" + st : "") : "";
+      var arrow = S.n ? (S.u > 0 ? "▲ " : S.u < 0 ? "▼ " : "") : "";
+
+      box.innerHTML = '<span class="t-info" title="1 unit is staked on each daily Gold package at the listed odds. A win returns the odds minus 1 in units, a loss costs 1 unit. Return % is units won or lost divided by units staked. Past results do not guarantee future results. 18+ only.">i</span>' +
+        '<div class="t-row"><div class="t-id"><h2>📈 VIP Tracker <em>GOLD</em></h2><div class="t-tabs" role="group" aria-label="Period">' + tabs + "</div></div>" +
+        '<div class="t-spark">' + spark + "</div>" +
+        '<div class="t-c hero"><i>' + (S.u >= 0 ? "Return" : "Return") + '</i><b>' + (S.n ? arrow + pct(S.roi) : "—") + "</b></div>" +
+        '<div class="t-c"><i>Profit / loss</i><b style="color:' + c + '">' + (S.n ? sgn(S.u) : "—") + "<small>u</small></b></div>" +
+        '<div class="t-c sm"><i>Bets placed</i><b>' + S.n + "</b></div>" +
+        '<div class="t-c sm"><i>Won / Lost</i><b><span style="color:' + G + '">' + S.w + '</span><small>/</small><span style="color:' + (S.l ? R : N) + '">' + S.l + "</span></b></div>" +
+        '<div class="t-c"><i>Win rate</i><b>' + (S.n ? Math.round(S.rate) + "%" : "—") + '<small>' + streak + "</small></b></div></div>";
+      box.hidden = false;
+    }
+
+    box.addEventListener("click", function (e) {
+      var b = e.target.closest && e.target.closest(".t-tabs button"); if (!b) return;
+      pick = b.getAttribute("data-k"); lastSig = ""; render();
+    });
+    function tick() {
+      var V = (window.PB && window.PB.home && window.PB.home.vip && window.PB.home.vip.bronze) || {};
+      var sig = Object.keys(V).map(function (k) { return k + (V[k] && V[k].st) + (V[k] && V[k].odds); }).join("|") + watToday() + pick;
+      if (sig !== lastSig) { lastSig = sig; try { render(); } catch (err) { box.hidden = true; } }
+    }
+    tick(); setInterval(tick, 4000);
+  }
+
   /* ---------- page structure ---------- */
   var built = false;
   function build() {
@@ -92,9 +204,11 @@
   var botd = main.querySelector("[data-botd]");
   var sure = main.querySelector("[data-sure]");
   if (first && botd && sure) {
-    var wide = null, secs = main.querySelectorAll("section.sec");
-    for (var i = 0; i < secs.length; i++) if (secs[i].querySelector(".adwide")) { wide = secs[i]; break; }
-    var tail = main.parentNode.querySelectorAll(".ads"), adsSec = tail.length ? tail[tail.length - 1].closest("section") : null;
+    /* removed on desktop and tablet: the 728x90 in-feed banner and the two "Advertise Here" boxes under the predictions */
+    var secs = main.querySelectorAll("section.sec");
+    for (var i = 0; i < secs.length; i++) if (secs[i].querySelector(".adwide")) { secs[i].parentNode.removeChild(secs[i]); break; }
+    var tail = main.parentNode.querySelectorAll(".ads");
+    for (var j = 0; j < tail.length; j++) { var as = tail[j].closest("section"); if (as && as.parentNode) as.parentNode.removeChild(as); }
 
     var cols = doc.createElement("div"); cols.className = "pb-cols";
     var left = doc.createElement("div"); left.className = "pb-main";
@@ -104,14 +218,13 @@
 
     /* left column: banker bet, bets of the day, the 728x90 in-feed, then sure predictions, props, and the two "Advertise here" boxes */
     left.appendChild(first);
-    if (wide) { wide.classList.add("adwide-sec"); }
     left.appendChild(botd);
-    if (wide) { var e = doc.createElement("div"); e.className = "pb-e"; e.style.cssText = "margin:0 0 22px"; e.appendChild(wide); left.appendChild(e); }
+    var trk = doc.createElement("section"); trk.className = "sec pbt"; trk.setAttribute("aria-label", "VIP tracker"); trk.hidden = true;
+    left.appendChild(trk); startTracker(trk);
     var inl = doc.createElement("div"); inl.className = "pb-inl"; inl.appendChild(slot("c")); inl.appendChild(slot("f"));
     left.appendChild(inl);
     left.appendChild(sure);
     var props = main.querySelector("[data-props-wrap]"); if (props) left.appendChild(props);
-    if (adsSec) left.appendChild(adsSec);
 
     rail.appendChild(slot("c", "pb-c"));
     var dwrap = doc.createElement("div"); dwrap.className = "pb-d"; dwrap.appendChild(slot("d"));
