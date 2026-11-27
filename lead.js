@@ -24,6 +24,7 @@
     "#pbLead .g{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:16px}@media(max-width:480px){#pbLead .g{grid-template-columns:1fr}#pbLead .lb{padding:44px 20px 24px}#pbLead h2{font-size:26px}}" +
     "#pbLead label{display:block;font-size:17px;font-weight:700;margin:0 0 8px;color:#111}#pbLead label i{color:#e11d48;font-style:normal}#pbLead label em{font-style:normal;font-weight:400;color:#777;font-size:15px}" +
     "#pbLead input{width:100%;padding:15px 18px;border-radius:999px;border:1px solid #d6d6dc;background:#fff;color:#111;font:inherit;font-size:17px}#pbLead input:focus{outline:2px solid #5b4ee0;outline-offset:1px}" +
+    "#pbLead .pw{display:flex;gap:8px}#pbLead .pw select{flex:0 0 42%;min-width:0;padding:15px 12px;border-radius:999px;border:1px solid #d6d6dc;background:#fff;color:#111;font:inherit;font-size:16px;text-overflow:ellipsis}#pbLead .pw select:focus{outline:2px solid #5b4ee0;outline-offset:1px}#pbLead .pw input{flex:1;min-width:0}" +
     "#pbLead .fw{margin-bottom:16px}#pbLead hr{border:0;border-top:1px solid #e3e3e8;margin:22px 0 18px}" +
     "#pbLead .tx{margin:0;color:#222;font-size:17px;line-height:1.5}" +
     "#pbLead .ft{display:flex;justify-content:flex-end;margin-top:22px}" +
@@ -41,11 +42,17 @@
     '<form novalidate><div class="g"><div><label for="pbF">First name <i>*</i></label><input id="pbF" name="f" autocomplete="given-name" maxlength="50"></div>' +
     '<div><label for="pbL">Last name <i>*</i></label><input id="pbL" name="l" autocomplete="family-name" maxlength="50"></div></div>' +
     '<div class="fw"><label for="pbE">Email <i>*</i></label><input id="pbE" name="e" type="email" autocomplete="email"></div>' +
-    '<div class="fw"><label for="pbW">WhatsApp number <em>(optional)</em></label><input id="pbW" name="w" type="tel" autocomplete="tel" placeholder="+234 801 234 5678" maxlength="20"></div>' +
+    '<div class="fw"><label for="pbW">WhatsApp number <em>(optional)</em></label><div class="pw"><select id="pbC" name="c" aria-label="Country code"></select><input id="pbW" name="w" type="tel" autocomplete="tel-national" inputmode="tel" placeholder="801 234 5678" maxlength="16"></div></div>' +
     '<hr><p class="tx">Be the first to know when winning tips are published.</p>' +
     '<div class="ft"><button class="lg" type="submit">Create your PicksBible account</button></div><div class="lm" role="status"></div></form></div>';
   document.body.appendChild(el);
   var msg = el.querySelector(".lm"), form = el.querySelector("form");
+  /* country code picker: [name, ISO, dialling code]. Default comes from the visitor's language/time zone, else Nigeria. */
+  var CC = [["Nigeria","NG","234"],["Ghana","GH","233"],["Kenya","KE","254"],["South Africa","ZA","27"],["Uganda","UG","256"],["Tanzania","TZ","255"],["Cameroon","CM","237"],["Ivory Coast","CI","225"],["Senegal","SN","221"],["Ethiopia","ET","251"],["Zambia","ZM","260"],["Zimbabwe","ZW","263"],["Rwanda","RW","250"],["Egypt","EG","20"],["Morocco","MA","212"],["Algeria","DZ","213"],["Tunisia","TN","216"],["Sierra Leone","SL","232"],["Liberia","LR","231"],["Gambia","GM","220"],["Benin","BJ","229"],["Togo","TG","228"],["Botswana","BW","267"],["Namibia","NA","264"],["Malawi","MW","265"],["Mozambique","MZ","258"],["Angola","AO","244"],["DR Congo","CD","243"],["United Kingdom","GB","44"],["Ireland","IE","353"],["United States","US","1"],["Canada","CA","1"],["Australia","AU","61"],["New Zealand","NZ","64"],["Germany","DE","49"],["France","FR","33"],["Spain","ES","34"],["Italy","IT","39"],["Portugal","PT","351"],["Netherlands","NL","31"],["Belgium","BE","32"],["Switzerland","CH","41"],["Sweden","SE","46"],["Norway","NO","47"],["Denmark","DK","45"],["Finland","FI","358"],["Poland","PL","48"],["Turkey","TR","90"],["Greece","GR","30"],["Russia","RU","7"],["Ukraine","UA","380"],["India","IN","91"],["Pakistan","PK","92"],["Bangladesh","BD","880"],["Sri Lanka","LK","94"],["Indonesia","ID","62"],["Malaysia","MY","60"],["Singapore","SG","65"],["Philippines","PH","63"],["Thailand","TH","66"],["Vietnam","VN","84"],["China","CN","86"],["Japan","JP","81"],["South Korea","KR","82"],["United Arab Emirates","AE","971"],["Saudi Arabia","SA","966"],["Qatar","QA","974"],["Kuwait","KW","965"],["Israel","IL","972"],["Brazil","BR","55"],["Mexico","MX","52"],["Argentina","AR","54"],["Colombia","CO","57"],["Chile","CL","56"],["Jamaica","JM","1876"],["Trinidad and Tobago","TT","1868"]], sel = el.querySelector("#pbC"), guess = "NG";
+  try { var rg = ((navigator.language || "").split("-")[1] || "").toUpperCase(); if (rg && CC.some(function (x) { return x[1] === rg; })) guess = rg; } catch (_) {}
+  CC.forEach(function (x) { var o = document.createElement("option"); o.value = x[1]; o.textContent = x[0] + " +" + x[2]; sel.appendChild(o); });
+  sel.value = guess;
+  var dial = function () { for (var i = 0; i < CC.length; i++) if (CC[i][1] === sel.value) return CC[i][2]; return "234"; };
 
   function open(why) {
     if (get(KEY)) return;
@@ -59,11 +66,17 @@
 
   form.onsubmit = function (e) {
     e.preventDefault();
-    var fn = form.f.value.trim(), ln = form.l.value.trim(), em = form.e.value.trim().toLowerCase(), wa = form.w.value.trim();
+    var q = function (i) { return el.querySelector("#" + i).value.trim(); };
+    var fn = q("pbF"), ln = q("pbL"), em = q("pbE").toLowerCase(), wa = q("pbW");
     var bad = function (t) { msg.className = "lm e"; msg.textContent = t; };
     if (!fn || !ln) return bad("Please enter your first and last name.");
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(em)) return bad("Enter a valid email address.");
-    if (wa && !/^\+?[0-9 ()-]{7,20}$/.test(wa)) return bad("Enter a valid WhatsApp number or leave it empty.");
+    if (wa) {
+      var plus = wa.charAt(0) === "+", dg = wa.replace(/\D/g, "");
+      if (!plus) dg = dial() + dg.replace(/^0+/, "");
+      if (!/^[0-9]{8,15}$/.test(dg)) return bad("Enter a valid WhatsApp number (without the country code) or leave it empty.");
+      wa = "+" + dg;
+    }
     var btn = form.querySelector(".lg"); btn.disabled = true; msg.className = "lm"; msg.textContent = "Saving...";
     var body = { fields: {
       email: { stringValue: em }, firstName: { stringValue: fn }, lastName: { stringValue: ln }, whatsapp: { stringValue: wa }, page: { stringValue: P.slice(0, 80) },
