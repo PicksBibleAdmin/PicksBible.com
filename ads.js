@@ -64,7 +64,7 @@
     "@media(min-width:1100px){" +
     ".pb-cols{display:grid;grid-template-columns:minmax(0,1fr) 300px;column-gap:24px;align-items:start}" +
     ".pb-main{min-width:0}" +
-    ".pb-rail{display:flex;flex-direction:column;gap:28px;padding-top:14px;align-self:stretch}" +
+    ".pb-rail{display:flex;flex-direction:column;gap:0;padding-top:0;align-self:stretch}.pb-rail .pbad{position:relative}.pb-rail .pbad-lbl{position:absolute;top:-17px;left:0;right:0;margin:0}" +
     ".pb-rail .pb-d{position:sticky;top:84px}" +
         "}" +
     /* layout: tablet */
@@ -243,7 +243,38 @@
     paint(window.__pbDay || t0);
   }
 
-  /* ---------- page structure ---------- */
+  
+  /* line the top of the first ad box up with the top of the first content block */
+  function alignRail() {
+    var c = doc.querySelector(".pb-cols"); if (!c) return;
+    var l = c.querySelector(".pb-main"), r = c.querySelector(".pb-rail"); if (!l || !r) return;
+    var f = l.firstElementChild; if (!f) return;
+    var off = Math.round(f.getBoundingClientRect().top - c.getBoundingClientRect().top);
+    var v = Math.max(0, off) + "px"; if (r.style.paddingTop !== v) r.style.paddingTop = v;
+    /* second ad: top lines up with the second content block (when there is one and it sits low enough) */
+    var a1 = r.children[0], a2 = r.children[1], sec2 = null;
+    for (var k = 1; k < l.children.length; k++) { var e = l.children[k]; if (e.getBoundingClientRect().height > 0) { sec2 = e; break; } }
+    if (a1 && a2) {
+      var gap = 36;
+      if (sec2) { var want = Math.round(sec2.getBoundingClientRect().top - a1.getBoundingClientRect().bottom); if (want > gap) gap = want; }
+      var g = gap + "px"; if (a1.style.marginBottom !== g) a1.style.marginBottom = g;
+    }
+  }
+  var aq = 0;
+  function queueAlign() { if (aq) return; aq = requestAnimationFrame(function () { aq = 0; alignRail(); }); }
+  window.addEventListener("load", queueAlign); window.addEventListener("resize", queueAlign);
+  window.addEventListener("orientationchange", queueAlign);
+  if (window.visualViewport) window.visualViewport.addEventListener("resize", queueAlign);
+  doc.addEventListener("pb:day", function () { setTimeout(queueAlign, 50); setTimeout(queueAlign, 600); });
+  if (doc.fonts && doc.fonts.ready) doc.fonts.ready.then(queueAlign);
+  if (window.ResizeObserver) {
+    var ro = new ResizeObserver(queueAlign);
+    var wire = function () { var c = doc.querySelector(".pb-cols"); if (!c) return; ro.observe(c); var m = c.querySelector(".pb-main"); if (m) { ro.observe(m); if (m.firstElementChild) ro.observe(m.firstElementChild); } };
+    setTimeout(wire, 100); setTimeout(wire, 1500);
+  }
+  setInterval(alignRail, 1000); /* safety net: cheap, only writes when the value changed */
+  setTimeout(alignRail, 100);
+/* ---------- page structure ---------- */
   var built = false;
   function build() {
     if (built) return; built = true;
