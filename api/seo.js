@@ -259,6 +259,7 @@ ${schema.map(ld).join('\n')}
 <footer class="sp-foot"><div class="wrap"><ul class="sp-links">${POPULAR.map(p => `<li><a href="${p[0]}">${p[1]}</a></li>`).join('')}</ul>
 <p>PicksBible tips are based on statistical analysis of past events, current form and team news available when each prediction was made. No prediction is guaranteed. 18+ only, please gamble responsibly.</p>
 <p>&copy; PicksBible &middot; <a href="/about.html">About</a> &middot; <a href="/contact.html">Contact</a> &middot; <a href="/legal.html">Legal</a></p></div></footer>
+<script src="/ads.js" defer></script>
 </body></html>`;
 }
 
