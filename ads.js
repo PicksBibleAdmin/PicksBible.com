@@ -1,4 +1,6 @@
 /* PicksBible ad placements: desktop (1100px and wider) and tablet (768px to 1099px). Phones are untouched.
+   Runs on: the home page, the three Predictions pages (all, football, basketball), the Expert Tips category pages and the Expert Tips market pages.
+   The home page also gets the VIP Tracker strip and the wider 7-day date strip.
    This file is self-contained: it adds its own styles and builds the slots when the page loads.
 
    TO RUN AN ADVERTISER: fill in the slot below, for example
@@ -24,8 +26,16 @@
 
   if (document.getElementById("pbAdsCss")) return;
   var doc = document, body = doc.body;
-  var main = doc.querySelector("main > .wrap");
-  if (!main) return; /* only the homepage layout has these sections */
+  var HUBS = ["over-2-5-goals-predictions-today", "under-2-5-goals-predictions-today", "btts-predictions-today", "correct-score-predictions-today", "double-chance-predictions-today", "sure-predictions-today", "football-predictions-tomorrow", "basketball-predictions-tomorrow", "nba-predictions-today", "wnba-predictions-today", "basketball-spread-predictions-today", "basketball-over-under-predictions-today", "nba-player-props-today", "2-odds-predictions-today", "3-odds-predictions-today", "5-odds-predictions-today", "10-odds-predictions-today"];
+  var path = location.pathname.replace(/^\/+|\/+$/g, "").replace(/\.html$/, "");
+  var home = doc.querySelector("main > .wrap"), flat = doc.querySelector("main.wrap");
+  var main = home || flat, kind = "";
+  if (!main) return;
+  if (home && home.querySelector("[data-experttip]")) kind = "home";
+  else if (flat && flat.querySelector("[data-bigtable]")) kind = "pred";
+  else if (flat && flat.querySelector("[data-cat]")) kind = "cat";
+  else if (flat && flat.classList.contains("sp") && HUBS.indexOf(path) >= 0) kind = "hub";
+  if (!kind) return; /* any other page: leave it alone */
 
   /* ---------- styles ---------- */
   var css = doc.createElement("style");
@@ -39,6 +49,15 @@
     ".pbad-ph small{display:block;font:500 11px var(--body,sans-serif);color:var(--muted,#94A3B8);letter-spacing:0}" +
     ".pbad-ph a{font:700 12px var(--body,sans-serif);color:#fff;background:var(--purple,#552583);border-radius:999px;padding:6px 14px;text-decoration:none;letter-spacing:.02em}" +
     "html[data-theme=\"light\"] .pbad-ph{background:var(--panel,#F3F5F9);color:#2563EB}" +
+    /* home date strip: full width, 7 days */
+    "@media(min-width:768px){" +
+    ".hdates[data-d7]{max-width:none;width:100%;box-sizing:border-box}" +
+    ".hdates[data-d7]>button[data-hday]{display:none}" +
+    ".hdates[data-d7]>button.pb-d7{flex:1 1 0;min-width:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;padding:9px 4px;line-height:1.15}" +
+    ".hdates[data-d7]>button.pb-d7 small{font:600 10.5px var(--body,sans-serif);letter-spacing:.1em;text-transform:uppercase;opacity:.75}" +
+    ".hdates[data-d7]>button.pb-d7 b{font:700 15px var(--body,sans-serif);white-space:nowrap}" +
+    ".hdates[data-d7]>button.pb-d7[aria-pressed=\"true\"] small{opacity:1}" +
+    "}" +
     /* layout: desktop rail */
     ".pb-cols{display:block}.pb-rail,.pb-inl,.pb-cf{display:none}" +
     ".pb-main .wrap{max-width:none;padding-inline:0}" +
@@ -178,7 +197,7 @@
         '<div class="t-spark">' + spark + "</div>" +
         '<div class="t-c hero"><i>' + (S.u >= 0 ? "Return" : "Return") + '</i><b>' + (S.n ? arrow + pct(S.roi) : "—") + "</b></div>" +
         '<div class="t-c"><i>Profit / loss</i><b style="color:' + c + '">' + (S.n ? sgn(S.u) : "—") + "<small>u</small></b></div>" +
-        '<div class="t-c sm"><i>Bets placed</i><b>' + S.n + "</b></div>" +
+        '<div class="t-c sm"><i>Settled bets</i><b>' + S.n + "</b></div>" +
         '<div class="t-c sm"><i>Won / Lost</i><b><span style="color:' + G + '">' + S.w + '</span><small>/</small><span style="color:' + (S.l ? R : N) + '">' + S.l + "</span></b></div>" +
         '<div class="t-c"><i>Win rate</i><b>' + (S.n ? Math.round(S.rate) + "%" : "—") + '<small>' + streak + "</small></b></div></div>";
       box.hidden = false;
@@ -196,40 +215,78 @@
     tick(); setInterval(tick, 4000);
   }
 
+  /* ---------- home page date strip: full width, last 7 days, plus the date picker and VIP button ---------- */
+  function dateStrip() {
+    var strip = doc.querySelector(".hero .hdates"); if (!strip || strip.getAttribute("data-d7")) return;
+    var cal = strip.querySelector("[data-hcal]"), todayBtn = strip.querySelector('[data-hday="today"]');
+    if (!cal || !todayBtn) return;
+    strip.setAttribute("data-d7", "1");
+    var DOW = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"], SHM = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    var t0 = new Date(Date.now() + 3600000).toISOString().slice(0, 10);
+    var anchor = cal.closest(".hcal") || cal, chips = [];
+    for (var n = 6; n >= 0; n--) {
+      (function (n) {
+        var d = new Date(t0 + "T12:00:00Z"); d.setUTCDate(d.getUTCDate() - n);
+        var y = d.toISOString().slice(0, 10), b = doc.createElement("button");
+        b.type = "button"; b.className = "pb-d7"; b.setAttribute("data-d7", y); b.setAttribute("aria-pressed", "false");
+        b.innerHTML = "<small>" + (n === 0 ? "Today" : DOW[d.getUTCDay()]) + "</small><b>" + d.getUTCDate() + " " + SHM[d.getUTCMonth()] + "</b>";
+        b.title = DOW[d.getUTCDay()] + " " + d.getUTCDate() + " " + SHM[d.getUTCMonth()];
+        b.addEventListener("click", function () {
+          if (n === 0) { todayBtn.click(); return; }
+          cal.value = y; cal.dispatchEvent(new Event("change", { bubbles: true }));
+        });
+        strip.insertBefore(b, anchor); chips.push(b);
+      })(n);
+    }
+    function paint(ymd) { chips.forEach(function (b) { b.setAttribute("aria-pressed", String(b.getAttribute("data-d7") === ymd)); }); }
+    doc.addEventListener("pb:day", function (e) { paint(e.detail); });
+    paint(window.__pbDay || t0);
+  }
+
   /* ---------- page structure ---------- */
   var built = false;
   function build() {
-  if (built) return; built = true;
-  var first = main.querySelector("[data-experttip]");
-  var botd = main.querySelector("[data-botd]");
-  var sure = main.querySelector("[data-sure]");
-  if (first && botd && sure) {
-    /* removed on desktop and tablet: the 728x90 in-feed banner and the two "Advertise Here" boxes under the predictions */
-    var secs = main.querySelectorAll("section.sec");
-    for (var i = 0; i < secs.length; i++) if (secs[i].querySelector(".adwide")) { secs[i].parentNode.removeChild(secs[i]); break; }
-    var tail = main.parentNode.querySelectorAll(".ads");
-    for (var j = 0; j < tail.length; j++) { var as = tail[j].closest("section"); if (as && as.parentNode) as.parentNode.removeChild(as); }
-
+    if (built) return; built = true;
     var cols = doc.createElement("div"); cols.className = "pb-cols";
     var left = doc.createElement("div"); left.className = "pb-main";
     var rail = doc.createElement("aside"); rail.className = "pb-rail"; rail.setAttribute("aria-label", "Advertising");
-    first.parentNode.insertBefore(cols, first);
-    cols.appendChild(left); cols.appendChild(rail);
-
-    /* left column: banker bet, bets of the day, the 728x90 in-feed, then sure predictions, props, and the two "Advertise here" boxes */
-    left.appendChild(first);
-    left.appendChild(botd);
-    var trk = doc.createElement("section"); trk.className = "sec pbt"; trk.setAttribute("aria-label", "VIP tracker"); trk.hidden = true;
-    left.appendChild(trk); startTracker(trk);
     var inl = doc.createElement("div"); inl.className = "pb-inl"; inl.appendChild(slot("c")); inl.appendChild(slot("f"));
-    left.appendChild(inl);
-    left.appendChild(sure);
-    var props = main.querySelector("[data-props-wrap]"); if (props) left.appendChild(props);
+    function mount(anchor) { anchor.parentNode.insertBefore(cols, anchor); cols.appendChild(left); cols.appendChild(rail); }
 
+    if (kind === "home") {
+      var first = main.querySelector("[data-experttip]"), botd = main.querySelector("[data-botd]"), sure = main.querySelector("[data-sure]");
+      if (!(first && botd && sure)) return;
+      /* removed on desktop and tablet: the 728x90 in-feed banner and the two "Advertise Here" boxes under the predictions */
+      var secs = main.querySelectorAll("section.sec");
+      for (var i = 0; i < secs.length; i++) if (secs[i].querySelector(".adwide")) { secs[i].parentNode.removeChild(secs[i]); break; }
+      var tail = main.parentNode.querySelectorAll(".ads");
+      for (var j = 0; j < tail.length; j++) { var as = tail[j].closest("section"); if (as && as.parentNode) as.parentNode.removeChild(as); }
+      mount(first);
+      left.appendChild(first); left.appendChild(botd);
+      var trk = doc.createElement("section"); trk.className = "sec pbt"; trk.setAttribute("aria-label", "VIP tracker"); trk.hidden = true;
+      left.appendChild(trk); startTracker(trk);
+      left.appendChild(inl); left.appendChild(sure);
+      var props = main.querySelector("[data-props-wrap]"); if (props) left.appendChild(props);
+    } else if (kind === "pred") {
+      var big = main.querySelector("[data-bigtable]"); if (!big) return;
+      mount(big);
+      left.appendChild(big); left.appendChild(inl);
+      var pw = main.querySelector("[data-props-wrap]"); if (pw) left.appendChild(pw);
+    } else if (kind === "cat") {
+      var cat = main.querySelector("[data-cat]"); if (!cat) return;
+      mount(cat);
+      left.appendChild(cat); left.appendChild(inl);
+    } else if (kind === "hub") {
+      var kids = Array.prototype.slice.call(main.children);
+      var h2 = main.querySelector("h2");
+      main.appendChild(cols); cols.appendChild(left); cols.appendChild(rail);
+      kids.forEach(function (k) { if (k === h2) left.appendChild(inl); left.appendChild(k); });
+      if (!inl.parentNode) left.appendChild(inl);
+    }
     rail.appendChild(slot("c", "pb-c"));
     var dwrap = doc.createElement("div"); dwrap.className = "pb-d"; dwrap.appendChild(slot("d"));
     rail.appendChild(dwrap);
-  }
+    if (kind === "home") dateStrip();
   }
   if (window.matchMedia("(min-width:768px)").matches) build();
   else { var mq = window.matchMedia("(min-width:768px)"), go = function () { if (mq.matches) build(); }; if (mq.addEventListener) mq.addEventListener("change", go); else mq.addListener(go); }
