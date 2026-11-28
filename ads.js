@@ -326,13 +326,17 @@
       var trk = doc.createElement("section"); trk.className = "sec pbt"; trk.setAttribute("aria-label", "VIP tracker"); trk.hidden = true;
       left.appendChild(trk); startTracker(trk);
       left.appendChild(inl); left.appendChild(sure);
-      /* on a wide screen the pair shows one sport at a time, so each half stays readable */
-      var tries = 0, iv = setInterval(function () {
-        tries++; if (tries > 25) { clearInterval(iv); return; }
-        if (!window.matchMedia("(min-width:1100px)").matches) return;
-        var both = first.querySelector('[data-et="both"][aria-pressed="true"]'), fb = first.querySelector('[data-et="football"]');
-        if (both && fb) { fb.click(); clearInterval(iv); } else if (first.querySelector('[data-et][aria-pressed="true"]')) clearInterval(iv);
-      }, 300);
+      /* on a wide screen the banker half shows ONE sport at a time: the visitor's own pick (saved sport), football by default */
+      function single() {
+        if (!window.matchMedia("(min-width:1100px)").matches) return true;
+        var bd = first.querySelector("[data-etbody]"); if (!bd) return false;
+        if (bd.classList.contains("full")) return true;
+        var sp = "football"; try { if (localStorage.getItem("pb.sport") === "basketball") sp = "basketball"; } catch (_) {}
+        var btn = first.querySelector('[data-et="' + sp + '"]'); if (btn) btn.click();
+        return bd.classList.contains("full");
+      }
+      var tries = 0, iv = setInterval(function () { tries++; if (single() || tries > 80) clearInterval(iv); }, 250);
+      window.addEventListener("resize", function () { setTimeout(single, 80); });
       var props = main.querySelector("[data-props-wrap]"); if (props) left.appendChild(props);
     } else if (kind === "pred") {
       var big = main.querySelector("[data-bigtable]"); if (!big) return;
