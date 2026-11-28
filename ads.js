@@ -132,11 +132,16 @@
     tcss.textContent =
       ".pbt{margin:14px 0 22px;border-radius:var(--r,10px);overflow:hidden;border:1px solid #1E293B;background:linear-gradient(100deg,#2a1647 0,#0F172A 34%,#0F172A 100%);color:#F8FAFC;position:relative}" +
       ".pbt[hidden]{display:none}" +
+      ".pb-sep{height:1px;margin:0 16px;background:linear-gradient(90deg,transparent,#f59e0b88,transparent)}" +
+      ".pbt.pbt-in{margin:0;border:0;border-radius:0;background:linear-gradient(100deg,#2a164777 0,transparent 40%)}" +
+      ".pbt.pbt-in:before{display:none}" +
+      ".pbt.pbt-in[hidden]+*,.pb-sep[hidden]{display:none}" +
       ".pbt:before{content:\"\";position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--c,#22c55e)}" +
       ".pbt .t-row{display:flex;align-items:center;gap:0;min-height:112px;padding:0 6px 0 4px}" +
       ".pbt .t-id{flex:none;padding:0 16px 0 16px;display:grid;gap:8px}" +
       ".pbt .t-id h2{margin:0;font:700 15px/1 var(--display,sans-serif);letter-spacing:.06em;text-transform:uppercase;color:#fff;display:flex;align-items:center;gap:7px;white-space:nowrap}" +
-      ".pbt .t-id h2 em{font:600 10px var(--body,sans-serif);font-style:normal;letter-spacing:.1em;color:#c4b5e0;border:1px solid #4a2d78;border-radius:999px;padding:2px 7px}" +
+      ".pbt .t-id h2 em{font:800 10px var(--body,sans-serif);font-style:normal;letter-spacing:.08em;color:#1a0f05;background:linear-gradient(135deg,#ffe08a,#e3a13a);border-radius:999px;padding:3px 9px;box-shadow:0 0 10px #f59e0b44}" +
+      ".pbt .t-id h2 b{font:inherit;background:linear-gradient(180deg,#ffe08a,#f9a01b 55%,#c98a00);-webkit-background-clip:text;background-clip:text;color:transparent;-webkit-text-fill-color:transparent}" +
       ".pbt .t-tabs{display:inline-flex;background:#0b1326;border:1px solid #243049;border-radius:999px;padding:2px}" +
       ".pbt .t-tabs button{appearance:none;border:0;background:transparent;color:#94A3B8;font:700 11.5px var(--body,sans-serif);padding:5px 11px;border-radius:999px;cursor:pointer;letter-spacing:.02em;white-space:nowrap}" +
       ".pbt .t-tabs button[aria-pressed=\"true\"]{background:var(--c);color:#04130a}" +
@@ -181,7 +186,8 @@
 
     function render() {
       var all = days(), today = watToday();
-      if (!all.length) { box.hidden = true; return; }
+      if (!all.length) { box.hidden = true; if (box.pbSep) box.pbSep.hidden = true; return; }
+      if (box.pbSep) box.pbSep.hidden = false;
       var t = today.split("-"), mStart = t[0] + "-" + t[1] + "-01";
       var dow = (new Date(today + "T12:00:00Z").getUTCDay() + 6) % 7, wStart = addDays(today, -dow), r30 = addDays(today, -29);
       var P = {
@@ -213,7 +219,7 @@
       var arrow = S.n ? (S.u > 0 ? "▲ " : S.u < 0 ? "▼ " : "") : "";
 
       box.innerHTML = '<span class="t-info" title="1 unit is staked on each daily Gold package at the listed odds. A win returns the odds minus 1 in units, a loss costs 1 unit. Return % is units won or lost divided by units staked. Past results do not guarantee future results. 18+ only.">i</span>' +
-        '<div class="t-row"><div class="t-id"><h2>📈 VIP Tracker <em>GOLD</em></h2><div class="t-tabs" role="group" aria-label="Period">' + tabs + "</div></div>" +
+        '<div class="t-row"><div class="t-id"><h2>📈 <span><b>VIP</b> Tracker</span> <em>GOLD</em></h2><div class="t-tabs" role="group" aria-label="Period">' + tabs + "</div></div>" +
         '<div class="t-spark">' + spark + "</div>" +
         '<div class="t-c hero"><i>' + (S.u >= 0 ? "Return" : "Return") + '</i><b>' + (S.n ? arrow + pct(S.roi) : "—") + "</b></div>" +
         '<div class="t-c"><i>Profit / loss</i><b style="color:' + c + '">' + (S.n ? sgn(S.u) : "—") + "<small>u</small></b></div>" +
@@ -326,7 +332,11 @@
       left.appendChild(pair); pair.appendChild(first); pair.appendChild(botd);
       if (vipbox) left.appendChild(vipbox);
       var trk = doc.createElement("section"); trk.className = "sec pbt"; trk.setAttribute("aria-label", "VIP tracker"); trk.hidden = true;
-      left.appendChild(trk); startTracker(trk);
+      /* one card: the tracker is docked inside the VIP results card, under a thin gold divider */
+      var vcard = vipbox && vipbox.querySelector(".vipbox");
+      if (vcard) { var sp = doc.createElement("div"); sp.className = "pb-sep"; trk.pbSep = sp; vcard.appendChild(sp); vcard.appendChild(trk); trk.className += " pbt-in"; }
+      else left.appendChild(trk);
+      startTracker(trk);
       left.appendChild(inl); left.appendChild(sure);
       /* on a wide screen the banker half shows ONE sport at a time: the visitor's own pick (saved sport), football by default */
       function single() {
