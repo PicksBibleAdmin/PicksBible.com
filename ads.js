@@ -73,6 +73,8 @@
     ".pb-pair .bdrow .bdt{grid-column:2;grid-row:1;justify-self:end;padding:3px 10px;font-size:14px;width:auto}" +
     ".pb-pair .bdrow .bdc{grid-column:1;grid-row:1/3}.pb-pair .bdrow .bdpk{grid-column:2;grid-row:2}" +
     ".pb-pair .bdlg{justify-content:flex-start;margin-bottom:2px}" +
+    ".pb-pair .pb-tight .bdrow{padding:4px 12px!important;gap:2px 10px!important}.pb-pair .pb-tight .ax{height:28px}.pb-pair .pb-tight .ax .lg{width:22px;height:22px}.pb-pair .pb-tight .bdrow .bdt{padding:2px 9px}" +
+    ".pb-pair .pb-tighter .bdrow{padding:2px 10px!important}.pb-pair .pb-tighter .bdlg{display:none}.pb-pair .pb-tighter .ax{height:24px}.pb-pair .pb-tighter .bdm{font-size:13px}" +
     ".pb-pair .bdrow .affwrap,.pb-pair .bdrow.hasaff .affwrap{grid-column:1/-1;grid-row:3;justify-self:start}" +
     ".pb-pair .bdrow.hasaff{grid-template-columns:minmax(0,1fr) 84px!important}" +
     ".pb-cols{display:grid;grid-template-columns:minmax(0,1fr) 300px;column-gap:24px;align-items:start}" +
@@ -335,15 +337,22 @@
         var btn = first.querySelector('[data-et="' + sp + '"]'); if (btn) btn.click();
         return bd.classList.contains("full");
       }
-      /* Bets of the day shows up to 4 bets and both halves are made exactly the same height (the taller one sets it) */
+      /* Bets of the day: up to 3 bets, always inside the height the banker bet needs (the banker is never stretched).
+         Rows tighten first; a row is only hidden if three cannot fit. */
       function fitPair() {
         var list = botd.querySelector("[data-botdlist]"); if (!list) return;
-        var rows = list.querySelectorAll(".bdrow"), k;
-        first.style.height = ""; botd.style.height = "";
-        for (k = 0; k < rows.length; k++) rows[k].classList.toggle("pb-hide", k >= 4 && window.matchMedia("(min-width:1100px)").matches);
-        if (!window.matchMedia("(min-width:1100px)").matches) return;
-        var H = Math.max(first.offsetHeight, botd.offsetHeight); if (!H) return;
-        first.style.height = H + "px"; botd.style.height = H + "px";
+        var rows = list.querySelectorAll(".bdrow"), k, wide = window.matchMedia("(min-width:1100px)").matches;
+        first.style.height = ""; botd.style.height = ""; botd.classList.remove("pb-tight", "pb-tighter");
+        for (k = 0; k < rows.length; k++) rows[k].classList.toggle("pb-hide", wide && k >= 3);
+        if (!wide) return;
+        var H = first.offsetHeight; if (!H) return;
+        var steps = ["pb-tight", "pb-tighter"], si = 0, n = Math.min(rows.length, 3);
+        while (botd.offsetHeight > H + 1) {
+          if (si < steps.length) { botd.classList.add(steps[si++]); continue; }
+          if (n > 1) { rows[--n].classList.add("pb-hide"); continue; }
+          break;
+        }
+        botd.style.height = H + "px";
       }
       var fq = 0; function qfit() { if (fq) return; fq = requestAnimationFrame(function () { fq = 0; fitPair(); }); }
       if (window.ResizeObserver) new ResizeObserver(qfit).observe(first);
